@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Delete - QuickFile</title>
+    <link rel="icon" href="/assets/imgs/icon.png">
+    <link rel="stylesheet" href="/assets/styles/delete.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.3.0/socket.io.slim.js"></script>
+    <script src="/assets/js/global.js"></script>
+    <script src="/assets/js/delete.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+</head>
+
+<body>
+    <div class="notification"></div>
+    <header>
+        <div class="item logo">
+            <a class="item logoText" href="/">
+                <svg version="1.1" id="Capa_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" width="179.386px" height="179.386px" viewBox="0 0 179.386 179.386" style="enable-background: new 0 0 179.386 179.386;" xml:space="preserve">
+                    <g>
+                        <path d="M168.185,47.392L147.256,26.43c-3.653-3.653-9.578-3.666-13.231-0.006c-3.653,3.647-3.659,9.572-0.006,13.226l3.866,3.869
+                            l-3.312,3.319c-10.437-9.265-23.419-15.676-37.771-18.057v-3.839h6.235c6.887,0,12.471-5.59,12.471-12.471
+                            c0-6.887-5.584-12.47-12.471-12.47H65.625c-6.884,0-12.471,5.583-12.471,12.47c0,6.881,5.587,12.471,12.471,12.471h6.235v3.839
+                            C35.95,34.754,8.466,65.954,8.466,103.527c0,41.833,34.032,75.858,75.865,75.858c41.832,0,75.864-34.025,75.864-75.858
+                            c0-15.819-4.877-30.507-13.188-42.673l3.154-3.16c0.328-0.326,0.621-0.63,0.925-0.943l3.861,3.86
+                            c1.826,1.833,4.226,2.743,6.618,2.743c2.394,0,4.78-0.91,6.607-2.731C171.826,56.97,171.838,51.051,168.185,47.392z
+                             M84.337,154.451c-28.077,0-50.923-22.841-50.923-50.917c0-28.084,22.846-50.924,50.923-50.924s50.924,22.84,50.924,50.924
+                            C135.261,131.61,112.414,154.451,84.337,154.451z M118.497,73.38c4.871,4.872-18.554,36.2-23.419,41.06
+                            c-4.868,4.871-12.769,4.871-17.637,0c-4.871-4.872-4.871-12.763,0-17.634C82.31,91.934,113.626,68.518,118.497,73.38z"></path>
+                    </g>
+                </svg>
+                <span>QuickFile</span>
+            </a>
+        </div>
+        <nav class="item link">
+            <ul>
+                <li><a href="/">Home</a></li>
+                <li><a target="_black" href="/contact">Contact</a></li>
+                <li><a target="_black" href="https://github.com/Glitchii/QuickFile-website">Source</a></li>
+                <li><a target="_black" href="//paypal.me/qurty">Donate</a></li>
+            </ul>
+            <div class="menu">
+                <div class="lines">
+                    <div></div>
+                    <div></div>
+                    <div></div>
+                </div>
+                <div class="menuBox">
+                    <ul>
+                        <li><a target="_black" href="/contact">Contact</a></li>
+                        <li><a target="_black" href="https://github.com/Glitchii/QuickFile-website">Source</a></li>
+                        <li><a href="/">Home page</a></li>
+                        <li><a target="_black" href="//paypal.me/qurty">Donate</a></li>
+                    </ul>
+                    <div class="bottomBtns">
+                        <a target="_black" href="https://github.com/Glitchii/">
+                            <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:svgjs="http://svgjs.com/svgjs" version="1.1" width="512" height="512" x="0" y="0" viewBox="0 0 438.549 438.549" style="enable-background:new 0 0 512 512;" xml:space="preserve" class="">
+                                <g>
+                                    <g xmlns="http://www.w3.org/2000/svg">
+                                        <path d="M409.132,114.573c-19.608-33.596-46.205-60.194-79.798-79.8C295.736,15.166,259.057,5.365,219.271,5.365c-39.781,0-76.472,9.804-110.063,29.408c-33.596,19.605-60.192,46.204-79.8,79.8C9.803,148.168,0,184.854,0,224.63   c0,47.78,13.94,90.745,41.827,128.906c27.884,38.164,63.906,64.572,108.063,79.227c5.14,0.954,8.945,0.283,11.419-1.996   c2.475-2.282,3.711-5.14,3.711-8.562c0-0.571-0.049-5.708-0.144-15.417c-0.098-9.709-0.144-18.179-0.144-25.406l-6.567,1.136   c-4.187,0.767-9.469,1.092-15.846,1c-6.374-0.089-12.991-0.757-19.842-1.999c-6.854-1.231-13.229-4.086-19.13-8.559   c-5.898-4.473-10.085-10.328-12.56-17.556l-2.855-6.57c-1.903-4.374-4.899-9.233-8.992-14.559   c-4.093-5.331-8.232-8.945-12.419-10.848l-1.999-1.431c-1.332-0.951-2.568-2.098-3.711-3.429c-1.142-1.331-1.997-2.663-2.568-3.997   c-0.572-1.335-0.098-2.43,1.427-3.289c1.525-0.859,4.281-1.276,8.28-1.276l5.708,0.853c3.807,0.763,8.516,3.042,14.133,6.851   c5.614,3.806,10.229,8.754,13.846,14.842c4.38,7.806,9.657,13.754,15.846,17.847c6.184,4.093,12.419,6.136,18.699,6.136   c6.28,0,11.704-0.476,16.274-1.423c4.565-0.952,8.848-2.383,12.847-4.285c1.713-12.758,6.377-22.559,13.988-29.41   c-10.848-1.14-20.601-2.857-29.264-5.14c-8.658-2.286-17.605-5.996-26.835-11.14c-9.235-5.137-16.896-11.516-22.985-19.126   c-6.09-7.614-11.088-17.61-14.987-29.979c-3.901-12.374-5.852-26.648-5.852-42.826c0-23.035,7.52-42.637,22.557-58.817   c-7.044-17.318-6.379-36.732,1.997-58.24c5.52-1.715,13.706-0.428,24.554,3.853c10.85,4.283,18.794,7.952,23.84,10.994   c5.046,3.041,9.089,5.618,12.135,7.708c17.705-4.947,35.976-7.421,54.818-7.421s37.117,2.474,54.823,7.421l10.849-6.849   c7.419-4.57,16.18-8.758,26.262-12.565c10.088-3.805,17.802-4.853,23.134-3.138c8.562,21.509,9.325,40.922,2.279,58.24   c15.036,16.18,22.559,35.787,22.559,58.817c0,16.178-1.958,30.497-5.853,42.966c-3.9,12.471-8.941,22.457-15.125,29.979   c-6.191,7.521-13.901,13.85-23.131,18.986c-9.232,5.14-18.182,8.85-26.84,11.136c-8.662,2.286-18.415,4.004-29.263,5.146   c9.894,8.562,14.842,22.077,14.842,40.539v60.237c0,3.422,1.19,6.279,3.572,8.562c2.379,2.279,6.136,2.95,11.276,1.995   c44.163-14.653,80.185-41.062,108.068-79.226c27.88-38.161,41.825-81.126,41.825-128.906   C438.536,184.851,428.728,148.168,409.132,114.573z" fill="#ffffff" data-original="#000000"></path>
+                                    </g>
+                                    <g xmlns="http://www.w3.org/2000/svg"></g>
+                                    <g xmlns="http://www.w3.org/2000/svg"></g>
+                                    <g xmlns="http://www.w3.org/2000/svg"></g>
+                                    <g xmlns="http://www.w3.org/2000/svg"></g>
+                                    <g xmlns="http://www.w3.org/2000/svg"></g>
+                                    <g xmlns="http://www.w3.org/2000/svg"></g>
+                                    <g xmlns="http://www.w3.org/2000/svg"></g>
+                                    <g xmlns="http://www.w3.org/2000/svg"></g>
+                                    <g xmlns="http://www.w3.org/2000/svg"></g>
+                                    <g xmlns="http://www.w3.org/2000/svg"></g>
+                                    <g xmlns="http://www.w3.org/2000/svg"></g>
+                                    <g xmlns="http://www.w3.org/2000/svg"></g>
+                                    <g xmlns="http://www.w3.org/2000/svg"></g>
+                                    <g xmlns="http://www.w3.org/2000/svg"></g>
+                                    <g xmlns="http://www.w3.org/2000/svg"></g>
+                                </g>
+                            </svg>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </nav>
+    </header>
+    <div class="loader">
+        <svg version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" width="150px" height="150px" viewBox="0 0 150 150" enable-background="new 0 0 150 150" xml:space="preserve">
+            <g opacity="0.95">
+                <circle fill="#EF4136" cx="56.752" cy="57.16" r="12"></circle>
+                <circle fill="#2B3990" cx="93.703" cy="57.16" r="12"></circle>
+                <circle fill="#92278F" cx="93.703" cy="93.764" r="12"></circle>
+                <circle fill="#1C75BC" cx="56.926" cy="93.764" r="12"></circle>
+                <animateTransform attributeName="transform" attributeType="XML" type="rotate" from="0 75 75" to="360 75 75" dur="2s" repeatCount="indefinite"></animateTransform>
+
+            </g>
+        </svg>
+    </div>
+    <main>
+        <div class="topPart">
+            <h2>Delete this file?</h2>
+            <div class="file">
+                <% if (contentType.startsWith('image/')) { %>
+                    <img src="/file/<%= filename %>" alt="">
+                <% } else { %>
+                    <div class="fileIcon">
+                        <p><%= filename.split('.').pop().length <= 5 ? filename.split('.').pop() : filename.substr(0, 2) + '...' %> </p>
+                        <svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" viewBox="0 0 512 512" style="enable-background:new 0 0 512 512;fill: #273036;" xml:space="preserve">
+                            <path d="M32,464V48c0-8.8,7.2-16,16-16h240v64c0,17.7,14.3,32,32,32h64v48h32v-64c0-4.3-1.6-8.3-4.6-11.4l-96-96c-3-3-7.1-4.7-11.4-4.6H48C21.5,0,0,21.5,0,48v416c0,26.5,21.5,48,48,48h112v-32H48C39.2,480,32,472.8,32,464z">
+                            </path>
+                        </svg>
+                    </div>
+                <% } %> 
+            </div>
+        </div>
+        <div class="other">
+            <p class="upOn">Expiring on <span class="dt"><%= uploadDate %></span></p>
+            <div class="sep"></div>
+            <div class="infos">
+                <h2 class="infoTitle">File Info</h2>
+                <% if (locals.name) { %>
+                    <div class="info name"><p>File name:</p><p><%= name %> <i>(<%= filename %>)</i></p></div>
+                <% } else { %>
+                    <div class="info name"><p>File name:</p><p><%= filename %></p></div>
+                <% } %> 
+                <div class="info length"><p>File length:</p><p><%= length %></p></div>
+                <div class="info type"><p>File type:</p><p><%= contentType %></p></div>
+                <div class="info"><p>Upload date:</p><p class="dt"><%= uploadDate %></p></div>
+                <div class="info"><p>Expires on:</p><p class="dt"><%= uploadDate %></p></div>
+            </div>
+            <div class="del">
+                <div class="in">
+                    <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:svgjs="http://svgjs.com/svgjs" version="1.1" width="512" height="512" x="0" y="0" viewBox="0 0 512 512" style="enable-background:new 0 0 512 512" xml:space="preserve" class=""><g><g xmlns="http://www.w3.org/2000/svg"><path d="m276 210h-40c-8.271 0-15 6.729-15 15v15h70v-15c0-8.271-6.729-15-15-15z" fill="#ffffff" data-original="#000000" /><path d="m346 270h-180c-8.284 0-15 6.716-15 15v15h210v-15c0-8.284-6.716-15-15-15z" fill="#ffffff" data-original="#000000"/><path d="m430.836 161.157c.109-2.05.164-4.104.164-6.157 0-63.411-51.589-115-115-115-17.118 0-33.892 3.815-49.244 11.125-23.39-31.855-60.784-51.125-100.756-51.125-68.925 0-125 56.075-125 125 0 11.529 1.599 22.924 4.764 34.017-27.891 19.519-44.764 51.423-44.764 85.983 0 57.897 47.103 105 105 105h36.634l-.943-20h-5.691c-8.284 0-15-6.716-15-15v-30c0-24.853 20.147-45 45-45h25v-15c0-24.853 20.147-45 45-45h40c24.853 0 45 20.147 45 45v15h25c24.853 0 45 20.147 45 45v30c0 8.284-6.716 15-15 15h-5.691l-.943 20h46.634c52.383 0 95-42.617 95-95 0-47.338-34.801-86.7-80.164-93.843z" fill="#ffffff" data-original="#000000"/><path d="m179.635 497.707c.377 8.001 6.974 14.293 14.983 14.293h122.763c8.009 0 14.606-6.293 14.983-14.293l7.912-167.707h-168.552zm94.373-123.196c.271-8.28 7.222-14.761 15.481-14.503 8.28.27 14.773 7.201 14.503 15.481l-3 92c-.265 8.113-6.925 14.511-14.983 14.511-.166 0-.331-.002-.498-.008-8.28-.27-14.773-7.201-14.503-15.481zm-51.497-14.503c8.283-.26 15.211 6.224 15.481 14.503l3 92c.27 8.28-6.224 15.211-14.503 15.481-.166.005-.333.008-.498.008-8.059 0-14.719-6.397-14.983-14.511l-3-92c-.27-8.28 6.224-15.211 14.503-15.481z" fill="#ffffff" data-original="#000000" /></g></g></svg>
+                    <span>Delete</span>
+                </div>
+            </div>
+            <div class="home">
+                <div class="in">
+                    <svg xmlns="http://www.w3.org/2000/svg" version="1.1" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:svgjs="http://svgjs.com/svgjs" width="512" height="512" x="0" y="0" viewBox="0 0 59.465 59.465" style="enable-background:new 0 0 512 512; fill: #fff" xml:space="preserve">
+                        <g>
+                            <g xmlns="http://www.w3.org/2000/svg">
+                                <g>
+                                    <path d="M58.862,33.886L45.045,20.069v-9.112c0-1.136-0.921-2.056-2.056-2.056c-1.137,0-2.057,0.92-2.057,2.056v5.001L31.185,6.21c-0.801-0.803-2.104-0.803-2.905,0L0.603,33.886c-0.803,0.804-0.803,2.104,0,2.907c0.802,0.803,2.104,0.803,2.907,0L29.732,10.57l26.223,26.223c0.401,0.398,0.93,0.604,1.455,0.604c0.522,0,1.051-0.201,1.452-0.604C59.665,35.988,59.665,34.689,58.862,33.886z" ill="#ffffff" data-original="#000000"></path>
+                                    <path d="M52.979,36.245L31.185,14.449c-0.385-0.385-0.908-0.602-1.454-0.602c-0.545,0-1.068,0.217-1.453,0.602L6.484,36.245c-0.291,0.288-0.487,0.659-0.565,1.062c-0.061,0.314-0.091,0.633-0.091,0.942v10.638c0,2.739,2.229,4.971,4.969,4.971h10.638c1.378,0,2.707-0.582,3.645-1.599c0.854-0.923,1.324-2.12,1.324-3.373v-7.812c0-1.896,1.453-3.48,3.33-3.658c1.878,0.178,3.331,1.762,3.331,3.658v7.812c0,1.252,0.472,2.45,1.324,3.373c0.938,1.017,2.269,1.599,3.646,1.599h10.638c2.74,0,4.971-2.229,4.971-4.972V38.252c0-0.312-0.031-0.63-0.092-0.941C53.471,36.904,53.271,36.533,52.979,36.245z" fill="#ffffff" data-original="#000000"></path>
+                                </g>
+                            </g>
+                            <g xmlns="http://www.w3.org/2000/svg">
+                            </g>
+                            <g xmlns="http://www.w3.org/2000/svg">
+                            </g>
+                            <g xmlns="http://www.w3.org/2000/svg">
+                            </g>
+                            <g xmlns="http://www.w3.org/2000/svg">
+                            </g>
+                            <g xmlns="http://www.w3.org/2000/svg">
+                            </g>
+                            <g xmlns="http://www.w3.org/2000/svg">
+                            </g>
+                            <g xmlns="http://www.w3.org/2000/svg">
+                            </g>
+                            <g xmlns="http://www.w3.org/2000/svg">
+                            </g>
+                            <g xmlns="http://www.w3.org/2000/svg">
+                            </g>
+                            <g xmlns="http://www.w3.org/2000/svg">
+                            </g>
+                            <g xmlns="http://www.w3.org/2000/svg">
+                            </g>
+                            <g xmlns="http://www.w3.org/2000/svg">
+                            </g>
+                            <g xmlns="http://www.w3.org/2000/svg">
+                            </g>
+                            <g xmlns="http://www.w3.org/2000/svg">
+                            </g>
+                            <g xmlns="http://www.w3.org/2000/svg">
+                            </g>
+                        </g>
+                    </svg>
+                    <span>Home</span>
+                </div>
+            </div>
+        </div>
+    </main>
+</body>
+
+</html>

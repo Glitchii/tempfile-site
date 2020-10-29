@@ -1,0 +1,605 @@
+@import url(https://fonts.googleapis.com/css?family=Heebo|Ubuntu:700&display=swap);
+:root {
+    --font1: 'Heebo', sans-serif;
+    --font2: 'Ubuntu', sans-serif;
+    --font3: Montserrat, sans-serif;
+    --font4: "Open Sans", "Helvetica Neue", "Segoe UI", "Calibri", "Arial", sans-serif
+}
+
+*, ::after, ::before, body, html {
+    margin: 0;
+    border: 0;
+    box-sizing: border-box;
+    scrollbar-width: thin;
+    outline: 0;
+    font-family: var(--font1);
+    text-decoration: none;
+    color: #273036;
+    -webkit-tap-highlight-color: transparent
+}
+
+body {
+    padding-bottom: 70px;
+    display: none;
+}
+
+::-webkit-scrollbar {
+    width: 7px
+}
+
+::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0)
+}
+
+::-webkit-scrollbar-thumb {
+    background: #ccc
+}
+
+a:hover {
+    color: #538ce8;
+    transition: .25s ease
+}
+
+ul {
+    padding-inline-start: 0
+}
+
+header {
+    margin: auto
+}
+
+@keyframes uploadBtnAn {
+    from {
+        opacity: 0;
+        transform: translateY(100%)
+    }
+}
+
+header .logoText, header .logoText span {
+    font-size: 28px;
+    font-family: var(--font2)
+}
+
+header .logoText svg path {
+    fill: #273036
+}
+
+header .logoText svg {
+    width: 33px;
+    height: 33px;
+    position: relative;
+    bottom: -5px
+}
+
+header .logo .item {
+    display: inline-block
+}
+
+header .logo {
+    position: relative
+}
+
+header {
+    padding: 10px 5%;
+    display: flex
+}
+
+header li {
+    list-style: none;
+    display: inline-block
+}
+
+header header nav>ul li {
+    display: inline-block
+}
+
+header nav>ul li~li {
+    padding: 0 10px
+}
+
+header nav {
+    position: absolute;
+    right: 10px;
+    font-size: 15px;
+    padding: 10px 10px 10px 0
+}
+
+header .item {
+    z-index: 5
+}
+
+main {
+    margin: 50px 20%;
+    transition: 1s ease
+}
+
+h2 {
+    font-family: Ubuntu;
+    transition: 1s ease;
+}
+
+h2.infoTitle {
+    font-size: 19px;
+    margin-bottom: 15px;
+    opacity: .8;
+    color: #252131;
+    padding-left: 5px
+}
+
+p.warn {
+    margin: 30px 0
+}
+
+@keyframes inputAn {
+    from {
+        opacity: 0
+    }
+}
+
+.notification .content {
+    color: #fff;
+    border-radius: 4px;
+    display: flex;
+    text-align: center;
+    padding: 5px 15px;
+    box-shadow: 0px 0px 20px 5px rgba(0, 0, 0, 0.055);
+}
+
+.notification {
+    display: none;
+    justify-content: center;
+    transition: 1s ease;
+    position: fixed;
+    display: flex;
+    justify-content: center;
+    transition: .5s ease;
+    height: 100%;
+    width: 100%;
+    position: fixed;
+    z-index: 10;
+    pointer-events: none;
+}
+
+@keyframes comeUp {
+    from {
+        bottom: -50px;
+    }
+}
+
+.notification .content p {
+    user-select: none;
+}
+
+.notification .content {
+    color: #fff !important;
+    border-radius: 4px;
+    text-align: center;
+    display: flex;
+    padding: 5px 15px;
+    box-shadow: 0px 0px 20px 5px rgba(0, 0, 0, 0.055);
+    font-family: var(--font1)!important;
+    animation: comeUp .5s cubic-bezier(.68, -0.55, .27, 1.55);
+    opacity: 0;
+    position: absolute;
+    transition: 1s ease;
+    bottom: 50px;
+    margin: 0 10px;
+    box-shadow: 0px 0px 20px 5px rgb(78 79 80 / 6%);
+    pointer-events: all;
+}
+
+.notification .content:not(:hover) .notifCloseBtn {
+    display: none;
+}
+
+@keyframes notifCloseBtnAn {
+    from {
+        opacity: 0;
+        margin-left: 0;
+    }
+}
+
+.notifCloseBtn {
+    margin: auto 10px;
+    /* background: #ffffff1c; */
+    padding: 0 5px;
+    margin-right: 0;
+    border-radius: 5px;
+    cursor: pointer;
+    animation: notifCloseBtnAn .5s ease;
+}
+
+.notifCloseBtn svg {
+    width: 15px;
+    height: 15px;
+    filter: invert(1);
+    transform: rotate(45deg);
+    top: 2px;
+    position: relative;
+    pointer-events: none;
+}
+
+.notification .content img {
+    display: flex;
+    text-align: center;
+    position: relative;
+    top: 3px;
+}
+
+.notification .success {
+    background: linear-gradient(to right, #61d3c3, #74e1a5);
+}
+
+.notification .normal {
+    background: linear-gradient(to left, #9c7ca6, #7d7699);
+}
+
+.notification .normal img {
+    filter: brightness(1000);
+}
+
+.notification .content p {
+    margin-left: 6px;
+    margin-top: 2px;
+    font-family: var(--font1);
+    color: #fff;
+}
+
+@keyframes addMoreAn {
+    from {
+        opacity: 0
+    }
+}
+
+.menu {
+    position: relative;
+    z-index: 2;
+    display: none
+}
+
+@keyframes menuBoxAn {
+    0% {
+        opacity: 0;
+        top: 30px
+    }
+    50% {
+        opacity: 1;
+        top: 50px
+    }
+}
+
+.menu .menuBox:not(.active) {
+    display: none
+}
+
+.menu .menuBox {
+    animation: menuBoxAn .7s ease;
+    padding: 10px;
+    border-radius: 5px;
+    box-shadow: 0 0 20px 5px rgb(62 41 82 / 33%);
+    width: 300px;
+    top: 40px;
+    position: relative;
+    background: linear-gradient(0deg, #272e36, #272a36);
+}
+
+.menu ul li:hover a {
+    color: #539afe;
+}
+
+.menu ul li a {
+    color: #fff
+}
+
+.bottomBtns a {
+    padding-left: 5px;
+    position: relative;
+}
+
+.bottomBtns a svg {
+    height: 25px;
+    width: 25px;
+    position: relative;
+    margin-top: 20px;
+}
+
+.menu ul li {
+    display: block;
+    padding-left: 5px;
+    cursor: pointer
+}
+
+.menu .lines {
+    cursor: pointer;
+    transform: scale(-1);
+    position: absolute;
+    right: 0;
+    top: 0
+}
+
+.menu .lines div:first-of-type {
+    width: 25px
+}
+
+.menu .lines div:nth-of-type(2) {
+    width: 15px
+}
+
+.menu .lines div:last-of-type {
+    width: 22px
+}
+
+.menu .lines:hover div {
+    width: 25px
+}
+
+.menu .lines div {
+    user-select: none;
+    pointer-events: none;
+    height: 3px;
+    background: #273036;
+    margin: 5px;
+    transition: .5s ease
+}
+
+@keyframes loaderAn {
+    from {
+        opacity: 0
+    }
+}
+
+.loader {
+    position: fixed;
+    width: 30px;
+    height: 30px;
+    left: 50%;
+    transform: translate(-50%, 20px);
+    background: #00000000;
+    border-radius: 100%;
+    opacity: .5;
+    z-index: 11;
+    animation: loaderAn .5s ease;
+    display: none
+}
+
+.loader svg {
+    width: 40px;
+    height: 50px;
+    position: absolute;
+    top: -5px;
+    left: -5px
+}
+
+@keyframes closeBtnAn {
+    from {
+        right: -30px;
+        opacity: 0
+    }
+}
+
+.sep {
+    width: 100%;
+    background: linear-gradient(to right, transparent, #a2a2a2, transparent);
+    height: 1px
+}
+
+.file {
+    margin: 50px 5px;
+    overflow-x: hidden;
+    position: relative;
+    transition: 1s ease;
+}
+
+.file img {
+    border-radius: 5px;
+    width: 250px
+}
+
+.fileIcon {
+    position: relative;
+    width: 220px;
+    left: 100px;
+    transform: translateX(-50%);
+    margin: auto;
+    transition: 1s ease;
+}
+
+.fileIcon p {
+    position: absolute;
+    color: #273036;
+    font-size: 50px;
+    text-transform: uppercase;
+    font-family: 'Ubuntu';
+    top: 85px;
+    left: 70px;
+}
+
+.topPart {
+    text-align: center;
+    position: relative;
+}
+
+.infos {
+    margin: 15px 15px 50px 15px;
+    margin-top: 0;
+    padding-top: 15px;
+}
+
+.infos .info {
+    margin: 5px
+}
+
+.infos .info p {
+    display: inline-flex;
+    font-size: 15px
+}
+
+.infos .info p:first-of-type {
+    padding-right: 10px;
+    color: #3d3652
+}
+
+.infos .info p:last-of-type {
+    opacity: .7;
+    color: #60707b
+}
+
+.infos .info p:last-of-type i {
+    opacity: .5;
+}
+
+.upOn {
+    margin: 0 5px 10px 50px;
+    margin: 0 5px 10px 20px;
+    font-family: system-ui;
+    font-size: 15px;
+    font-weight: 500;
+    opacity: .6
+}
+
+.upOn span {
+    opacity: .4
+}
+
+.del, .home {
+    position: relative;
+    left: 50%;
+    transform: translateX(-50%);
+    transition: 1s ease;
+    cursor: pointer;
+    margin-top: 50px;
+}
+
+.del .in {
+    background: linear-gradient(100deg, #e47878, #ff7979);
+    box-shadow: 0px 0px 20px 0px #fe535357;
+}
+
+.home .in {
+    background: linear-gradient(30deg, #74adff, #7f94ff);
+    box-shadow: 0px 0px 20px 0px #7653fe33;
+}
+
+.del .in, .home .in {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    border-radius: 3px;
+    padding: 8px 20px;
+    display: flex;
+}
+
+.del svg, .home svg {
+    width: 20px;
+    height: 100%;
+    margin-right: 10px;
+    pointer-events: none;
+}
+
+.del span, .home span {
+    color: #fff;
+    font-family: var(--font2);
+    pointer-events: none;
+}
+
+main.deleted .fileIcon:hover {
+    opacity: 1;
+}
+main.deleted .del, main:not(.deleted) .home  {
+    display: none;
+}
+main.deleted .fileIcon {
+    opacity: .5;
+}
+
+main.deleted .file {
+    filter: grayscale(1);
+}
+
+main.deleted .file:hover {
+    filter: grayscale(0);
+}
+
+main.deleted .upOn, main.deleted .info p {
+    text-decoration: line-through;
+}
+@keyframes lineAn {
+    from {
+        opacity: 0;
+        left: -500px;
+        width: 20%;
+    }
+}
+main.deleted .file:after {
+    animation: lineAn .2s ease;
+    position: absolute;
+    content: "";
+    top: 60%;
+    right: 0;
+    width: 80%;
+    border-top: 10px solid;
+    border-color: inherit;
+    transform: rotate(-5deg);
+    width: 70%;
+    border-radius: 100%;
+    left: 150px;
+}
+
+@media screen and (max-width:1020px) {
+    main.deleted .file:after {
+        left: 0;
+        width: 100%;
+    }
+}
+
+@media screen and (max-width:830px) {
+    .fileIcon {
+        width: 210px;
+    }
+}
+
+@media screen and (max-width:430px) {
+    header nav>ul {
+        display: none
+    }
+    .menu {
+        display: block
+    }
+}
+
+@media screen and (max-width:540px) {
+    header .logoText, header .logoText span {
+        display: none
+    }
+    main {
+        margin: 50px 5%
+    }
+}
+
+@media screen and (max-width:650px) {
+    header .logoText svg {
+        width: 28px;
+        height: 28px;
+        position: relative;
+        bottom: -5px
+    }
+    header .logoText, header .logoText span {
+        font-size: 25px
+    }
+    nav {
+        top: 6px
+    }
+    main.deleted .file:after {
+        left: 0;
+        width: calc(100% + 30px);
+        z-index: 3000;
+        left: -10px;
+        border-radius: 0;
+    }
+}
+
+@media screen and (max-width:700px) {
+    main {
+        margin: 50px
+    }
+}
