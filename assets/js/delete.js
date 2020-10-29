@@ -1,13 +1,3 @@
-const sock = io.connect(window.location.origin);
-
-getI().then(I => {
-    if (!I) return window.location.href = '/';
-    sock.emit('I', { I: I, n: window.location.pathname.split('/')[2] }, outp => {
-        if (!outp || outp.userIP && outp.userIP !== I) return window.location.href = '/forbidden/2';
-        document.body.style.display = 'revert';
-    });
-});
-
 var closeBtn = (el) => {
     try { el.animate({ bottom: '-50px', opacity: '0' }, { duration: 500, easing: 'cubic-bezier(.68, -0.55, .27, 1.55)' }).onfinish = () => el.remove(); }
     catch { };
@@ -25,7 +15,6 @@ var closeBtn = (el) => {
 };
 
 window.onload = () => {
-    document.querySelectorAll('.dt').forEach(el => el.innerText = new Date(el.innerText).toDateString());
     let menuBox = document.querySelector('.menuBox'),
         links = document.querySelector('.links'),
         closeMenuBox = () => {
@@ -62,15 +51,23 @@ window.onload = () => {
         };
 
     document.querySelector('.del').addEventListener('click', (el) => {
-        getI().then(p => {
-            if (!p) return notify("Couldn't get your IP address.");
-            sock.emit('del', { i: p, n: window.location.pathname.split('/')[2] }, outp => {
-                if (outp.code === 200) {
-                    document.querySelector('main').classList.add('deleted');
-                    document.querySelector('.topPart h2').innerText = 'File has been deleted';
-                    el.target.classList.replace('del', 'home');
-                } else notify(outp.msg);
-            });
+        let name = `/del/${window.location.pathname.split('/')[2]}`;
+        $.ajax({
+            type: "POST",
+            url: name,
+            data: 'Hi backend!',
+            processData: false,
+            contentType: false,
+            success: function (r) {
+                document.querySelector('main').classList.add('deleted');
+                document.querySelector('.topPart h2').innerText = 'File has been deleted';
+                el.target.classList.replace('del', 'home');
+            },
+            error: function (e) {
+                // notify(`Error ${e.status} (${e.statusText}) - ${e.responseText}`);
+                // console.log(`Error ${e.status} (${e.statusText}) - ${e.responseText}`);
+                console.log(e);
+            }
         });
     });
 
@@ -93,6 +90,4 @@ window.onload = () => {
         }
         else if (menuBox && menuBox.classList.contains('active') && el.target !== menuBox && !el.target.closest('.menuBox')) closeMenuBox();
     });
-
-    sock.on('notify', outp => { notify(outp.msg, outp.type) });
 };

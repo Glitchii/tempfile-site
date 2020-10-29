@@ -5,10 +5,8 @@
     <title>Delete - QuickFile</title>
     <link rel="icon" href="/assets/imgs/icon.png">
     <link rel="stylesheet" href="/assets/styles/delete.css">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.3.0/socket.io.slim.js"></script>
-    <script src="/assets/js/global.js"></script>
-    <script src="/assets/js/delete.js"></script>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="/assets/js/delete.js"></script>
 </head>
 
 <body>
@@ -112,7 +110,7 @@
             </div>
         </div>
         <div class="other">
-            <p class="upOn">Expiring on <span class="dt"><%= uploadDate %></span></p>
+            <p class="upOn">Expiring on <span class="dt"><%= uploadDate.toDateString() %></span></p>
             <div class="sep"></div>
             <div class="infos">
                 <h2 class="infoTitle">File Info</h2>
@@ -123,8 +121,8 @@
                 <% } %> 
                 <div class="info length"><p>File length:</p><p><%= length %></p></div>
                 <div class="info type"><p>File type:</p><p><%= contentType %></p></div>
-                <div class="info"><p>Upload date:</p><p class="dt"><%= uploadDate %></p></div>
-                <div class="info"><p>Expires on:</p><p class="dt"><%= uploadDate %></p></div>
+                <div class="info"><p>Upload date:</p><p class="dt"><%= uploadDate.toDateString() %></p></div>
+                <div class="info"><p>Expires on:</p><p class="dt"><%= uploadDate.toDateString() %></p></div>
             </div>
             <div class="del">
                 <div class="in">

@@ -20,7 +20,6 @@
 
 body {
     padding-bottom: 70px;
-    display: none;
 }
 
 ::-webkit-scrollbar {
@@ -261,8 +260,7 @@ p.warn {
     0% {
         opacity: 0;
         top: 30px
-    }
-    50% {
+    } 50% {
         opacity: 1;
         top: 50px
     }
@@ -505,9 +503,11 @@ p.warn {
 main.deleted .fileIcon:hover {
     opacity: 1;
 }
+
 main.deleted .del, main:not(.deleted) .home  {
     display: none;
 }
+
 main.deleted .fileIcon {
     opacity: .5;
 }
@@ -523,6 +523,7 @@ main.deleted .file:hover {
 main.deleted .upOn, main.deleted .info p {
     text-decoration: line-through;
 }
+
 @keyframes lineAn {
     from {
         opacity: 0;
@@ -530,6 +531,7 @@ main.deleted .upOn, main.deleted .info p {
         width: 20%;
     }
 }
+
 main.deleted .file:after {
     animation: lineAn .2s ease;
     position: absolute;

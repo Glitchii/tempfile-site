@@ -28,7 +28,6 @@ var fixed = false, min = new Date(), max = new Date((new Date).setMonth((new Dat
         return new Date(local(obj)) > max || new Date(local(obj)) < min ? null : obj;
     };
 
-const sock = io.connect(window.location.origin);
 window.onload = () => {
     let menuBox = document.querySelector('.menuBox'),
         links = document.querySelector('.links'),
@@ -92,7 +91,7 @@ window.onload = () => {
         };
 
     ['.closeBtn', '.ov'].forEach(el => document.querySelector(el).addEventListener('click', () => closeLinksBox()));
-    
+
     document.querySelectorAll('.menu ul li').forEach(el => {
         el.addEventListener('click', e => {
             let a = e.target.querySelector('a');
@@ -166,57 +165,47 @@ window.onload = () => {
         submitBtn = btnsInner.querySelector('.submit'),
         inp = document.querySelector('.urls input');
 
-        document.querySelector('.linkBtn:first-child').addEventListener('click', () => {
-            inp.select();
-            inp.setSelectionRange(0, 99999);
-            document.execCommand("copy");
-        });
-        document.querySelector('.linkBtn:last-child').addEventListener('click', (el) =>
-            window.location.href = el.target.closest('.urls').querySelector('.btn input').value.replace('/file/', '/del/'));
-        
+    document.querySelector('.linkBtn:first-child').addEventListener('click', () => {
+        inp.select();
+        inp.setSelectionRange(0, 99999);
+        document.execCommand("copy");
+    });
+    document.querySelector('.linkBtn:last-child').addEventListener('click', (el) =>
+        window.location.href = el.target.closest('.urls').querySelector('.btn input').value.replace('/file/', '/del/'));
+
 
     $("form").submit(function (e) {
         e.preventDefault();
-        if (uploadInput.files.length === 0) return notify('You must first add a file');
-        getI().then(IP => {
-            if (!IP) return notify('Failed to get your IP which is required');
-            load();
-            let data = { dateTime: local(timeGui.value), userIP: IP }, name = btnsInner.querySelector('.btn.name input').value,
-                ip = Array.from(document.querySelector('.btns .inner').querySelectorAll('.btn.ipBlackList input')).filter(el => el.value).map(el => el.value.trim()),
-                ip2 = Array.from(document.querySelector('.btns .inner').querySelectorAll('.btn.ipWhiteList input')).filter(el => el.value).map(el => el.value.trim()),
-                limit = btnsInner.querySelector('.btn.limit input').value, pass = btnsInner.querySelector('.btn.pass input').value;
+        if (uploadInput.files.length === 0) return notify('You must first add a file'); load();
+        let name = btnsInner.querySelector('.btn.name input').value, data = { dateTime: local(timeGui.value) }
+            ip = Array.from(document.querySelector('.btns .inner').querySelectorAll('.btn.ipBlackList input')).filter(el => el.value).map(el => el.value.trim()),
+            ip2 = Array.from(document.querySelector('.btns .inner').querySelectorAll('.btn.ipWhiteList input')).filter(el => el.value).map(el => el.value.trim()),
+            limit = btnsInner.querySelector('.btn.limit input').value, pass = btnsInner.querySelector('.btn.pass input').value;
 
-            if (ip.length > 0) data.ip = ip;
-            if (ip2.length > 0) data.ip2 = ip2;
-            if (limit && limit > 0) data.limit = limit;
-            if (pass) data.pass = pass;
-            if (name) data.name = name;
+        if (ip.length > 0) data.ip = ip;
+        if (ip2.length > 0) data.ip2 = ip2;
+        if (limit && limit > 0) data.limit = limit;
+        if (pass) data.pass = pass;
+        if (name) data.name = name;
 
-            $.ajax({
-                type: "POST",
-                url: `/upload/${btoa(JSON.stringify(data))}`,
-                data: new FormData(this),
-                processData: false,
-                contentType: false,
-                success: function (r) {
-                    inp.value = `${window.location.protocol}//${window.location.host}${r.url}`;
-                    document.body.classList.add('showLinks');
-                    loaded(); reset(); inp.select();
-
-                },
-                error: function (e) {
-                    if (e.status === 417) notify(e.responseText || e.statusText);
-                    else if (e.status === 0) notify("Upload failed, did you upload a folder?");
-                    else console.error("Error", `${e.status} (${e.statusText}) - ${e.responseText}`);
-                    loaded();
-                }
-            });
-        }).catch(e => {
-            console.error(e);
-            notify('There was an error, check console');
+        $.ajax({
+            type: "POST",
+            url: `/upload/${btoa(JSON.stringify(data))}`,
+            data: new FormData(this),
+            processData: false,
+            contentType: false,
+            success: function (r) {
+                inp.value = `${window.location.protocol}//${window.location.host}${r.url}`;
+                document.body.classList.add('showLinks');
+                loaded(); reset(); inp.select();
+            },
+            error: function (e) {
+                if (e.status === 417) notify(e.responseText || e.statusText);
+                else if (e.status === 0) notify("Upload failed, did you upload a folder?");
+                else console.error("Error", `${e.status} (${e.statusText}) - ${e.responseText}`);
+                loaded();
+            }
         });
-
-
     });
 
     submitBtn.addEventListener('click', () => submitInput.click());
@@ -267,6 +256,4 @@ window.onload = () => {
             previewFile(items.files);
         };
     };
-
-    sock.on('notify', outp => { notify(outp.msg, outp.type) });
 };
