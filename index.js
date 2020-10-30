@@ -148,5 +148,5 @@ app.route("/del/:name?")
     .get((req, res) => del(req, res));
 
 app.get("/forbidden/:code?", (req, res) => res.render('403', { code: req.params.code }));
-app.get('/contact', (req, res) => res.redirect('mailto:darlionthesis@gmail.com')); // My email if you want to get in touch :)
+app.get('/contact', (req, res) => res.redirect('mailto:lorem.ipsum@mailsire.com'));
 app.use((req, res, next) => res.status(404).render("404"));
