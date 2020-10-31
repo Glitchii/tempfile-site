@@ -1,4 +1,4 @@
-var fixed = false, min = new Date(), max = new Date((new Date).setMonth((new Date).getMonth() + 1)), local = d => { return d.toLocaleString().replace(/(\d+)\/(\d+)\/(\d+), (\d+):(\d+):(\d+)/g, '$3-$2-$1T$4:$5'); },
+var fixed = false, local = d => { return d.toLocaleString().replace(/(\d+)\/(\d+)\/(\d+), (\d+):(\d+):(\d+)/g, '$3-$2-$1T$4:$5'); }, min = local(new Date()), max = local(new Date((new Date).setMonth((new Date).getMonth() + 1))),
     closeBtn = (el) => {
         try { el.animate({ bottom: '-50px', opacity: '0' }, { duration: 500, easing: 'cubic-bezier(.68, -0.55, .27, 1.55)' }).onfinish = () => el.remove(); }
         catch { };
@@ -21,7 +21,7 @@ var fixed = false, min = new Date(), max = new Date((new Date).setMonth((new Dat
                 str.endsWith('h') ? ((new Date).setHours((new Date).getHours() + parseInt(str.replace(/\D+$/, '')))) :
                     str.endsWith('d') ? ((new Date).setDate((new Date).getDate() + parseInt(str.replace(/\D+$/, '')))) :
                         str.endsWith('w') ? ((new Date).setDate((new Date).getDate() + (7 * parseInt(str.replace(/\D+$/, ''))))) :
-                            str.endsWith('mo') ? ((new Date).setMonth((new Date).getMonth() + parseInt(str.replace(/\D+$/, '')))) :
+                            str.endsWith('mo') ? ((new Date).setMonth((new Date).getMonth() + 1)) :
                                 !!new Date(str).getDate() ? new Date(new Date(str).setMinutes(new Date(str).getMinutes() + 1)) :
                                     null
         );
@@ -135,8 +135,7 @@ window.onload = () => {
         window.fixed = false;
     };
 
-    let dTChanger = () => { // Update datetime input when time changes
-        window.setTimeout(dTChanger, (60 - new Date().getSeconds()) * 1000);
+    let dTChanger = () => {
         if (!window.fixed) {
             timeGui.value = local(dateFromValue(sel.querySelector('option[selected]').value));
             let cust = document.querySelectorAll('option.cust');
