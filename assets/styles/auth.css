@@ -1,0 +1,587 @@
+@import url(https://fonts.googleapis.com/css?family=Heebo|Ubuntu:700&display=swap);
+:root {
+    --font1: 'Heebo', sans-serif;
+    --font2: 'Ubuntu', sans-serif;
+    --font3: Montserrat, sans-serif;
+    --font4: "Open Sans", "Helvetica Neue", "Segoe UI", "Calibri", "Arial", sans-serif
+}
+
+*, ::after, ::before, body, html {
+    margin: 0;
+    border: 0;
+    box-sizing: border-box;
+    scrollbar-width: thin;
+    outline: 0;
+    font-family: var(--font1);
+    text-decoration: none;
+    color: #273036;
+    -webkit-tap-highlight-color: transparent
+}
+
+::-webkit-scrollbar {
+    width: 7px
+}
+
+::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0)
+}
+
+::-webkit-scrollbar-thumb {
+    background: #ccc
+}
+
+a:hover {
+    color: #538ce8;
+    transition: .25s ease
+}
+
+ul {
+    padding-inline-start: 0
+}
+
+header {
+    margin: auto
+}
+
+@keyframes uploadBtnAn {
+    from {
+        opacity: 0;
+        transform: translateY(100%)
+    }
+}
+
+header .logoText, header .logoText span {
+    font-size: 28px;
+    font-family: var(--font2)
+}
+
+header .logoText svg path {
+    fill: #273036
+}
+
+header .logoText svg {
+    width: 33px;
+    height: 33px;
+    position: relative;
+    bottom: -5px
+}
+
+header .logo .item {
+    display: inline-block
+}
+
+header .logo {
+    position: relative
+}
+
+header {
+    padding: 10px 5%;
+    display: flex
+}
+
+header li {
+    list-style: none;
+    display: inline-block
+}
+
+header header nav>ul li {
+    display: inline-block
+}
+
+header nav>ul li~li {
+    padding: 0 10px
+}
+
+header nav {
+    position: absolute;
+    right: 10px;
+    font-size: 15px;
+    padding: 10px 10px 10px 0
+}
+
+header .item {
+    z-index: 5
+}
+
+@keyframes mainAn {
+    from {
+        opacity: 0;
+    }
+}
+
+@keyframes centerAn {
+    from {
+        opacity: 0;
+    }
+}
+
+main {
+    animation: mainAn 1s ease;
+    transition: 1s ease;
+    position: absolute;
+    top: 10%;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 100%;
+}
+
+main>svg {
+    width: 400px;
+    position: relative;
+    left: 50%;
+    transform: translate(-50%);
+    margin: 0 10px 5% 10px;
+}
+
+.main {
+    transition: 1s ease;
+    width: 80%;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    position: relative;
+    top: 20%;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+h2:first-of-type {
+    margin-bottom: 10px;
+}
+
+h2 {
+    font-family: Ubuntu;
+    transition: 1s ease;
+    font-size: 30px;
+}
+
+@keyframes leftPartAn {
+    from {
+        opacity: 0;
+    }
+}
+
+.leftPart {
+    animation: leftPartAn 5s ease;
+}
+
+.leftPart h2:first-of-type {
+    margin: 10px 0 30px 0;
+}
+
+.rightPart h2 {
+    font-size: 200px;
+    display: flex;
+    justify-content: center;
+}
+
+@keyframes inputAn {
+    from {
+        opacity: 0
+    }
+}
+
+@keyframes comeUp {
+    from {
+        bottom: -50px
+    }
+}
+
+@keyframes addMoreAn {
+    from {
+        opacity: 0
+    }
+}
+
+.menu {
+    position: relative;
+    z-index: 2;
+    display: none
+}
+
+@keyframes menuBoxAn {
+    0% {
+        opacity: 0;
+        top: 30px
+    }
+    50% {
+        opacity: 1;
+        top: 50px
+    }
+}
+
+.menu .menuBox:not(.active) {
+    display: none
+}
+
+.menu .menuBox {
+    animation: menuBoxAn .7s ease;
+    padding: 10px;
+    border-radius: 5px;
+    box-shadow: 0 0 20px 5px rgb(62 41 82 / 33%);
+    width: 300px;
+    top: 40px;
+    position: relative;
+    background: linear-gradient(0deg, #272e36, #272a36)
+}
+
+.menu ul li:hover a {
+    color: #539afe;
+}
+
+.menu ul li a {
+    color: #fff
+}
+
+.bottomBtns a {
+    padding-left: 5px;
+    position: relative;
+}
+
+.bottomBtns a svg {
+    height: 25px;
+    width: 25px;
+    position: relative;
+    margin-top: 20px
+}
+
+.menu ul li {
+    display: block;
+    padding-left: 5px;
+    cursor: pointer
+}
+
+.menu .lines {
+    cursor: pointer;
+    transform: scale(-1);
+    position: absolute;
+    right: 0;
+    top: 0
+}
+
+.menu .lines div:first-of-type {
+    width: 25px
+}
+
+.menu .lines div:nth-of-type(2) {
+    width: 15px
+}
+
+.menu .lines div:last-of-type {
+    width: 22px
+}
+
+.menu .lines:hover div {
+    width: 25px
+}
+
+.menu .lines div {
+    user-select: none;
+    pointer-events: none;
+    height: 3px;
+    background: #273036;
+    margin: 5px;
+    transition: .5s ease
+}
+
+.notification .content {
+    color: #fff;
+    border-radius: 4px;
+    display: flex;
+    text-align: center;
+    padding: 5px 15px;
+    box-shadow: 0px 0px 20px 5px rgba(0, 0, 0, 0.055);
+}
+
+.notification {
+    display: none;
+    justify-content: center;
+    transition: 1s ease;
+    top: 0;
+    width: 100%;
+    position: fixed;
+    display: flex;
+    justify-content: center;
+    transition: .5s ease;
+    height: 100%;
+    width: 100%;
+    position: fixed;
+    z-index: 10;
+    pointer-events: none;
+}
+
+@keyframes comeUp {
+    from {
+        top: -50px;
+    }
+}
+
+.notification .content p {
+    user-select: none;
+}
+
+.notification .content {
+    color: #fff !important;
+    border-radius: 4px;
+    text-align: center;
+    display: flex;
+    padding: 5px 15px;
+    box-shadow: 0px 0px 20px 5px rgba(0, 0, 0, 0.055);
+    font-family: var(--font1)!important;
+    animation: comeUp .5s cubic-bezier(.68, -0.55, .27, 1.55);
+    opacity: 0;
+    position: absolute;
+    transition: 1s ease;
+    top: 10px;
+    margin: 0 10px;
+    box-shadow: 0px 0px 20px 5px rgb(78 79 80 / 6%);
+    pointer-events: all;
+}
+
+.notification .content:not(:hover) .notifCloseBtn {
+    display: none;
+}
+
+@keyframes notifCloseBtnAn {
+    from {
+        opacity: 0;
+        margin-left: 0;
+    }
+}
+
+.notifCloseBtn {
+    margin: auto 10px;
+    padding: 0 5px;
+    margin-right: 0;
+    border-radius: 5px;
+    cursor: pointer;
+    animation: notifCloseBtnAn .5s ease;
+}
+
+.notifCloseBtn svg {
+    width: 15px;
+    height: 15px;
+    filter: invert(1);
+    transform: rotate(45deg);
+    top: 2px;
+    position: relative;
+    pointer-events: none;
+}
+
+.notification .content img {
+    display: flex;
+    text-align: center;
+    position: relative;
+    top: 3px;
+}
+
+.notification .success {
+    background: linear-gradient(to right, #61d3c3, #74e1a5);
+}
+
+.notification .normal {
+    background: linear-gradient(to left, #9c7ca6, #7d7699);
+}
+
+.notification .normal img {
+    filter: brightness(1000);
+}
+
+.notification .content p {
+    margin-left: 6px;
+    margin-top: 2px;
+    font-family: var(--font1);
+    color: #fff;
+}
+
+.home, .login {
+    position: relative;
+    left: 50%;
+    transform: translateX(-50%);
+    transition: 1s ease;
+    cursor: pointer;
+    margin-top: 50px;
+    padding: 9px 10px 9px 17px;
+}
+
+.home .in, .login .in {
+    background: linear-gradient(30deg, #74adff, #7f94ff);
+    box-shadow: 0 0 20px 0 #5368fe33
+}
+
+.login .in {
+    background: #7f94ff;
+    padding: 9px 13px;
+}
+
+.home .in, .login .in {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    border-radius: 3px;
+    padding: 8px 20px;
+    display: flex
+}
+
+.btns {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr 1fr;
+}
+
+.btn .in {
+    min-height: 35px;
+}
+
+.home {
+    grid-column: 2;
+}
+
+.home svg, .login svg {
+    width: 20px;
+    height: 100%;
+    margin-right: 10px;
+    pointer-events: none
+}
+
+.login svg {
+    transform: rotate(180deg) translate(-2px, -2px);
+    margin-left: 5px;
+    position: relative;
+    width: 18px;
+}
+
+.home span, .login span {
+    color: #fff;
+    font-family: var(--font2);
+    pointer-events: none
+}
+
+.leftPart a {
+    color: #446eb1;
+}
+
+.center {
+    animation: centerAn 2s ease;
+    transition: 1s ease;
+    width: 80%;
+    position: relative;
+    top: 20%;
+    left: 50%;
+    transform: translateX(-50%);
+    text-align: center;
+}
+
+.inp {
+    display: flex;
+    font-size: 15px;
+    width: 100%;
+    margin: auto;
+    margin-top: 70px;
+    justify-content: center;
+}
+
+.inp .icon {
+    width: 40px;
+}
+
+.inp .input, .inp p {
+    padding: 10px 10px 10px 5px;
+    font-size: 15px;
+    width: 100%;
+    margin-left: 5px;
+    width: 50%;
+    transition: 1s ease;
+}
+
+.sep {
+    background: linear-gradient(to right, transparent, #cfcfcf, transparent);
+    height: 1px;
+    display: flex;
+    font-size: 15px;
+    justify-content: center;
+    margin-top: 10px;
+    margin: 10px auto 50px auto;
+}
+
+@keyframes lineAn {
+    from {
+        opacity: 0;
+        left: -500px;
+        width: 20%
+    }
+}
+
+@media screen and (max-width:835px) {
+    .rightPart h2 {
+        font-size: 130px;
+        font-size: 130px;
+        margin: 20px auto;
+    }
+    .inp .input, .inp p {
+        width: 100%;
+    }
+    .btns {
+        grid-template-columns: 1fr 1fr;
+        grid-row: auto;
+    }
+    .home {
+        grid-column: auto;
+    }
+}
+
+@media screen and (max-width:650px) {
+    header .logoText svg {
+        width: 28px;
+        height: 28px;
+        position: relative;
+        bottom: -5px
+    }
+    header .logoText, header .logoText span {
+        font-size: 25px
+    }
+    nav {
+        top: 6px
+    }
+    .main {
+        display: flex;
+        flex-direction: column-reverse;
+    }
+    main>svg {
+        width: 300px;
+    }
+}
+
+@media screen and (max-width:540px) {
+    header .logoText, header .logoText span {
+        display: none
+    }
+}
+
+@media screen and (max-width:430px) {
+    header nav>ul {
+        display: none
+    }
+    .menu {
+        display: block
+    }
+    .center {
+        width: 90%;
+    }
+    .inp .input, .inp p {
+        width: 70%;
+    }
+}
+
+@media screen and (max-width:350px) {
+    main>svg {
+        width: 90%;
+    }
+    .rightPart h2 {
+        font-size: 100px;
+    }
+    .btns {
+        display: block;
+    }
+    .home {
+        display: none;
+    }
+}
