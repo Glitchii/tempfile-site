@@ -2,7 +2,7 @@ var ua = navigator.userAgent.match(/\sEdg\w\//),
     closeBtn = (el) => {
         try {
             if (ua) return el.remove();
-            el.animate({ bottom: '-50px', opacity: '0' }, { duration: 500, easing: 'cubic-bezier(.68, -0.55, .27, 1.55)' }).onfinish = () => el.remove();
+            el.animate({ top: '-50px', opacity: '0' }, { duration: 500, easing: 'cubic-bezier(.68, -0.55, .27, 1.55)' }).onfinish = () => el.remove();
         } catch { };
     }, notify = (text, type, ms) => {
         text = text || "Hello world", type = type || 1, ms = ms || 5000;
@@ -67,31 +67,17 @@ window.onload = () => {
                 easing: 'ease'
             });
         }
-        console.log({
-            name: window.location.pathname.split('/')[2],
-            pass: input.value
-        });
 
-        $.ajax({
-            type: "POST",
-            url: `/auth/${btoa(JSON.stringify({ name: window.location.pathname.split('/')[2], pass: input.value }))}`,
-            data: null,
-            processData: false,
-            contentType: false,
-            success: function (r) {
-                window.location.reload();
-            },
-            error: function (e) {
-                if (e.status === 401) return notify('Incorrect password');
-                notify(`Error, ${e.status} ${e.statusText}`);
-            }
-        });
-
+        fetch("/auth", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: `{ "data": "${input.value}" }`
+        })
+            .then(res => res.status === 200 ? window.location.reload() : notify(res.status === 401 ? 'Incorect password' : `Error—${res.statusText} (${res.status})`));
     };
 
     document.querySelector('.login').addEventListener('click', submit)
     input.addEventListener('keypress', (k) => {
         if (k.code == 'Enter') submit();
     });
-
 };

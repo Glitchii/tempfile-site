@@ -131,12 +131,12 @@ app.get("/file/:name", async (req, res) => {
     }
 });
 
-app.post("/auth/:data", async (req, res) => {
+app.post("/auth/", async (req, res) => {
     try {
-        let data = JSON.parse(Buffer.from(req.params.data, 'base64').toString('ascii')), find = async (name) => { return (await files.findOne({ filename: name })) }
-        find = (await find(data.name)) || (await find({ $regex: `${data.name}(?=\.)` })) || null;
+        let fn = req.headers.referer.split('/')[req.headers.referer.split('/').length - 1], find = (await gfs.find({ filename: fn }).toArray())[0] || (await gfs.find({ filename: { $regex: `${fn}(?=\.)` } }).toArray())[0];
         if (!find) return res.status(404);
-        bcrypt.compare(data.pass, find.pass, async (err, resp) => {
+        
+        bcrypt.compare(req.body.data, find.pass, async (err, resp) => {
             if (!resp) return res.status(401).send('Incorect password');
             req.cookies.set('_yum', await (bcrypt.hash(find.pass, 10)), { expires: new Date(new Date().setSeconds(new Date().getSeconds() + 15)) });
             res.status(200).send('Done');
@@ -148,16 +148,18 @@ app.post("/auth/:data", async (req, res) => {
 });
 
 let del = async (req, res) => {
-    if (!req.params.name) return res.render('deleteSearch');
-    let find = async (name) => { return (await gfs.find({ filename: name }).toArray())[0]; }, resp = res, ip = (req.headers['x-forwarded-for'] || req.connection.remoteAddress).split(',')[0];
-    find = (await find(req.params.name)) || (await find({ $regex: `${req.params.name}(?=\.)` }));
+    let filename = req.params.name;
+    if (!req.params.name && req.method == 'POST') filename = req.headers.referer.split('/')[req.headers.referer.split('/').length - 1];
+    else if (!req.params.name) return res.render('deleteSearch');
+
+    let find = (await gfs.find({ filename: filename }).toArray())[0] || (await gfs.find({ filename: { $regex: `${filename}(?=\.)` } }).toArray())[0], resp = res, ip = (req.headers['x-forwarded-for'] || req.connection.remoteAddress).split(',')[0];
     if (!find) return res.status(404).render('error', { type: 404 });
     if (find.userIP !== ip) return req.method == "GET" ? res.status(403).render('error', { code: 2, type: 403 }) : res.status(403).send('You have no access to delete this file');
     if (req.method == "GET") return res.render('delete', find);
 
     gfs.delete(ObjectId(find._id), (err, res) => {
         if (err) req.method == "GET" ? resp.status(500).render('error', { code: 1, type: 500, text: 'There was an error deleting file' }) : resp.status(500).send('There was an error deleting file');
-        return resp.status(200).redirect('/');
+        return req.method == "GET" ? resp.status(200).redirect('/') : resp.status(200).send('File has been deleted');
     });
 };
 
