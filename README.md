@@ -1,4 +1,4 @@
-# QuickFile website
+# TempFile website
 
 A website for temporarily storing files that will be deleted in chosen time or date.
 Let's say sometime you need to share a file to someone or to another device and that's all therefore don't need the file to stay on the website after it's downloaded from the other device or at a certain time.
