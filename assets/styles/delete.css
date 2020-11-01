@@ -260,7 +260,8 @@ p.warn {
     0% {
         opacity: 0;
         top: 30px
-    } 50% {
+    }
+    50% {
         opacity: 1;
         top: 50px
     }
@@ -437,6 +438,10 @@ p.warn {
     color: #3d3652
 }
 
+.infos .info.note p:first-of-type {
+    padding-right: 0;
+}
+
 .infos .info p:last-of-type {
     opacity: .7;
     color: #60707b
@@ -504,7 +509,7 @@ main.deleted .fileIcon:hover {
     opacity: 1;
 }
 
-main.deleted .del, main:not(.deleted) .home  {
+main.deleted .del, main:not(.deleted) .home {
     display: none;
 }
 

@@ -8,6 +8,6 @@ You can set it to allow only a certain IP, to accept all except one, set downloa
 ## Helpful links
 https://github.com/aheckmann/gridfs-stream  
 https://mongoosejs.com/docs/api.html  
-http://mongodb.github.io/node-mongodb-native/3.1/api/GridFSBucket.html 
+http://mongodb.github.io/node-mongodb-native/3.1/api/GridFSBucket.html  
 https://github.com/devconcept/multer-gridfs-storage  
 https://github.com/aheckmann/gridfs-stream

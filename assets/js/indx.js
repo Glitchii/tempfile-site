@@ -177,15 +177,15 @@ window.onload = () => {
         e.preventDefault();
         if (uploadInput.files.length === 0) return notify('You must first add a file'); load();
         let name = btnsInner.querySelector('.btn.name input').value, data = { dateTime: local(timeGui.value) }
-            ip = Array.from(document.querySelector('.btns .inner').querySelectorAll('.btn.ipBlackList input')).filter(el => el.value).map(el => el.value.trim()),
+        ip = Array.from(document.querySelector('.btns .inner').querySelectorAll('.btn.ipBlackList input')).filter(el => el.value).map(el => el.value.trim()),
             ip2 = Array.from(document.querySelector('.btns .inner').querySelectorAll('.btn.ipWhiteList input')).filter(el => el.value).map(el => el.value.trim()),
             limit = btnsInner.querySelector('.btn.limit input').value, pass = btnsInner.querySelector('.btn.pass input').value;
 
-        if (ip.length > 0) data.ip = ip;
-        if (ip2.length > 0) data.ip2 = ip2;
-        if (limit && limit > 0) data.limit = limit;
+        if (limit) data.limit = limit;
         if (pass) data.pass = pass;
         if (name) data.name = name;
+        if (ip.length > 0) data.ip = ip;
+        if (ip2.length > 0) data.ip2 = ip2;
 
         $.ajax({
             type: "POST",

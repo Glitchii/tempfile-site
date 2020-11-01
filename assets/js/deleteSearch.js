@@ -2,7 +2,6 @@ window.onload = () => {
     document.querySelectorAll('.dt').forEach(el => el.innerText = new Date(el.innerText).toDateString());
     let inp = document.querySelector('main input'),
         menuBox = document.querySelector('.menuBox'),
-        links = document.querySelector('.links'),
         closeMenuBox = () => {
             menuBox.animate([
                 { top: '50px', opacity: '1', offset: .7 },
@@ -12,28 +11,6 @@ window.onload = () => {
                 easing: 'ease'
             })
                 .onfinish = () => menuBox.classList.remove('active');
-        }, load = (animate) => {
-            loader.style.display = 'revert';
-            if (animate) {
-                loader.animate([
-                    { transform: 'translate(-50%, -100px)', opacity: '0' },
-                    { transform: 'translate(-50%, 20px)' }
-                ], {
-                    duration: 500,
-                    easing: 'ease'
-                })
-                    .onfinish = () => loader.style.removeProperty('display');
-            };
-        }, loaded = (ms) => {
-            loader.animate([
-                { transform: 'translate(-50%, 50px)', opacity: '1', offset: .7 },
-                { transform: 'translate(-50%, -100px)', opacity: '0', offset: 1 }
-            ], {
-                duration: ms || 700,
-                easing: 'ease'
-            })
-                .onfinish = () => loader.style.removeProperty('display');
-
         };
     inp.focus();
     document.querySelector('.submit').addEventListener('click', () => {

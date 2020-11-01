@@ -127,7 +127,7 @@ input::placeholder {
     opacity: .2
 }
 
-@keyframes mainAn{
+@keyframes mainAn {
     from {
         opacity: 0;
         transform: translateY(0);
@@ -240,13 +240,13 @@ h2 {
     transition: .5s ease
 }
 
-.svg{
+.svg {
     position: absolute;
     left: 50%;
     transform: translate(-50%, -300px);
 }
 
-.svg svg{
+.svg svg {
     width: 250px;
     height: 100%;
 }
@@ -293,12 +293,14 @@ h2 {
     height: 100%;
     margin-right: 10px
 }
+
 .submit .in svg {
     width: 20px;
     transform: rotate(-90deg);
     margin-right: 10px;
     pointer-events: none;
 }
+
 @media screen and (max-width:430px) {
     header nav>ul {
         display: none

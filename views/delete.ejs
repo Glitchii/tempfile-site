@@ -94,9 +94,9 @@
     </div>
     <main>
         <div class="topPart">
-            <h2>Delete this file?</h2>
+            <h2><%= locals.pass ? "Delete the file?" : "Delete this file?" %> </h2>
             <div class="file">
-                <% if (contentType.startsWith('image/')) { %>
+                <% if (contentType.startsWith('image/') && !locals.pass) { %>
                     <img src="/file/<%= filename %>" alt="">
                 <% } else { %>
                     <div class="fileIcon">
@@ -123,6 +123,9 @@
                 <div class="info type"><p>File type:</p><p><%= contentType %></p></div>
                 <div class="info"><p>Upload date:</p><p class="dt"><%= uploadDate.toDateString() %></p></div>
                 <div class="info"><p>Expires on:</p><p class="dt"><%= uploadDate.toDateString() %></p></div>
+                <% if (contentType.startsWith('image/') && locals.pass) { %>
+                    <div class="info note"><p><b>Note:</b>&nbsp;Image is password protected</p><p class="dt">—Therefore invisible when added to any site</p></div>
+                <% } %>
             </div>
             <div class="del">
                 <div class="in">

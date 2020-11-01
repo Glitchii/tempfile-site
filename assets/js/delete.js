@@ -16,7 +16,6 @@ var closeBtn = (el) => {
 
 window.onload = () => {
     let menuBox = document.querySelector('.menuBox'),
-        links = document.querySelector('.links'),
         closeMenuBox = () => {
             menuBox.animate([
                 { top: '50px', opacity: '1', offset: .7 },
@@ -26,28 +25,6 @@ window.onload = () => {
                 easing: 'ease'
             })
                 .onfinish = () => menuBox.classList.remove('active');
-        }, load = (animate) => {
-            loader.style.display = 'revert';
-            if (animate) {
-                loader.animate([
-                    { transform: 'translate(-50%, -100px)', opacity: '0' },
-                    { transform: 'translate(-50%, 20px)' }
-                ], {
-                    duration: 500,
-                    easing: 'ease'
-                })
-                    .onfinish = () => loader.style.removeProperty('display');
-            };
-        }, loaded = (ms) => {
-            loader.animate([
-                { transform: 'translate(-50%, 50px)', opacity: '1', offset: .7 },
-                { transform: 'translate(-50%, -100px)', opacity: '0', offset: 1 }
-            ], {
-                duration: ms || 700,
-                easing: 'ease'
-            })
-                .onfinish = () => loader.style.removeProperty('display');
-
         };
 
     document.querySelector('.del').addEventListener('click', (el) => {
@@ -64,8 +41,7 @@ window.onload = () => {
                 el.target.classList.replace('del', 'home');
             },
             error: function (e) {
-                // notify(`Error ${e.status} (${e.statusText}) - ${e.responseText}`);
-                // console.log(`Error ${e.status} (${e.statusText}) - ${e.responseText}`);
+                notify(`Error ${e.status} ${e.statusText}`);
                 console.log(e);
             }
         });

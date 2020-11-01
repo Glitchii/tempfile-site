@@ -638,7 +638,6 @@ main {
     transition: .5s ease;
 }
 
-
 .links .inner .urls .icon {
     width: 20px;
     position: relative;
@@ -691,16 +690,17 @@ body:not(.showLinks) .links, body:not(.showLinks) .ov {
     display: none!important;
 }
 
-body.showLinks .ov{
+body.showLinks .ov {
     display: revert!important;
 }
 
-@keyframes linksAn{
+@keyframes linksAn {
     from {
         top: -600px;
         opacity: 0;
     }
 }
+
 .links {
     width: 100%;
     position: fixed;
@@ -712,7 +712,7 @@ body.showLinks .ov{
     animation: linksAn .5s ease;
 }
 
-@keyframes ovAn{
+@keyframes ovAn {
     from {
         opacity: 0;
     }
@@ -733,13 +733,13 @@ body.showLinks .ov{
     opacity: .5;
 }
 
-@keyframes loaderAn{
+@keyframes loaderAn {
     from {
         opacity: 0;
     }
 }
 
-.loader{
+.loader {
     position: fixed;
     width: 30px;
     height: 30px;
@@ -753,7 +753,7 @@ body.showLinks .ov{
     display: none;
 }
 
-.loader svg{
+.loader svg {
     width: 40px;
     height: 50px;
     position: absolute;
@@ -761,34 +761,40 @@ body.showLinks .ov{
     left: -5px;
 }
 
-.linkBtns{
+.linkBtns {
     display: flex;
     justify-content: center;
     margin-top: 5%;
 }
+
 .linkBtn {
     padding: 5px;
     cursor: pointer;
 }
-.linkBtn:first-child svg{
+
+.linkBtn:first-child svg {
     width: 20px;
 }
-.linkBtn:last-child svg{
+
+.linkBtn:last-child svg {
     width: 23px;
 }
+
 .linkBtn:last-child svg path {
     fill: #e67f78;
 }
+
 .linkBtn:first-child svg path {
     fill: #31ada9;
 }
 
-@keyframes closeBtnAn{
+@keyframes closeBtnAn {
     from {
         right: -30px;
         opacity: 0;
     }
 }
+
 .closeBtn {
     cursor: pointer;
     position: absolute;

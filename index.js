@@ -1,6 +1,7 @@
 require('dotenv').config();
 const ipRegex = require('ip-regex'),
     PORT = process.env.PORT || 2020,
+    bcrypt = require('bcrypt'),
     bodyParser = require('body-parser'),
     multer = require('multer'),
     GridFsStorage = require('multer-gridfs-storage'),
@@ -8,6 +9,7 @@ const ipRegex = require('ip-regex'),
     path = require('path'),
     express = require('express'),
     app = express(),
+    cookies = require('cookies'),
     mongoURI = process.env.DBURI,
     { MongoClient, ObjectId, GridFSBucket } = require('mongodb'),
     dbClient = new MongoClient(process.env.DBURI, { useUnifiedTopology: true, useNewUrlParser: true });
@@ -17,44 +19,38 @@ dbClient.connect().then(async (res, err) => {
     if (err) throw err;
     db = dbClient.db('db'), files = db.collection('data.files'), chunks = db.collection('data.chunks'), gfs = new GridFSBucket(db, { bucketName: "data" });
     if (!await files.indexExists('dateTime_1')) files.createIndex({ dateTime: 1 }, { expireAfterSeconds: 0 });
-
-    files.watch().on('change', next => {
-        if (next.operationType == 'delete') {
-            chunks.findOneAndDelete({ files_id: next.documentKey._id }, (err, res) => {
-                if (err) throw err;
-            })
-        }
-    });
+    if (!await chunks.indexExists('dateTime_1')) chunks.createIndex({ dateTime: 1 }, { expireAfterSeconds: 0 });
 });
 
 const chooseName = async (filename) => {
-        let name = filename ? filename.trim().toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-_\.]/g, '') : null,
-            findName = async (name) => {
-                let arr = (await files.find({ filename: { $regex: ('^' + name + '((-\\d+)?\\..+)?$') } }).toArray()).sort((x, y) => {
-                    let re = new RegExp(/(?<!-\d+)\.\w+$/g), name1 = x.filename.toLowerCase().replace(/\.\w+$/, ''), name2 = y.filename.toLowerCase().replace(/\.\w+$/, '');
-                    if (re.test(name1) || re.test(name2)) return 0;
-                    else {
-                        if (name1 < name2) return -1;
-                        if (name1 > name2) return 1;
-                    }
-                    return 0;
-                });
-                return arr.length !== 0 ? arr[arr.length - 1].filename.split('.')[0] : null;
-            };
+    let name = filename ? filename.trim().toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-_\.]/g, '') : null,
+        findName = async (name) => {
+            let arr = (await files.find({ filename: { $regex: ('^' + name + '((-\\d+)?\\..+)?$') } }).toArray()).sort((x, y) => {
+                let re = new RegExp(/(?<!-\d+)\.\w+$/g), name1 = x.filename.toLowerCase().replace(/\.\w+$/, ''), name2 = y.filename.toLowerCase().replace(/\.\w+$/, '');
+                if (re.test(name1) || re.test(name2)) return 0;
+                else {
+                    if (name1 < name2) return -1;
+                    if (name1 > name2) return 1;
+                }
+                return 0;
+            });
+            return arr.length !== 0 ? arr[arr.length - 1].filename.split('.')[0] : null;
+        };
 
-        if (name && await findName(name)) {
-            let found = await findName(name);
-            return (found.match(/-\d+$/g) ? `${found.slice(0, -2)}-${parseInt(found.slice(-1)) + 1}` : found + '-1');
-        } else if (!name) {
-            let min = 1, max = 6, check = async () => {
-                let name2 = [...Array(Math.floor(Math.random() * (max - min + min) + 1))].map(i => (~~(Math.random() * 36)).toString(36)).join('').toLowerCase();
-                if (await findName(name2)) await check();
-                return name2;
-            }
-            return await check();
-        } else return name;
-    }
+    if (name && await findName(name)) {
+        let found = await findName(name);
+        return (found.match(/-\d+$/g) ? `${found.slice(0, -2)}-${parseInt(found.slice(-1)) + 1}` : found + '-1');
+    } else if (!name) {
+        let min = 1, max = 6, check = async () => {
+            let name2 = [...Array(Math.floor(Math.random() * (max - min + min) + 1))].map(i => (~~(Math.random() * 36)).toString(36)).join('').toLowerCase();
+            if (await findName(name2)) await check();
+            return name2;
+        }
+        return await check();
+    } else return name;
+}
 
+app.use(cookies.express());
 app.use(bodyParser.json());
 app.use(methodOverrride('_method'));
 app.set('view engine', 'ejs');
@@ -68,10 +64,14 @@ app.post("/upload/:info", async (req, res) => {
     info.dateTime = date; info.userIP = (req.headers['x-forwarded-for'] || req.connection.remoteAddress).split(',')[0];
     if (!!!new Date(info.dateTime).getDate()) return res.status(417).send('Given date is invalid');
     if (info.limit && isNaN(info.limit)) return res.status(417).send('The given limit isn\'t a number');
-    if (info.limit && info.limit < 0) return res.status(417).send("Limit shouldn't be less than 0");
+    if (info.limit && info.limit < 1) return res.status(417).send("Limit invalid. Leave empty for unlimited");
     if (info.dateTime > max || info.dateTime < min) return res.status(417).send('The given duration is not accepted');
     if (info.dateTime < new Date()) return res.status(417).send('Looks like that time is alittle behind');
     if ((info.ip && info.ip.length > 4) || (info.ip2 && info.ip2.length > 4)) return res.status(417).send('I can only accept 4 IPs');
+    if (info.pass) bcrypt.hash(info.pass, 10, (err, hash) => {
+        if (err) return res.status(500).send('There was an error hashing password');
+        info.pass = hash;
+    });
 
 
     let checkIP = (ip, ip2) => {
@@ -103,35 +103,65 @@ app.post("/upload/:info", async (req, res) => {
         else if (err) return res.status(200).send(err);
 
         await files.findOneAndUpdate({ filename: req.file.filename }, { $set: info });
+        let chunk = await chunks.findOne({ file_id: req.file._id });
+        chunk.dateTime = date;
+        await chunks.findOneAndUpdate({ file_id: req.file._id }, { $set: chunk });
         return res.status(200).json({ url: `/file/${req.file.filename}` });
     });
 });
 
 app.get("/file/:name", async (req, res) => {
     try {
-        let find = async (name) => { return (await gfs.find({ filename: name }).toArray())[0]; }, ip = (req.headers['x-forwarded-for'] || req.connection.remoteAddress).split(',')[0];
-        find = (await find(req.params.name)) || (await find({ $regex: `${req.params.name}(?=\.)` }));
-        if (!find) return res.status(404).render('404');
-        if (find.ip && find.ip.includes(ip) || find.ip2 && !find.ip2.includes(ip)) return req.method == "GET" ? res.status(403).render('403', { code: 1 }) : res.status(403).send('You have no access to view this file');
+        let find = async (name) => { return (await files.findOne({ filename: name })) }, hds = req.headers, ip = (hds['x-forwarded-for'] || req.connection.remoteAddress).split(',')[0], cookie = req.cookies.get('_yum');
+        find = (await find(req.params.name)) || (await find({ $regex: `${req.params.name}(?=\.)` })) || null;
+        if (!find) return res.status(404).render('error', { type: 404 });
+        if (find.ip && find.ip.includes(ip) || find.ip2 && !find.ip2.includes(ip)) return req.method == "GET" ? res.status(403).render('error', { code: 1, type: 403 }) : res.status(403).send('You have no access to view this file');
+        if (find.pass) {
+            if (!cookie) return res.render('auth');
+            if (!await bcrypt.compare(find.pass, cookie)) return  req.method == "GET" ? res.status(403).render('error', { code: 1, type: 403 }) : res.status(403).send('You have no access to view this file');
+            req.cookies.set('_yum', false, { expires: Date.now() });
+        }
 
-        return gfs.openDownloadStreamByName(find.filename).pipe(res);
+        let stream = gfs.openDownloadStreamByName(find.filename).pipe(res);
+        stream.on('close', async () => {
+            if (find.limit && ((hds['sec-fetch-site'] === 'same-origin' && hds['sec-fetch-mode'] !== 'no-cors') || hds['sec-fetch-site'] !== 'same-origin')) {
+                find.limit--;
+                if (find.limit == 0) await files.findOneAndDelete({ _id: find._id });
+                else await files.findOneAndUpdate({ filename: req.params.name }, { $set: find });
+            }
+        });
     } catch (e) {
         console.log(e);
-        res.status(500).send('There was an internal server error');
+        req.method == "GET" ? res.status(500).render('error', { code: 1, type: 500 }) : res.status(500).send('There was an internal server error');
     }
+});
 
+app.post("/auth/:data", async (req, res) => {
+    try {
+        let data = JSON.parse(Buffer.from(req.params.data, 'base64').toString('ascii')), find = async (name) => { return (await files.findOne({ filename: name })) }
+        find = (await find(data.name)) || (await find({ $regex: `${data.name}(?=\.)` })) || null;
+        if (!find) return res.status(404);
+        bcrypt.compare(data.pass, find.pass, async (err, resp) => {
+            if (!resp) return res.status(401).send('Incorect password');
+            req.cookies.set('_yum', await (bcrypt.hash(find.pass, 10)), { expires: new Date(new Date().setSeconds(new Date().getSeconds()+15)) });
+            res.status(200).send('Done');
+        });
+    } catch (e) {
+        console.log(e);
+        req.method == "GET" ? res.status(500).render('error', { code: 1, type: 500 }) : res.status(500).send('There was an internal server error');
+    }
 });
 
 let del = async (req, res) => {
     if (!req.params.name) return res.render('deleteSearch');
     let find = async (name) => { return (await gfs.find({ filename: name }).toArray())[0]; }, resp = res, ip = (req.headers['x-forwarded-for'] || req.connection.remoteAddress).split(',')[0];
     find = (await find(req.params.name)) || (await find({ $regex: `${req.params.name}(?=\.)` }));
-    if (!find) return res.status(404).render('404');
-    if (find.userIP !== ip) return req.method == "GET" ? res.status(403).render('403', { code: 2 }) : res.status(403).send('You have no access to delete this file');
+    if (!find) return res.status(404).render('error', { type: 404 });
+    if (find.userIP !== ip) return req.method == "GET" ? res.status(403).render('error', { code: 2, type: 403 }) : res.status(403).send('You have no access to delete this file');
     if (req.method == "GET") return res.render('delete', find);
 
     gfs.delete(ObjectId(find._id), (err, res) => {
-        if (err) resp.status(500).send('There was an error deleting file');
+        if (err) req.method == "GET" ? resp.status(500).render('error', { code: 1, type: 500, text: 'There was an error deleting file' }) : resp.status(500).send('There was an error deleting file');
         return resp.status(200).redirect('/');
     });
 };
@@ -140,8 +170,8 @@ app.route("/del/:name?")
     .post((req, res) => del(req, res))
     .get((req, res) => del(req, res));
 
-app.get("/forbidden/:code?", (req, res) => res.render('403', { code: req.params.code }));
+app.get("/forbidden/:code?", (req, res) => res.render('error', { code: req.params.code, type: 403 }));
 app.get('/contact', (req, res) => res.redirect('mailto:lorem.ipsum@mailsire.com'));
-app.use((req, res, next) => res.status(404).render("404"));
+app.use((req, res, next) => res.status(404).render('error', { type: 404 }));
 
 const server = app.listen(PORT, () => { console.log(`Listening on port ${PORT}`); }), io = require('socket.io')(server);
