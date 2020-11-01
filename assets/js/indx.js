@@ -1,9 +1,11 @@
-var fixed = false, local = d => { return d.toLocaleString().replace(/(\d+)\/(\d+)\/(\d+), (\d+):(\d+):(\d+)/g, '$3-$2-$1T$4:$5'); }, min = local(new Date()), max = local(new Date((new Date).setMonth((new Date).getMonth() + 1))),
+var ua = navigator.userAgent.match(/\sEdg\w\//), // For some reason Element.animate() doesn't work on Edge for mobile 
+    fixed = false, local = d => { return d.toLocaleString().replace(/(\d+)\/(\d+)\/(\d+), (\d+):(\d+):(\d+)/g, '$3-$2-$1T$4:$5'); }, min = local(new Date()), max = local(new Date((new Date).setMonth((new Date).getMonth() + 1))),
     closeBtn = (el) => {
-        try { el.animate({ bottom: '-50px', opacity: '0' }, { duration: 500, easing: 'cubic-bezier(.68, -0.55, .27, 1.55)' }).onfinish = () => el.remove(); }
-        catch { };
-    },
-    notify = (text, type, ms) => {
+        try {
+            if (ua) return el.remove();
+            el.animate({ bottom: '-50px', opacity: '0' }, { duration: 500, easing: 'cubic-bezier(.68, -0.55, .27, 1.55)' }).onfinish = () => el.remove();
+        } catch { };
+    }, notify = (text, type, ms) => {
         text = text || "Hello world", type = type || 1, ms = ms || 5000;
         let notif = document.querySelector(".notification"), normal = notif.querySelectorAll(".normal"), success = notif.querySelectorAll(".success"), content = notif.querySelectorAll(".content"), marginBottom = 0;
         let whatToDo = (what, class_) => {
@@ -14,8 +16,7 @@ var fixed = false, local = d => { return d.toLocaleString().replace(/(\d+)\/(\d+
         };
         if (type === 1) whatToDo(normal, '.normal');
         else if (type === 2) whatToDo(success, '.success');
-    },
-    dateFromValue = str => {
+    }, dateFromValue = str => {
         let obj = !str ? null : new Date(
             str.endsWith('m') ? ((new Date).setMinutes((new Date).getMinutes() + parseInt(str.replace(/\D+$/, '')))) :
                 str.endsWith('h') ? ((new Date).setHours((new Date).getHours() + parseInt(str.replace(/\D+$/, '')))) :
@@ -29,13 +30,14 @@ var fixed = false, local = d => { return d.toLocaleString().replace(/(\d+)\/(\d+
     };
 
 window.onload = () => {
-    let menuBox = document.querySelector('.menuBox'),
+    var  menuBox = document.querySelector('.menuBox'),
         links = document.querySelector('.links'),
         fileIcon = document.querySelector('.partInner div .fileIcon'),
         fileImg = document.querySelector('.partInner div img'),
         loader = document.querySelector(".loader"),
         uploadInput = document.querySelector('input#upload'),
         closeMenuBox = () => {
+            if (ua) return menuBox.classList.remove('active');
             menuBox.animate([
                 { top: '50px', opacity: '1', offset: .7 },
                 { top: '20px', opacity: '0', offset: 1 }
@@ -46,6 +48,10 @@ window.onload = () => {
                 .onfinish = () => menuBox.classList.remove('active');
         }, closeLinksBox = () => {
             document.querySelector('.ov').style.opacity = 0;
+            if (ua) {
+                document.body.classList.remove('showLinks');
+                return document.querySelector('.ov').style.removeProperty('opacity');
+            }
             links.animate({
                 top: '-600px',
                 opacity: 0
@@ -60,6 +66,7 @@ window.onload = () => {
         }, load = (animate) => {
             loader.style.display = 'revert';
             if (animate) {
+                if (ua) return loader.style.removeProperty('display');
                 loader.animate([
                     { transform: 'translate(-50%, -100px)', opacity: '0' },
                     { transform: 'translate(-50%, 20px)' }
@@ -70,6 +77,7 @@ window.onload = () => {
                     .onfinish = () => loader.style.removeProperty('display');
             };
         }, loaded = (ms) => {
+            if (ua) return loader.style.removeProperty('display');
             loader.animate([
                 { transform: 'translate(-50%, 50px)', opacity: '1', offset: .7 },
                 { transform: 'translate(-50%, -100px)', opacity: '0', offset: 1 }
@@ -125,7 +133,7 @@ window.onload = () => {
         document.querySelectorAll('option[selected]').forEach(s => { s.removeAttribute('selected') });
         document.querySelectorAll('option.cust').forEach(c => { c.remove() });
         createCust();
-        window.fixed = true; // Make time stop updating after user has changed it to custom. (Look at the 'dTChanger' function )
+        window.fixed = true;
     };
     sel.onchange = e => {
         timeGui.value = local(dateFromValue(e.target.options[e.target.selectedIndex].value));
@@ -134,8 +142,8 @@ window.onload = () => {
         e.target.options[e.target.selectedIndex].setAttribute('selected', '');
         window.fixed = false;
     };
-
     let dTChanger = () => {
+        window.setTimeout(dTChanger, (60 - new Date().getSeconds()) * 1000);
         if (!window.fixed) {
             timeGui.value = local(dateFromValue(sel.querySelector('option[selected]').value));
             let cust = document.querySelectorAll('option.cust');

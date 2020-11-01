@@ -1,8 +1,10 @@
 window.onload = () => {
     document.querySelector('.home').addEventListener('click', () => window.location.href = '/');
 
-    let menuBox = document.querySelector('.menuBox'),
+    let ua = navigator.userAgent.match(/\sEdg\w\//)
+        menuBox = document.querySelector('.menuBox'),
         closeMenuBox = () => {
+            if (ua) return menuBox.classList.remove('active');
             menuBox.animate([
                 { top: '50px', opacity: '1', offset: .7 },
                 { top: '20px', opacity: '0', offset: 1 }
@@ -12,7 +14,6 @@ window.onload = () => {
             })
                 .onfinish = () => menuBox.classList.remove('active');
         };
-
 
     document.querySelectorAll('.menu ul li').forEach(el => {
         el.addEventListener('click', e => {

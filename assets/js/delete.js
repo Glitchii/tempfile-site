@@ -1,6 +1,9 @@
-var closeBtn = (el) => {
-    try { el.animate({ bottom: '-50px', opacity: '0' }, { duration: 500, easing: 'cubic-bezier(.68, -0.55, .27, 1.55)' }).onfinish = () => el.remove(); }
-    catch { };
+var ua = navigator.userAgent.match(/\sEdg\w\//),
+    closeBtn = (el) => {
+        try {
+            if (ua) return el.remove();
+            el.animate({ bottom: '-50px', opacity: '0' }, { duration: 500, easing: 'cubic-bezier(.68, -0.55, .27, 1.55)' }).onfinish = () => el.remove();
+        } catch { };
 }, notify = (text, type, ms) => {
     text = text || "Hello world", type = type || 1, ms = ms || 5000;
     let notif = document.querySelector(".notification"), normal = notif.querySelectorAll(".normal"), success = notif.querySelectorAll(".success"), content = notif.querySelectorAll(".content"), marginTop = 0;
@@ -17,6 +20,7 @@ var closeBtn = (el) => {
 window.onload = () => {
     let menuBox = document.querySelector('.menuBox'),
         closeMenuBox = () => {
+            if (ua) return menuBox.classList.remove('active');
             menuBox.animate([
                 { top: '50px', opacity: '1', offset: .7 },
                 { top: '20px', opacity: '0', offset: 1 }
@@ -42,7 +46,6 @@ window.onload = () => {
             },
             error: function (e) {
                 notify(`Error ${e.status} ${e.statusText}`);
-                console.log(e);
             }
         });
     });

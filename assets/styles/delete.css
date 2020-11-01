@@ -424,6 +424,10 @@ p.warn {
     padding-top: 15px;
 }
 
+.info {
+    overflow: auto;
+}
+
 .infos .info {
     margin: 5px
 }

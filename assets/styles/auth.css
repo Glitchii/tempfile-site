@@ -446,7 +446,8 @@ h2 {
     transform: rotate(180deg) translate(-2px, -2px);
     margin-left: 5px;
     position: relative;
-    width: 18px;
+    margin-right: 0;
+    top: -1px;
 }
 
 .home span, .login span {
