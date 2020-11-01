@@ -3,6 +3,9 @@
   "version": "1.0.0",
   "description": "A website for temporarily storing files that will be deleted in chosen time or date.",
   "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
   "author": "Glitchii",
   "license": "CC BY-SA",
   "dependencies": {
