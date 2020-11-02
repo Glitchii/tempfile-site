@@ -17,6 +17,14 @@ dbClient.connect().then(async (res, err) => {
     db = dbClient.db('db'), files = db.collection('data.files'), chunks = db.collection('data.chunks'), gfs = new GridFSBucket(db, { bucketName: "data" });
     if (!await files.indexExists('dateTime_1')) files.createIndex({ dateTime: 1 }, { expireAfterSeconds: 0 });
     if (!await chunks.indexExists('dateTime_1')) chunks.createIndex({ dateTime: 1 }, { expireAfterSeconds: 0 });
+
+    files.watch().on('change', next => {
+        if (next.operationType == 'delete') {
+            chunks.findOneAndDelete({ files_id: next.documentKey._id }, (err, res) => {
+                if (err) throw err;
+            })
+        }
+    });
 });
 
 const chooseName = async (filename) => {
@@ -55,7 +63,7 @@ app.use(express.json());
 app.get('/', (req, res) => res.render('index'));
 
 app.post("/upload/:info", async (req, res) => {
-    let info = JSON.parse(Buffer.from(req.params.info, 'base64').toString('ascii')), name = await chooseName(info.name), resp = res, min = new Date(), max = new Date((new Date).setMonth((new Date).getMonth() + 1)), date = new Date(info.dateTime);
+    let info = JSON.parse(Buffer.from(req.params.info, 'base64').toString('ascii')), name = await chooseName(info.name), min = new Date(), max = new Date((new Date).setMonth((new Date).getMonth() + 1)), date = new Date(info.dateTime);
     info.dateTime = date; info.userIP = (req.headers['x-forwarded-for'] || req.connection.remoteAddress).split(',')[0];
     if (!!!new Date(info.dateTime).getDate()) return res.status(417).send('Given date is invalid');
     if (info.limit && isNaN(info.limit)) return res.status(417).send('The given limit isn\'t a number');
