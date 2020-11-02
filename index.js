@@ -135,7 +135,7 @@ app.post("/auth/", async (req, res) => {
     try {
         let fn = req.headers.referer.split('/')[req.headers.referer.split('/').length - 1], find = (await gfs.find({ filename: fn }).toArray())[0] || (await gfs.find({ filename: { $regex: `${fn}(?=\.)` } }).toArray())[0];
         if (!find) return res.status(404);
-        
+
         bcrypt.compare(req.body.data, find.pass, async (err, resp) => {
             if (!resp) return res.status(401).send('Incorect password');
             req.cookies.set('_yum', await (bcrypt.hash(find.pass, 10)), { expires: new Date(new Date().setSeconds(new Date().getSeconds() + 15)) });
@@ -168,7 +168,7 @@ app.route("/del/:name?")
     .get((req, res) => del(req, res));
 
 app.get("/forbidden/:code?", (req, res) => res.render('error', { code: req.params.code, type: 403 }));
-app.get('/contact', (req, res) => res.redirect('mailto:lorem.ipsum@mailsire.com'));
+app.get('/contact', (req, res) => res.redirect(`mailto:hello@tempfile.site`));
 app.use((req, res, next) => res.status(404).render('error', { type: 404 }));
 
 const PORT = process.env.PORT || 2020,
