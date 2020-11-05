@@ -1,11 +1,12 @@
-# TempFile website
+# tempfile.site
 
 A website that temporarily stores files that get deleted at a certain (chosen) time or date.
 
-Website: https://tempfile.site/
+Files can be stored to a maximum of a month.
+
+Written in NodeJS, hosted on Heroku, and the files are stored in MongDB.
 
 ---
-
 
 ## Helpful links
 https://github.com/aheckmann/gridfs-stream  

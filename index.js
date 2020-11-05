@@ -122,7 +122,7 @@ app.get("/file/:name", async (req, res) => {
         if (find.pass) {
             if (!cookie) return res.render('auth');
             if (!await bcrypt.compare(find.pass, cookie)) return req.method == "GET" ? res.status(403).render('error', { code: 1, type: 403 }) : res.status(403).send('You have no access to view this file');
-            req.cookies.set('_yum', false, { expires: Date.now() });
+            req.cookies.set('_yum', false, { expires: Date.now(), sameSite: "Lax" });
         }
 
         let stream = gfs.openDownloadStreamByName(find.filename).pipe(res);
@@ -146,7 +146,7 @@ app.post("/auth/", async (req, res) => {
 
         bcrypt.compare(req.body.data, find.pass, async (err, resp) => {
             if (!resp) return res.status(401).send('Incorect password');
-            req.cookies.set('_yum', await (bcrypt.hash(find.pass, 10)), { expires: new Date(new Date().setSeconds(new Date().getSeconds() + 15)) });
+            req.cookies.set('_yum', await (bcrypt.hash(find.pass, 10)), { expires: new Date(new Date().setSeconds(new Date().getSeconds() + 15)), sameSite: "Lax"  });
             res.status(200).send('Done');
         });
     } catch (e) {
