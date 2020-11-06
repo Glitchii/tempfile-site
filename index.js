@@ -122,14 +122,14 @@ app.get("/file/:name", async (req, res) => {
         if (find.pass) {
             if (!cookie) return res.render('auth');
             if (!await bcrypt.compare(find.pass, cookie)) return req.method == "GET" ? res.status(403).render('error', { code: 1, type: 403 }) : res.status(403).send('You have no access to view this file');
-            req.cookies.set('_tmpfle', '', { maxAge: 15000, sameSite: 'Lax' });
+            req.cookies.set('_tmpfle', '', { maxAge: 0, sameSite: 'Lax' });
         }
 
         let stream = gfs.openDownloadStreamByName(find.filename).pipe(res);
         stream.on('close', async () => {
             if (find.limit && ((hds['sec-fetch-site'] === 'same-origin' && hds['sec-fetch-mode'] !== 'no-cors') || hds['sec-fetch-site'] !== 'same-origin')) {
                 find.limit--;
-                if (find.limit == 0) await files.findOneAndDelete({ _id: find._id });
+                if (find.limit == 0) gfs.delete(ObjectId(find._id));
                 else await files.findOneAndUpdate({ filename: req.params.name }, { $set: find });
             }
         });
