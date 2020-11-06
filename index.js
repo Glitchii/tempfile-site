@@ -115,14 +115,14 @@ app.post("/upload/:info", async (req, res) => {
 
 app.get("/file/:name", async (req, res) => {
     try {
-        let find = async (name) => { return (await files.findOne({ filename: name })) }, hds = req.headers, ip = (hds['x-forwarded-for'] || req.connection.remoteAddress).split(',')[0], cookie = req.cookies.get('_yum');
+        let find = async (name) => { return (await files.findOne({ filename: name })) }, hds = req.headers, ip = (hds['x-forwarded-for'] || req.connection.remoteAddress).split(',')[0], cookie = req.cookies.get('_tmpfle');
         find = (await find(req.params.name)) || (await find({ $regex: `${req.params.name}(?=\.)` })) || null;
         if (!find) return res.status(404).render('error', { type: 404 });
         if (find.ip && find.ip.includes(ip) || find.ip2 && !find.ip2.includes(ip)) return req.method == "GET" ? res.status(403).render('error', { code: 1, type: 403 }) : res.status(403).send('You have no access to view this file');
         if (find.pass) {
             if (!cookie) return res.render('auth');
             if (!await bcrypt.compare(find.pass, cookie)) return req.method == "GET" ? res.status(403).render('error', { code: 1, type: 403 }) : res.status(403).send('You have no access to view this file');
-            req.cookies.set('_yum', false, { expires: Date.now(), sameSite: "Lax" });
+            req.cookies.set('_tmpfle', '', { maxAge: 15000, sameSite: 'Lax' });
         }
 
         let stream = gfs.openDownloadStreamByName(find.filename).pipe(res);
@@ -144,9 +144,9 @@ app.post("/auth/", async (req, res) => {
         let fn = req.headers.referer.split('/')[req.headers.referer.split('/').length - 1], find = (await gfs.find({ filename: fn }).toArray())[0] || (await gfs.find({ filename: { $regex: `${fn}(?=\.)` } }).toArray())[0];
         if (!find) return res.status(404);
 
-        bcrypt.compare(req.body.data, find.pass, async (err, resp) => {
-            if (!resp) return res.status(401).send('Incorect password');
-            req.cookies.set('_yum', await (bcrypt.hash(find.pass, 10)), { expires: new Date(new Date().setSeconds(new Date().getSeconds() + 15)), sameSite: "Lax"  });
+        bcrypt.compare(req.body.data, find.pass, async (err, rs) => {
+            if (!rs) return res.status(401).send('Incorect password');
+            req.cookies.set('_tmpfle', (await bcrypt.hash(find.pass, 10)), { maxAge: 15000, sameSite: 'Lax' });
             res.status(200).send('Done');
         });
     } catch (e) {
@@ -160,14 +160,14 @@ let del = async (req, res) => {
     if (!req.params.name && req.method == 'POST') filename = req.headers.referer.split('/')[req.headers.referer.split('/').length - 1];
     else if (!req.params.name) return res.render('deleteSearch');
 
-    let find = (await gfs.find({ filename: filename }).toArray())[0] || (await gfs.find({ filename: { $regex: `${filename}(?=\.)` } }).toArray())[0], resp = res, ip = (req.headers['x-forwarded-for'] || req.connection.remoteAddress).split(',')[0];
+    let find = (await gfs.find({ filename: filename }).toArray())[0] || (await gfs.find({ filename: { $regex: `${filename}(?=\.)` } }).toArray())[0], ip = (req.headers['x-forwarded-for'] || req.connection.remoteAddress).split(',')[0];
     if (!find) return res.status(404).render('error', { type: 404 });
     if (find.userIP !== ip) return req.method == "GET" ? res.status(403).render('error', { code: 2, type: 403 }) : res.status(403).send('You have no access to delete this file');
     if (req.method == "GET") return res.render('delete', find);
 
-    gfs.delete(ObjectId(find._id), (err, res) => {
-        if (err) req.method == "GET" ? resp.status(500).render('error', { code: 1, type: 500, text: 'There was an error deleting file' }) : resp.status(500).send('There was an error deleting file');
-        return req.method == "GET" ? resp.status(200).redirect('/') : resp.status(200).send('File has been deleted');
+    gfs.delete(ObjectId(find._id), (err, rs) => {
+        if (err) req.method == "GET" ? res.status(500).render('error', { code: 1, type: 500, text: 'There was an error deleting file' }) : res.status(500).send('There was an error deleting file');
+        return req.method == "GET" ? res.status(200).redirect('/') : res.status(200).send('File has been deleted');
     });
 };
 
