@@ -135,19 +135,12 @@ p.warn {
     }
 }
 
-.notification .content {
-    color: #fff;
-    border-radius: 4px;
-    display: flex;
-    text-align: center;
-    padding: 5px 15px;
-    box-shadow: 0px 0px 20px 5px rgba(0, 0, 0, 0.055);
-}
-
-.notification {
+.notif {
     display: none;
     justify-content: center;
     transition: 1s ease;
+    top: 50px;
+    width: 100%;
     position: fixed;
     display: flex;
     justify-content: center;
@@ -161,16 +154,16 @@ p.warn {
 
 @keyframes comeUp {
     from {
-        bottom: -50px;
+        opacity: 0;
+        bottom: -90px;
     }
 }
 
-.notification .content p {
+.notif .content p {
     user-select: none;
 }
 
-.notification .content {
-    color: #fff !important;
+.notif .content {
     border-radius: 4px;
     text-align: center;
     display: flex;
@@ -178,17 +171,49 @@ p.warn {
     box-shadow: 0px 0px 20px 5px rgba(0, 0, 0, 0.055);
     font-family: var(--font1)!important;
     animation: comeUp .5s cubic-bezier(.68, -0.55, .27, 1.55);
-    opacity: 0;
     position: absolute;
-    transition: 1s ease;
-    bottom: 50px;
+    transition: .5s ease;
+    display: none;
+    bottom: 90px;
     margin: 0 10px;
     box-shadow: 0px 0px 20px 5px rgb(78 79 80 / 6%);
     pointer-events: all;
 }
 
-.notification .content:not(:hover) .notifCloseBtn {
+.notif .content:not(:hover) .notifCloseBtn {
     display: none;
+}
+
+.notif .content .lnk {
+    text-decoration: none;
+    position: relative;
+    color: inherit;
+}
+
+.notif .content .lnk::after {
+    content: "";
+    width: 100%;
+    position: absolute;
+    left: 0;
+    bottom: 1px;
+    border: 1px solid;
+    transition: .25s ease
+}
+
+.notif .normal .lnk::after {
+    border-color: #c0b1d6b7;
+}
+
+.notif .normal .lnk:hover::after {
+    border-color: #e2cfffab;
+}
+
+.notif .success .lnk::after {
+    border-color: #c2ffe994;
+}
+
+.notif .success .lnk:hover::after {
+    border-color: #c2ffe9da;
 }
 
 @keyframes notifCloseBtnAn {
@@ -200,7 +225,6 @@ p.warn {
 
 .notifCloseBtn {
     margin: auto 10px;
-    /* background: #ffffff1c; */
     padding: 0 5px;
     margin-right: 0;
     border-radius: 5px;
@@ -218,26 +242,28 @@ p.warn {
     pointer-events: none;
 }
 
-.notification .content img {
+.notif .content svg.leftIcon {
+    width: 20px;
+    height: 20px;
     display: flex;
     text-align: center;
     position: relative;
     top: 3px;
 }
 
-.notification .success {
+.notif .success {
     background: linear-gradient(to right, #61d3c3, #74e1a5);
 }
 
-.notification .normal {
+.notif .normal {
     background: linear-gradient(to left, #9c7ca6, #7d7699);
 }
 
-.notification .normal img {
+.notif .normal img {
     filter: brightness(1000);
 }
 
-.notification .content p {
+.notif .content p {
     margin-left: 6px;
     margin-top: 2px;
     font-family: var(--font1);

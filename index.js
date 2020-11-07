@@ -176,7 +176,7 @@ app.route("/del/:name?")
     .get((req, res) => del(req, res));
 
 app.get("/forbidden/:code?", (req, res) => res.render('error', { code: req.params.code, type: 403 }));
-app.get('/contact', (req, res) => res.redirect(`mailto:hello@tempfile.site`));
+app.get('/contact', (req, res) => res.status(302).redirect('https://github.com/Glitchii/'));
 app.use((req, res, next) => res.status(404).render('error', { type: 404 }));
 
 const PORT = process.env.PORT || 2020,

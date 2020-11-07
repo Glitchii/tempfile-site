@@ -1,21 +1,27 @@
 var ua = navigator.userAgent.match(/\sEdg\w\//), // For some reason Element.animate() doesn't work on Edge for mobile 
-    fixed = false, local = d => { return d.toLocaleString().replace(/(\d+)\/(\d+)\/(\d+), (\d+):(\d+):(\d+)/g, '$3-$2-$1T$4:$5'); }, min = local(new Date()), max = local(new Date((new Date).setMonth((new Date).getMonth() + 1))),
-    closeBtn = (el) => {
-        try {
-            if (ua) return el.remove();
-            el.animate({ bottom: '-50px', opacity: '0' }, { duration: 500, easing: 'cubic-bezier(.68, -0.55, .27, 1.55)' }).onfinish = () => el.remove();
-        } catch { };
+    fixed = false, local = d => {
+        d = d ? new Date(d) : new Date();
+        return `${d.toLocaleDateString().replace(/(\d+)\/(\d+)\/(\d+)/g, '$3-$2-$1')}T${d.toLocaleTimeString().substr(0, 5)}`;
+    },
+    min = local(),
+    max = local(new Date((new Date).setMonth((new Date).getMonth() + 1))),
+    closeBtn = (el, func, arg) => {
+        let _do = () => {
+            el.style.display = 'none';
+            if (func && arg) setTimeout(() => func(arg), 200);
+        }
+        if (ua) return _do();
+        el.animate({ bottom: '-90px', opacity: '0' }, { duration: 500, easing: 'cubic-bezier(.68, -0.55, .27, 1.55)' }).onfinish = _do;
     }, notify = (text, type, ms) => {
-        text = text || "Hello world", type = type || 1, ms = ms || 5000;
-        let notif = document.querySelector(".notification"), normal = notif.querySelectorAll(".normal"), success = notif.querySelectorAll(".success"), content = notif.querySelectorAll(".content"), marginBottom = 0;
-        let whatToDo = (what, class_) => {
-            if (content) content.forEach(el => { marginBottom += 40; el.style.marginBottom = `${marginBottom}px`; });
-            notif.innerHTML += `<div class="${class_.slice(1)} content"><img src="${what === success ? '/assets/imgs/mark.svg' : '/assets/imgs/iBubble.svg'}" width="20px" height="20px" alt=""><p>${text}</p><div class="notifCloseBtn" onclick="closeBtn(this.parentElement)"><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:svgjs="http://svgjs.com/svgjs" version="1.1" width="512" height="512" x="0" y="0" viewBox="0 0 426.66667 426.66667" style="enable-background:new 0 0 512 512" xml:space="preserve" class=""><g><path xmlns="http://www.w3.org/2000/svg" d="m405.332031 192h-170.664062v-170.667969c0-11.773437-9.558594-21.332031-21.335938-21.332031-11.773437 0-21.332031 9.558594-21.332031 21.332031v170.667969h-170.667969c-11.773437 0-21.332031 9.558594-21.332031 21.332031 0 11.777344 9.558594 21.335938 21.332031 21.335938h170.667969v170.664062c0 11.777344 9.558594 21.335938 21.332031 21.335938 11.777344 0 21.335938-9.558594 21.335938-21.335938v-170.664062h170.664062c11.777344 0 21.335938-9.558594 21.335938-21.335938 0-11.773437-9.558594-21.332031-21.335938-21.332031zm0 0" fill="#000000" data-original="#000000"></path></g></svg></div></div>`;
-            if (what[0] || notif.querySelector(class_)) { document.querySelectorAll(class_).forEach((el) => { el.style.opacity = 1; }) };
-            setTimeout(() => closeBtn(document.querySelectorAll(class_)[0]), ms);
+        text = text.replace(/</g, '&lt;').replace(/>/g, '&gt;') || "Hello world", type = type || 1, ms = ms || 5000;
+        let notif = document.querySelector(".notif"), normal = notif.querySelector(".normal"), success = notif.querySelector(".success"), nor = notif.querySelector('.normal[style*="display: flex;"]'), succ = notif.querySelector('.success[style*="display: flex;"]'), re = /\[(.+)\]\((.+)\)/ig.exec(text);
+        let doNext = (elm) => {
+            if (re && re.length === 3) text = text.replace(re[0], `<a class="lnk" target="_blank" href="${re[2]}">${re[1]}</a>`);
+            elm.style.display = 'flex', elm.querySelector('.content p').innerHTML = text;
+            setTimeout(() => closeBtn(elm), ms);
         };
-        if (type === 1) whatToDo(normal, '.normal');
-        else if (type === 2) whatToDo(success, '.success');
+        if (nor || succ) closeBtn((nor || succ), doNext, type === 2 ? success : normal);
+        else doNext(type === 2 ? success : normal);
     }, dateFromValue = str => {
         let obj = !str ? null : new Date(
             str.endsWith('m') ? ((new Date).setMinutes((new Date).getMinutes() + parseInt(str.replace(/\D+$/, '')))) :
@@ -30,7 +36,7 @@ var ua = navigator.userAgent.match(/\sEdg\w\//), // For some reason Element.anim
     };
 
 window.onload = () => {
-    var  menuBox = document.querySelector('.menuBox'),
+    var menuBox = document.querySelector('.menuBox'),
         links = document.querySelector('.links'),
         fileIcon = document.querySelector('.partInner div .fileIcon'),
         fileImg = document.querySelector('.partInner div img'),
@@ -117,19 +123,18 @@ window.onload = () => {
         else if (menuBox && menuBox.classList.contains('active') && el.target !== menuBox && !el.target.closest('.menuBox')) closeMenuBox();
     });
     let timeGui = document.querySelector('.timeGui'), sel = document.querySelector('.dateTime select'), allOpts = sel.querySelectorAll('option');
-    timeGui.min = local(min);
-    timeGui.max = local(max);
+    timeGui.min = min, timeGui.max = max;
     timeGui.value = local(dateFromValue(sel.querySelector('option[selected]').value));
     let createCust = () => {
         let el = document.createElement('option');
         el.setAttribute('class', 'cust');
-        el.setAttribute('value', local(new Date(timeGui.value)));
+        el.setAttribute('value', local(timeGui.value));
         el.setAttribute('selected', '');
         el.setAttribute('disabled', '');
         el.innerText = new Date(local(timeGui.value)).toString().replace(/(\w+)\s(\w+)\s(\w+)\s(.+):\d+\s.+$/, '$1, $3 $2 $4');
         sel.insertBefore(el, allOpts[allOpts.length - 1]);
     }
-    timeGui.onchange = e => {
+    timeGui.onchange = () => {
         document.querySelectorAll('option[selected]').forEach(s => { s.removeAttribute('selected') });
         document.querySelectorAll('option.cust').forEach(c => { c.remove() });
         createCust();
@@ -177,9 +182,14 @@ window.onload = () => {
         inp.setSelectionRange(0, 99999);
         document.execCommand("copy");
     });
-    document.querySelector('.linkBtn:last-child').addEventListener('click', (el) =>
-        window.location.href = el.target.closest('.urls').querySelector('.btn input').value.replace('/file/', '/del/'));
 
+    document.querySelector('.linkBtn:last-child').addEventListener('click', el =>
+        window.location.href = el.target.closest('.urls').querySelector('.btn input').value.replace('/file/', '/del/')
+    );
+
+    document.querySelectorAll('.notif .notifCloseBtn').forEach(e =>
+        e.addEventListener('click', el => closeBtn(el.target.parentNode))
+    );
 
     $("form").submit(function (e) {
         e.preventDefault();
@@ -208,8 +218,7 @@ window.onload = () => {
             },
             error: function (e) {
                 if (e.status === 417) notify(e.responseText || e.statusText);
-                else if (e.status === 0) notify("Upload failed, did you upload a folder?");
-                else console.error("Error", `${e.status} (${e.statusText}) - ${e.responseText}`);
+                else if (e.status === 0) notify("Upload failed. [Report issue](https://github.com/Glitchii/tempfile.site/issues)?");
                 loaded();
             }
         });
