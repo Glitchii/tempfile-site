@@ -227,8 +227,9 @@ window.onload = () => {
     let previewFile = (files) => {
         fs = Array.from(files)
         if (fs.length === 0) return reset();
-        if (!fs[0].type) {
-            notify('Unknown type, did you upload a folder?');
+        console.log(fs)
+        if (!fs[0].size && !/.+?\.[^\.]+$/.exec(fs[0].name)) {
+            notify('File has no extension or size, is it a folder?');
             return reset();
         }
         uploadInput.files = files;
