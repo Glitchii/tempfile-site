@@ -792,7 +792,6 @@ body.showLinks .ov {
     transform: translate(-50%, 20px);
     background: #00000000;
     border-radius: 100%;
-    opacity: .5;
     z-index: 11;
     animation: loaderAn .5s ease;
     display: none;

@@ -1,7 +1,7 @@
 var ua = navigator.userAgent.match(/\sEdg\w\//), // For some reason Element.animate() doesn't work on Edge for mobile 
     fixed = false, local = d => {
-        d = d ? new Date(d) : new Date();
-        return `${d.toLocaleDateString().replace(/(\d+)\/(\d+)\/(\d+)/g, '$3-$2-$1')}T${d.toLocaleTimeString().substr(0, 5)}`;
+        let tzoffset = (new Date()).getTimezoneOffset() * 60000; // Offset milliseconds
+        return (new Date((d ? new Date(d) : new Date()) - tzoffset)).toISOString().replace(/(?<=T\d+:\d+):.+/g, '');
     },
     closeBtn = (el, func, arg) => {
         let _do = () => {
@@ -21,7 +21,7 @@ var ua = navigator.userAgent.match(/\sEdg\w\//), // For some reason Element.anim
         if (nor || succ) closeBtn((nor || succ), doNext, type === 2 ? success : normal);
         else doNext(type === 2 ? success : normal);
     }, dateFromValue = str => {
-        let obj = !str ? null : new Date(
+        let obj = !str ? null :
             str.endsWith('m') ? ((new Date).setMinutes((new Date).getMinutes() + parseInt(str.replace(/\D+$/, '')))) :
                 str.endsWith('h') ? ((new Date).setHours((new Date).getHours() + parseInt(str.replace(/\D+$/, '')))) :
                     str.endsWith('d') ? ((new Date).setDate((new Date).getDate() + parseInt(str.replace(/\D+$/, '')))) :
@@ -29,14 +29,13 @@ var ua = navigator.userAgent.match(/\sEdg\w\//), // For some reason Element.anim
                             str.endsWith('mo') ? ((new Date).setMonth((new Date).getMonth() + 1)) :
                                 !!new Date(str).getDate() ? new Date(new Date(str).setMinutes(new Date(str).getMinutes() + 1)) :
                                     null
-        );
-        return new Date(local(obj)) > local(new Date((new Date).setMonth((new Date).getMonth() + 1))) || new Date(local(obj)) < local() ? null : obj;
+
+        return new Date(local(obj)) > local(new Date((new Date).setMonth((new Date).getMonth() + 1))) || new Date(local(obj)) < local() ? null : new Date(obj);
     };
 
 window.onload = () => {
     let menuBox = document.querySelector('.menuBox'),
         links = document.querySelector('.links'),
-        fileImg = document.querySelector('.partInner .img.otherImg'),
         loader = document.querySelector(".loader"),
         uploadInput = document.querySelector('input#upload'),
         drag = document.querySelector('.drag'),
@@ -201,7 +200,7 @@ window.onload = () => {
         if ((data.dateTime - new Date()) / (24 * 60 * 60 * 1000) > 31) return notify('Given date is over the allowed');
         if (data.dateTime < local()) return notify('Given date or time is behind');
         if (data.dateTime < new Date()) return notify('Looks like that time is alittle behind');
-        
+
         load();
         $.ajax({
             type: "POST",
@@ -222,26 +221,32 @@ window.onload = () => {
         });
     });
 
-    submitBtn.addEventListener('click', () => submitInput.click());
+    submitBtn.addEventListener('click', () => {
+        submitInput.click();
+        if (window.matchMedia('(max-width: 1125px)').matches) window.scrollTo({
+            top: 0,
+            behavior: 'smooth'
+        });
+    });
 
     let previewFile = (files) => {
         fs = Array.from(files)
         if (fs.length === 0) return reset();
-        console.log(fs)
         if (!fs[0].size && !/.+?\.[^\.]+$/.exec(fs[0].name)) {
             notify('File has no extension or size, is it a folder?');
+            uploadInput.value = '';
             return reset();
         }
-        uploadInput.files = files;
+
         let reader = new FileReader();
         if (window.matchMedia('(max-width: 1125px)').matches) setTimeout(() => window.scrollTo({
             top: document.documentElement.scrollHeight,
             behavior: 'smooth'
-        }), 1000);
+        }), 500);
 
         if (fs[0].type.startsWith('image/')) {
             reader.onload = (e) => {
-                fileImg.setAttribute('src', e.target.result);
+                document.querySelector('.partInner .img.otherImg').setAttribute('src', e.target.result);
                 drag.classList.remove('notImg');
                 drag.classList.add('hasFile');
             };
@@ -264,11 +269,17 @@ window.onload = () => {
     dP.ondrop = (e) => {
         e.preventDefault();
         let files = e.dataTransfer.files;
-        if (files) previewFile(files);
+        if (files) {
+            uploadInput.files = files;
+            previewFile(files);
+        }
     };
 
     document.onpaste = (e) => {
-        let items = e.clipboardData || e.originalEvent.clipboardData;
-        if (items.files && Array.from(items.files).length > 0) previewFile(items.files);
+        let data = e.clipboardData;
+        if (data.files && Array.from(data.files).length > 0) {
+            uploadInput.files = data.files;
+            previewFile(data.files);
+        }
     };
 };
