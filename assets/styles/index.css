@@ -76,7 +76,6 @@ header, .cont {
 }
 
 .fileIcon {
-    display: none;
     position: relative;
     width: 180px;
     left: 100px;
@@ -101,16 +100,21 @@ header, .cont {
     transition: .5s ease;
 }
 
-.drag>div div:not(.uploadBtn) .img {
+.drag .partInner .img {
     width: 250px;
 }
 
-.drag>div div:not(.uploadBtn) .img.otherImg {
+.drag .partInner .img.otherImg {
     width: 240px;
     margin-bottom: 8px;
 }
 
-.drag.hasFile>div div:not(.uploadBtn) .mainImg, .drag:not(.hasFile)>div div:not(.uploadBtn) .otherImg {
+.drag .partInner .img.fileIcon {
+    width: 200px;
+    margin-bottom: 45px;
+}
+
+.drag.hasFile .partInner .img.mainImg, .drag:not(.hasFile) .partInner .img.otherImg, .drag.notImg .partInner .img.otherImg, .drag:not(.notImg) .partInner .img.fileIcon {
     display: none;
 }
 
@@ -208,10 +212,6 @@ header, .cont {
     box-shadow: 0px 0px 20px 0px #539afe61;
     background: linear-gradient(to bottom, #539afe, #536ffe);
     animation: uploadBtnAn .5s ease-in;
-}
-
-.drag.hasFile.notImg .partInner .uploadBtn {
-    top: calc(221.5px);
 }
 
 header .logoText, header .logoText span {

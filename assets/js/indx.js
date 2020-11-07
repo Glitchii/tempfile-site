@@ -241,11 +241,12 @@ window.onload = () => {
         if (files[0].type.startsWith('image/')) {
             reader.onload = (e) => {
                 fileImg.setAttribute('src', e.target.result);
+                drag.classList.remove('notImg');
                 drag.classList.add('hasFile');
             };
         } else {
             let ext = files[0].name.split('.').pop();
-            document.querySelector('.partInner div .fileIcon p').innerText = ext.length <= 5 ? ext : files[0].name.substr(0, 2) + '...';
+            document.querySelector('.partInner .fileIcon p').innerText = ext.length <= 5 ? ext : files[0].name.substr(0, 2) + '...';
             drag.classList.add(...['hasFile', 'notImg']);
         }
         loaded();
