@@ -188,7 +188,6 @@ window.onload = () => {
 
     $("form").submit(function (e) {
         e.preventDefault();
-        if (uploadInput.files.length === 0) return notify('You must add a file first');
         let name = btnsInner.querySelector('.btn.name input').value, data = { dateTime: new Date(local(timeGui.value)) },
             ip = Array.from(document.querySelector('.btns .inner').querySelectorAll('.btn.ipBlackList input')).filter(el => el.value).map(el => el.value.trim()),
             ip2 = Array.from(document.querySelector('.btns .inner').querySelectorAll('.btn.ipWhiteList input')).filter(el => el.value).map(el => el.value.trim()),
@@ -202,7 +201,7 @@ window.onload = () => {
         if ((data.dateTime - new Date()) / (24 * 60 * 60 * 1000) > 31) return notify('Given date is over the allowed');
         if (data.dateTime < local()) return notify('Given date or time is behind');
         if (data.dateTime < new Date()) return notify('Looks like that time is alittle behind');
-
+        
         load();
         $.ajax({
             type: "POST",
@@ -226,8 +225,9 @@ window.onload = () => {
     submitBtn.addEventListener('click', () => submitInput.click());
 
     let previewFile = (files) => {
-        if (files.length === 0) return reset();
-        if (!files[0].type) {
+        fs = Array.from(files)
+        if (fs.length === 0) return reset();
+        if (!fs[0].type) {
             notify('Unknown type, did you upload a folder?');
             return reset();
         }
@@ -238,20 +238,20 @@ window.onload = () => {
             behavior: 'smooth'
         }), 1000);
 
-        if (files[0].type.startsWith('image/')) {
+        if (fs[0].type.startsWith('image/')) {
             reader.onload = (e) => {
                 fileImg.setAttribute('src', e.target.result);
                 drag.classList.remove('notImg');
                 drag.classList.add('hasFile');
             };
         } else {
-            let ext = files[0].name.split('.').pop();
-            document.querySelector('.partInner .fileIcon p').innerText = ext.length <= 5 ? ext : files[0].name.substr(0, 2) + '...';
+            let ext = fs[0].name.split('.').pop();
+            document.querySelector('.partInner .fileIcon p').innerText = ext.length <= 5 ? ext : fs[0].name.substr(0, 2) + '...';
             drag.classList.add(...['hasFile', 'notImg']);
         }
         loaded();
 
-        reader.readAsDataURL(files[0]);
+        reader.readAsDataURL(fs[0]);
     };
 
     uploadInput.onchange = (e) => {
@@ -267,7 +267,7 @@ window.onload = () => {
     };
 
     document.onpaste = (e) => {
-        var items = e.clipboardData || e.originalEvent.clipboardData;
-        if (items.files && items.files.length > 0) previewFile(items.files);
+        let items = e.clipboardData || e.originalEvent.clipboardData;
+        if (items.files && Array.from(items.files).length > 0) previewFile(items.files);
     };
 };
