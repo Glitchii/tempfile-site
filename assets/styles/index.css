@@ -107,6 +107,7 @@ header, .cont {
 .drag .partInner .img.otherImg {
     width: 240px;
     margin-bottom: 8px;
+    border-radius: 5px;
 }
 
 .drag .partInner .img.fileIcon {
