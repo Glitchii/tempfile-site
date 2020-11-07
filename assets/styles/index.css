@@ -179,7 +179,9 @@ header, .cont {
     height: 50px;
     border-radius: 100%;
     cursor: pointer;
-    margin: 20% auto 1px auto;
+    margin: auto;
+    position: relative;
+    top: 190px;
     box-shadow: 0px 0px 20px 0px #539afe61;
     background: linear-gradient(to bottom, #539afe, #536ffe);
     animation: uploadBtnAn 1s ease;
@@ -838,6 +840,7 @@ body.showLinks .ov {
         display: none;
     }
     .partInner .uploadBtn {
+        position: unset;
         margin: 10% auto 10% auto;
         opacity: .8;
     }
