@@ -68,9 +68,6 @@ app.post("/upload/:info", async (req, res) => {
     if (!!!new Date(info.dateTime).getDate()) return res.status(417).send('Given date is invalid');
     if (info.limit && isNaN(info.limit)) return res.status(417).send('The given limit isn\'t a number');
     if (info.limit && info.limit < 1) return res.status(417).send("Limit invalid. Leave empty for unlimited");
-    if (info.dateTime > max) return res.status(417).send('Given date or time is more than the max');
-    if (info.dateTime < min) return res.status(417).send('Given date or time is behind');
-    if (info.dateTime < new Date()) return res.status(417).send('Looks like that time is alittle behind');
     if ((info.ip && info.ip.length > 4) || (info.ip2 && info.ip2.length > 4)) return res.status(417).send('I can only accept 4 IPs');
     if (info.pass) bcrypt.hash(info.pass, 10, (err, hash) => {
         if (err) return res.status(500).send('There was an error hashing password');

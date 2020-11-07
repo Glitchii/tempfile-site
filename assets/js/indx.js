@@ -3,8 +3,6 @@ var ua = navigator.userAgent.match(/\sEdg\w\//), // For some reason Element.anim
         d = d ? new Date(d) : new Date();
         return `${d.toLocaleDateString().replace(/(\d+)\/(\d+)\/(\d+)/g, '$3-$2-$1')}T${d.toLocaleTimeString().substr(0, 5)}`;
     },
-    min = local(),
-    max = local(new Date((new Date).setMonth((new Date).getMonth() + 1))),
     closeBtn = (el, func, arg) => {
         let _do = () => {
             el.style.display = 'none';
@@ -32,7 +30,7 @@ var ua = navigator.userAgent.match(/\sEdg\w\//), // For some reason Element.anim
                                 !!new Date(str).getDate() ? new Date(new Date(str).setMinutes(new Date(str).getMinutes() + 1)) :
                                     null
         );
-        return new Date(local(obj)) > max || new Date(local(obj)) < min ? null : obj;
+        return new Date(local(obj)) > local(new Date((new Date).setMonth((new Date).getMonth() + 1))) || new Date(local(obj)) < local() ? null : obj;
     };
 
 window.onload = () => {
@@ -115,6 +113,7 @@ window.onload = () => {
             };
         });
     });
+
     document.body.addEventListener('click', el => {
         if (el.target.classList.contains('lines')) {
             if (!menuBox.classList.contains('active')) return menuBox.classList.add('active');
@@ -122,8 +121,9 @@ window.onload = () => {
         }
         else if (menuBox && menuBox.classList.contains('active') && el.target !== menuBox && !el.target.closest('.menuBox')) closeMenuBox();
     });
+
     let timeGui = document.querySelector('.timeGui'), sel = document.querySelector('.dateTime select'), allOpts = sel.querySelectorAll('option');
-    timeGui.min = min, timeGui.max = max;
+    timeGui.min = local(), timeGui.max = local(new Date((new Date).setMonth((new Date).getMonth() + 1)));
     timeGui.value = local(dateFromValue(sel.querySelector('option[selected]').value));
     let createCust = () => {
         let el = document.createElement('option');
@@ -193,9 +193,9 @@ window.onload = () => {
 
     $("form").submit(function (e) {
         e.preventDefault();
-        if (uploadInput.files.length === 0) return notify('You must first add a file'); load();
-        let name = btnsInner.querySelector('.btn.name input').value, data = { dateTime: local(timeGui.value) }
-        ip = Array.from(document.querySelector('.btns .inner').querySelectorAll('.btn.ipBlackList input')).filter(el => el.value).map(el => el.value.trim()),
+        if (uploadInput.files.length === 0) return notify('You must first add a file');
+        let name = btnsInner.querySelector('.btn.name input').value, data = { dateTime: new Date(local(timeGui.value)) },
+            ip = Array.from(document.querySelector('.btns .inner').querySelectorAll('.btn.ipBlackList input')).filter(el => el.value).map(el => el.value.trim()),
             ip2 = Array.from(document.querySelector('.btns .inner').querySelectorAll('.btn.ipWhiteList input')).filter(el => el.value).map(el => el.value.trim()),
             limit = btnsInner.querySelector('.btn.limit input').value, pass = btnsInner.querySelector('.btn.pass input').value;
 
@@ -204,7 +204,11 @@ window.onload = () => {
         if (name) data.name = name;
         if (ip.length > 0) data.ip = ip;
         if (ip2.length > 0) data.ip2 = ip2;
+        if ((data.dateTime - new Date()) / (24 * 60 * 60 * 1000) > 31) return notify('Given date is over the allowed');
+        if (data.dateTime < local()) return notify('Given date or time is behind');
+        if (data.dateTime < new Date()) return notify('Looks like that time is alittle behind');
 
+        load();
         $.ajax({
             type: "POST",
             url: `/upload/${btoa(JSON.stringify(data))}`,
@@ -227,24 +231,29 @@ window.onload = () => {
     submitBtn.addEventListener('click', () => submitInput.click());
 
     let previewFile = (files) => {
-        let reader = new FileReader();
-        reader.onload = (e) => {
-            let div = document.querySelector('.partInner div:nth-of-type(2)')
-            div.querySelector('h2').innerText = 'Ready to upload';
-            div.querySelector('p').style.opacity = 0;
-            if (files[0].type.startsWith('image/')) {
+        if (files.length === 0) return reset();
+        if (!files[0].type) {
+            notify('Unknown type, did you upload a folder?');
+            return reset();
+        }
+        uploadInput.files = files;
+        let div = document.querySelector('.partInner div:nth-of-type(2)'), reader = new FileReader();
+        div.querySelector('h2').innerText = 'Ready to upload';
+        div.querySelector('p').style.opacity = 0;
+        if (files[0].type.startsWith('image/')) {
+            reader.onload = (e) => {
                 fileImg.setAttribute('src', e.target.result);
                 fileImg.setAttribute('width', '200px');
                 fileIcon.style.display = 'none'
                 fileImg.style.display = 'revert';
-            } else {
-                fileImg.style.display = 'none';
-                fileIcon.style.display = 'revert';
-                let ext = files[0].name.split('.').pop();
-                fileIcon.querySelector('p').innerText = ext.length <= 5 ? ext : files[0].name.substr(0, 2) + '...';
-            }
-            loaded();
-        };
+            };
+        } else {
+            fileImg.style.display = 'none';
+            fileIcon.style.display = 'revert';
+            let ext = files[0].name.split('.').pop();
+            fileIcon.querySelector('p').innerText = ext.length <= 5 ? ext : files[0].name.substr(0, 2) + '...';
+        }
+        loaded();
 
         reader.readAsDataURL(files[0]);
     };
@@ -254,22 +263,15 @@ window.onload = () => {
     }
 
     let drag = document.querySelector('.dragParent');
-    drag.ondragover = () => { drag.classList.add('hover'); return false; };
-    drag.ondragleave = () => { drag.classList.remove('hover'); return false; };
+    drag.ondragover = () => false;
     drag.ondrop = (e) => {
         e.preventDefault();
         let files = e.dataTransfer.files;
-        if (files) {
-            uploadInput.files = files;
-            previewFile(files);
-        }
+        if (files) previewFile(files);
     };
 
     document.onpaste = (e) => {
         var items = e.clipboardData || e.originalEvent.clipboardData;
-        if (items.files && items.files.length > 0) {
-            uploadInput.files = items.files;
-            previewFile(items.files);
-        };
+        if (items.files && items.files.length > 0) previewFile(items.files);
     };
 };
