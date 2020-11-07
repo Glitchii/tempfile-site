@@ -34,12 +34,12 @@ var ua = navigator.userAgent.match(/\sEdg\w\//), // For some reason Element.anim
     };
 
 window.onload = () => {
-    var menuBox = document.querySelector('.menuBox'),
+    let menuBox = document.querySelector('.menuBox'),
         links = document.querySelector('.links'),
-        fileIcon = document.querySelector('.partInner div .fileIcon'),
-        fileImg = document.querySelector('.partInner div img'),
+        fileImg = document.querySelector('.partInner .img.otherImg'),
         loader = document.querySelector(".loader"),
         uploadInput = document.querySelector('input#upload'),
+        drag = document.querySelector('.drag'),
         closeMenuBox = () => {
             if (ua) return menuBox.classList.remove('active');
             menuBox.animate([
@@ -92,12 +92,7 @@ window.onload = () => {
                 .onfinish = () => loader.style.removeProperty('display');
 
         }, reset = () => {
-            let div = document.querySelector('.partInner div:nth-of-type(2)')
-            div.querySelector('h2').innerText = 'Drag file here';
-            div.querySelector('p').style.removeProperty('opacity');
-            fileIcon.style.removeProperty('display');
-            fileImg.setAttribute('src', '/assets/imgs/upload.svg');
-            fileImg.style.removeProperty('display');
+            drag.classList.remove(...['hasFile', 'notImg']);
             document.querySelectorAll('.btns .btn .input').forEach(i => i.value = '');
             uploadInput.value = '';
         };
@@ -193,7 +188,7 @@ window.onload = () => {
 
     $("form").submit(function (e) {
         e.preventDefault();
-        if (uploadInput.files.length === 0) return notify('You must first add a file');
+        if (uploadInput.files.length === 0) return notify('You must add a file first');
         let name = btnsInner.querySelector('.btn.name input').value, data = { dateTime: new Date(local(timeGui.value)) },
             ip = Array.from(document.querySelector('.btns .inner').querySelectorAll('.btn.ipBlackList input')).filter(el => el.value).map(el => el.value.trim()),
             ip2 = Array.from(document.querySelector('.btns .inner').querySelectorAll('.btn.ipWhiteList input')).filter(el => el.value).map(el => el.value.trim()),
@@ -237,21 +232,21 @@ window.onload = () => {
             return reset();
         }
         uploadInput.files = files;
-        let div = document.querySelector('.partInner div:nth-of-type(2)'), reader = new FileReader();
-        div.querySelector('h2').innerText = 'Ready to upload';
-        div.querySelector('p').style.opacity = 0;
+        let reader = new FileReader();
+        if (window.matchMedia('(max-width: 1125px)').matches) setTimeout(() => window.scrollTo({
+            top: document.documentElement.scrollHeight,
+            behavior: 'smooth'
+        }), 1000);
+
         if (files[0].type.startsWith('image/')) {
             reader.onload = (e) => {
                 fileImg.setAttribute('src', e.target.result);
-                fileImg.setAttribute('width', '200px');
-                fileIcon.style.display = 'none'
-                fileImg.style.display = 'revert';
+                drag.classList.add('hasFile');
             };
         } else {
-            fileImg.style.display = 'none';
-            fileIcon.style.display = 'revert';
             let ext = files[0].name.split('.').pop();
-            fileIcon.querySelector('p').innerText = ext.length <= 5 ? ext : files[0].name.substr(0, 2) + '...';
+            document.querySelector('.partInner div .fileIcon p').innerText = ext.length <= 5 ? ext : files[0].name.substr(0, 2) + '...';
+            drag.classList.add(...['hasFile', 'notImg']);
         }
         loaded();
 
@@ -262,9 +257,9 @@ window.onload = () => {
         if (e.target.files) previewFile(e.target.files);
     }
 
-    let drag = document.querySelector('.dragParent');
-    drag.ondragover = () => false;
-    drag.ondrop = (e) => {
+    let dP = drag.closest('.dragParent');
+    dP.ondragover = () => false;
+    dP.ondrop = (e) => {
         e.preventDefault();
         let files = e.dataTransfer.files;
         if (files) previewFile(files);

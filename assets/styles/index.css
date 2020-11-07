@@ -101,8 +101,16 @@ header, .cont {
     transition: .5s ease;
 }
 
-.drag>div div:not(.uploadBtn) .mainImg {
+.drag>div div:not(.uploadBtn) .img {
     width: 250px;
+}
+.drag>div div:not(.uploadBtn) .img.otherImg {
+    width: 240px;
+    margin-bottom: 8px;
+}
+
+.drag.hasFile>div div:not(.uploadBtn) .mainImg, .drag:not(.hasFile)>div div:not(.uploadBtn) .otherImg {
+    display: none;
 }
 
 .drag .partInner {
@@ -133,6 +141,10 @@ header, .cont {
     color: #424345;
 }
 
+.drag.drag.hasFile h2 {
+    margin-top: 0;
+}
+
 #upload {
     display: none;
 }
@@ -150,7 +162,6 @@ header, .cont {
 @keyframes uploadBtnAn {
     from {
         opacity: 0;
-        transform: translateY(100%);
     }
 }
 
@@ -160,21 +171,29 @@ header, .cont {
 }
 
 .partInner h2+p::after {
-    content: "Drag and drop any or click anywere here to browse your computer.\AYou can also paste images";
     white-space: pre;
     color: #626364;
+}
+.drag .partInner h2+p::after {
+    content: "Drag and drop a file or click anywere here to browse your computer.\AYou can also paste images";
+    transition: 1s ease;
+}
+.drag.hasFile .partInner h2+p::after {
+    opacity: .5;
+}
+.drag .partInner h2::after {
+    content: "Drag File Here";
+}
+
+.drag.hasFile .partInner h2::after {
+    content: "Ready to upload";
 }
 
 .partInner div img {
     border-radius: 5px;
 }
 
-.partInner * {
-    transition: 1s ease;
-}
-
 .partInner .uploadBtn {
-    transition: 1s ease;
     width: 50px;
     height: 50px;
     border-radius: 100%;
@@ -184,7 +203,11 @@ header, .cont {
     top: 190px;
     box-shadow: 0px 0px 20px 0px #539afe61;
     background: linear-gradient(to bottom, #539afe, #536ffe);
-    animation: uploadBtnAn 1s ease;
+    animation: uploadBtnAn .5s ease-in;
+}
+
+.drag.hasFile.notImg .partInner .uploadBtn {
+    top: calc(221.5px);
 }
 
 header .logoText, header .logoText span {
@@ -359,6 +382,7 @@ main {
     transition: .5s ease;
     cursor: pointer;
     margin-top: 100px;
+    animation: uploadBtnAn .5s ease-in;
 }
 
 .submit .in {
