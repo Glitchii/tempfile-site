@@ -104,6 +104,7 @@ header, .cont {
 .drag>div div:not(.uploadBtn) .img {
     width: 250px;
 }
+
 .drag>div div:not(.uploadBtn) .img.otherImg {
     width: 240px;
     margin-bottom: 8px;
@@ -174,13 +175,16 @@ header, .cont {
     white-space: pre;
     color: #626364;
 }
+
 .drag .partInner h2+p::after {
     content: "Drag and drop a file or click anywere here to browse your computer.\AYou can also paste images";
     transition: 1s ease;
 }
+
 .drag.hasFile .partInner h2+p::after {
     opacity: .5;
 }
+
 .drag .partInner h2::after {
     content: "Drag File Here";
 }
