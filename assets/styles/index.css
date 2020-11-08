@@ -813,23 +813,32 @@ body.showLinks .ov {
 }
 
 .linkBtn {
-    padding: 5px;
+    padding: 5px 17px;
     cursor: pointer;
+    width: 30px;
 }
 
-.linkBtn:first-child svg {
+.linkBtn svg {
     width: 20px;
 }
 
-.linkBtn:last-child svg {
-    width: 23px;
+.linkBtn.del svg {
+    width: 21px;
 }
 
-.linkBtn:last-child svg path {
+.linkBtn.goToLink svg {
+    width: 19px;
+}
+
+.linkBtn.del svg path {
     fill: #e67f78;
 }
 
-.linkBtn:first-child svg path {
+.linkBtn.copy svg path {
+    fill: #31a5ad;
+}
+
+.linkBtn.goToLink svg path {
     fill: #31ada9;
 }
 

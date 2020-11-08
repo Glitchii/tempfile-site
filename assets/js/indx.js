@@ -171,15 +171,11 @@ window.onload = () => {
         submitBtn = btnsInner.querySelector('.submit'),
         inp = document.querySelector('.urls input');
 
-    document.querySelector('.linkBtn:first-child').addEventListener('click', () => {
+    document.querySelector('.urls .linkBtns .linkBtn.copy').addEventListener('click', () => {
         inp.select();
         inp.setSelectionRange(0, 99999);
         document.execCommand("copy");
     });
-
-    document.querySelector('.linkBtn:last-child').addEventListener('click', el =>
-        window.location.href = el.target.closest('.urls').querySelector('.btn input').value.replace('/file/', '/del/')
-    );
 
     document.querySelectorAll('.notif .notifCloseBtn').forEach(e =>
         e.addEventListener('click', el => closeBtn(el.target.parentNode))
@@ -210,6 +206,8 @@ window.onload = () => {
             contentType: false,
             success: function (r) {
                 inp.value = `${window.location.protocol}//${window.location.host}${r.url}`;
+                inp.closest('.urls').querySelector('.linkBtns .linkBtn.del').href = inp.value.replace('/file/', '/del/');
+                inp.closest('.urls').querySelector('.linkBtns .linkBtn.goToLink').href = inp.value;
                 document.body.classList.add('showLinks');
                 loaded(); reset(); inp.select();
             },
