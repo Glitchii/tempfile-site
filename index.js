@@ -63,7 +63,7 @@ app.use(express.json());
 app.get('/', (req, res) => res.render('index'));
 
 app.post("/upload/:info", async (req, res) => {
-    let info = JSON.parse(Buffer.from(req.params.info, 'base64').toString('ascii')), name = await chooseName(info.name), min = new Date(), max = new Date((new Date).setMonth((new Date).getMonth() + 1)), date = new Date(info.dateTime);
+    let info = JSON.parse(Buffer.from(req.params.info, 'base64').toString('ascii')), name = await chooseName(info.name), date = new Date(info.dateTime);
     info.dateTime = date; info.userIP = (req.headers['x-forwarded-for'] || req.connection.remoteAddress).split(',')[0];
     if (!!!new Date(info.dateTime).getDate()) return res.status(417).send('Given date is invalid');
     if (info.limit && isNaN(info.limit)) return res.status(417).send('The given limit isn\'t a number');
@@ -103,9 +103,11 @@ app.post("/upload/:info", async (req, res) => {
         else if (err) return res.status(200).send(err);
 
         await files.findOneAndUpdate({ filename: req.file.filename }, { $set: info });
-        let chunk = await chunks.findOne({ file_id: req.file._id });
-        chunk.dateTime = date;
-        await chunks.findOneAndUpdate({ file_id: req.file._id }, { $set: chunk });
+        setTimeout(async () => {
+            let chunk = await chunks.findOne({ file_id: req.file._id });
+            chunk.dateTime = date;
+            await chunks.findOneAndUpdate({ file_id: req.file._id }, { $set: chunk });
+        }, 2000);
         return res.status(200).json({ url: `/file/${req.file.filename}` });
     });
 });
