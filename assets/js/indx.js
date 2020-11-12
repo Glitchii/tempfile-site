@@ -181,7 +181,7 @@ window.onload = () => {
         e.addEventListener('click', el => closeBtn(el.target.parentNode))
     );
 
-    $("form").submit(function (e) {
+    document.querySelector('form').addEventListener('submit', e => {
         e.preventDefault();
         let name = btnsInner.querySelector('.btn.name input').value, data = { dateTime: new Date(local(timeGui.value)) },
             ip = Array.from(document.querySelector('.btns .inner').querySelectorAll('.btn.ipBlackList input')).filter(el => el.value).map(el => el.value.trim()),
@@ -198,25 +198,24 @@ window.onload = () => {
         if (data.dateTime < new Date()) return notify('Looks like that time is alittle behind');
 
         load();
-        $.ajax({
-            type: "POST",
-            url: `/upload/${btoa(JSON.stringify(data))}`,
-            data: new FormData(this),
-            processData: false,
-            contentType: false,
-            success: function (r) {
-                inp.value = `${window.location.protocol}//${window.location.host}${r.url}`;
-                inp.closest('.urls').querySelector('.linkBtns .linkBtn.del').href = inp.value.replace('/file/', '/del/');
-                inp.closest('.urls').querySelector('.linkBtns .linkBtn.goToLink').href = inp.value;
-                document.body.classList.add('showLinks');
-                loaded(); reset(); inp.select();
-            },
-            error: function (e) {
-                if (e.status === 417) notify(e.responseText || e.statusText);
-                else if (e.status === 0) notify("Upload failed. [Report issue](https://github.com/Glitchii/tempfile.site/issues)?");
+        fetch(`/upload/${btoa(JSON.stringify(data))}`, {
+            method: "POST",
+            body: new FormData(e.target),
+
+        })
+            .then(res => {
+                if (res.status === 200)
+                    res.json().then(res => {
+                        inp.value = `${window.location.protocol}//${window.location.host}/file/${res.url}`;
+                        inp.closest('.urls').querySelector('.linkBtns .linkBtn.del').href = inp.value.replace('/file/', '/del/');
+                        inp.closest('.urls').querySelector('.linkBtns .linkBtn.goToLink').href = inp.value;
+                        document.body.classList.add('showLinks');
+                        loaded(); reset(); inp.select();
+                    });
+                else if (res.status === 417) notify(res.responseText || res.statusText);
+                else notify(`Upload failed (${res.status}). [Report issue](https://github.com/Glitchii/tempfile.site/issues)?`);
                 loaded();
-            }
-        });
+            });
     });
 
     submitBtn.addEventListener('click', () => {

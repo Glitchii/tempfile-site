@@ -108,7 +108,7 @@ app.post("/upload/:info", async (req, res) => {
             chunk.dateTime = date;
             await chunks.findOneAndUpdate({ file_id: req.file._id }, { $set: chunk });
         }, 2000);
-        return res.status(200).json({ url: `/file/${req.file.filename}` });
+        return res.status(200).json({ url: req.file.filename });
     });
 });
 
@@ -124,6 +124,7 @@ app.get("/file/:name", async (req, res) => {
             req.cookies.set('_tmpfle', '', { maxAge: 0, sameSite: 'Lax' });
         }
 
+        res.setHeader('Access-Control-Allow-Origin', '*');
         let stream = gfs.openDownloadStreamByName(find.filename).pipe(res);
         stream.on('close', async () => {
             if (find.limit && ((hds['sec-fetch-site'] === 'same-origin' && hds['sec-fetch-mode'] !== 'no-cors') || hds['sec-fetch-site'] !== 'same-origin')) {
@@ -179,5 +180,4 @@ app.get('/contact', (req, res) => res.status(302).redirect('https://github.com/G
 app.use((req, res, next) => res.status(404).render('error', { type: 404 }));
 
 const PORT = process.env.PORT || 2020,
-    server = app.listen(PORT, () => console.log(`Listening on port ${PORT}`)),
-    io = require('socket.io')(server);
+    server = app.listen(PORT, () => console.log(`Listening on port ${PORT}`));
