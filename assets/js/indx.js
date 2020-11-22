@@ -183,25 +183,27 @@ window.onload = () => {
 
     document.querySelector('form').addEventListener('submit', e => {
         e.preventDefault();
-        let name = btnsInner.querySelector('.btn.name input').value, data = { dateTime: new Date(local(timeGui.value)) },
+        let data = { dateTime: new Date(local(timeGui.value)) },
+            name = btnsInner.querySelector('.btn.name input').value,
             ip = Array.from(document.querySelector('.btns .inner').querySelectorAll('.btn.ipBlackList input')).filter(el => el.value).map(el => el.value.trim()),
             ip2 = Array.from(document.querySelector('.btns .inner').querySelectorAll('.btn.ipWhiteList input')).filter(el => el.value).map(el => el.value.trim()),
             limit = btnsInner.querySelector('.btn.limit input').value, pass = btnsInner.querySelector('.btn.pass input').value;
 
         if (limit) data.limit = limit;
         if (pass) data.pass = pass;
-        if (name) data.name = name;
         if (ip.length > 0) data.ip = ip;
         if (ip2.length > 0) data.ip2 = ip2;
         if ((data.dateTime - new Date()) / (24 * 60 * 60 * 1000) > 31) return notify('Given date is over the allowed');
         if (data.dateTime < local()) return notify('Given date or time is behind');
         if (data.dateTime < new Date()) return notify('Looks like that time is alittle behind');
-
         load();
-        fetch(`/upload/${btoa(JSON.stringify(data))}`, {
-            method: "POST",
-            body: new FormData(e.target),
 
+        let formData = new FormData(e.target);
+        formData.append('data', JSON.stringify(data));
+
+        fetch('/upload/' + btoa(name), {
+            method: "POST",
+            body: formData
         })
             .then(res => {
                 if (res.status === 200)

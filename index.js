@@ -16,7 +16,6 @@ dbClient.connect().then(async (res, err) => {
     if (err) throw err;
     db = dbClient.db('db'), files = db.collection('data.files'), chunks = db.collection('data.chunks'), gfs = new GridFSBucket(db, { bucketName: "data" });
     if (!await files.indexExists('dateTime_1')) files.createIndex({ dateTime: 1 }, { expireAfterSeconds: 0 });
-    if (!await chunks.indexExists('dateTime_1')) chunks.createIndex({ dateTime: 1 }, { expireAfterSeconds: 0 });
 
     files.watch().on('change', next => {
         if (next.operationType == 'delete') {
@@ -62,30 +61,8 @@ app.use(express.json());
 
 app.get('/', (req, res) => res.render('index'));
 
-app.post("/upload/:info", async (req, res) => {
-    let info = JSON.parse(Buffer.from(req.params.info, 'base64').toString('ascii')), name = await chooseName(info.name), date = new Date(info.dateTime);
-    info.dateTime = date; info.userIP = (req.headers['x-forwarded-for'] || req.connection.remoteAddress).split(',')[0];
-    if (!!!new Date(info.dateTime).getDate()) return res.status(417).send('Given date is invalid');
-    if (info.limit && isNaN(info.limit)) return res.status(417).send('The given limit isn\'t a number');
-    if (info.limit && info.limit < 1) return res.status(417).send("Limit invalid. Leave empty for unlimited");
-    if ((info.ip && info.ip.length > 4) || (info.ip2 && info.ip2.length > 4)) return res.status(417).send('I can only accept 4 IPs');
-    if (info.pass) bcrypt.hash(info.pass, 10, (err, hash) => {
-        if (err) return res.status(500).send('There was an error hashing password');
-        info.pass = hash;
-    });
-
-    let checkIP = (ip, ip2) => {
-        if (ip) for (i = 0; i < ip.length; i++) {
-            if (!ipRegex({ exact: true }).test(ip[i])) return `This IP "${ip[i]}" is invalid`;
-            if (ip2 && ip2.includes(ip[i])) return `This IP "${ip[i]}" shouldn't be in both whitelist and blacklist box`;
-        };
-    },
-        ipCheck = checkIP(info.ip, info.ip2),
-        ip2Check = checkIP(info.ip2, info.ip);
-
-    if (ipCheck) return res.status(417).send(ipCheck);
-    if (ip2Check) return res.status(417).send(ip2Check);
-
+app.post("/upload/:name?", async (req, res) => {
+    let name = await chooseName(req.params.name ? Buffer.from(req.params.name, 'base64').toString('utf-8') : null);
     multer({
         storage: new GridFsStorage({
             url: mongoURI,
@@ -102,13 +79,37 @@ app.post("/upload/:info", async (req, res) => {
         else if (err instanceof multer.MulterError) return res.status(200).send(err);
         else if (err) return res.status(200).send(err);
 
-        await files.findOneAndUpdate({ filename: req.file.filename }, { $set: info });
-        setTimeout(async () => {
-            let chunk = await chunks.findOne({ file_id: req.file._id });
-            chunk.dateTime = date;
-            await chunks.findOneAndUpdate({ file_id: req.file._id }, { $set: chunk });
-        }, 2000);
-        return res.status(200).json({ url: req.file.filename });
+        try {
+            
+            let info = JSON.parse(req.body.data), date = new Date(info.dateTime);
+            info.dateTime = date; info.userIP = (req.headers['x-forwarded-for'] || req.connection.remoteAddress).split(',')[0];
+            if (!!!new Date(info.dateTime).getDate()) return res.status(417).send('Given date is invalid');
+            if (info.limit && isNaN(info.limit)) return res.status(417).send('The given limit isn\'t a number');
+            if (info.limit && info.limit < 1) return res.status(417).send("Limit invalid. Leave empty for unlimited");
+            if ((info.ip && info.ip.length > 4) || (info.ip2 && info.ip2.length > 4)) return res.status(417).send('I can only accept 4 IPs');
+            if (info.pass) bcrypt.hash(info.pass, 10, (err, hash) => {
+                if (err) return res.status(500).send('There was an error hashing password');
+                info.pass = hash;
+            });
+
+            let checkIP = (ip, ip2) => {
+                if (ip) for (i = 0; i < ip.length; i++) {
+                    if (!ipRegex({ exact: true }).test(ip[i])) return `This IP "${ip[i]}" is invalid`;
+                    if (ip2 && ip2.includes(ip[i])) return `This IP "${ip[i]}" shouldn't be in both whitelist and blacklist box`;
+                };
+            },
+                ipCheck = checkIP(info.ip, info.ip2),
+                ip2Check = checkIP(info.ip2, info.ip);
+
+            if (ipCheck) return res.status(417).send(ipCheck);
+            if (ip2Check) return res.status(417).send(ip2Check);
+
+            await files.findOneAndUpdate({ filename: req.file.filename }, { $set: info });
+            return res.status(200).json({ url: req.file.filename });
+        } catch (err) {
+            res.status(500).send('Failed adding info to database');
+            return await gfs.delete(ObjectId(req.file._id));
+        }
     });
 });
 
