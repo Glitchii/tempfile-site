@@ -19,11 +19,7 @@ const { lookFor, chooseName, checkIP } = require('./assets/components'),
 dbClient.connect().then(async (_res, err) => {
     if (err) throw err;
     db = dbClient.db('db'), files = db.collection('data.files'), chunks = db.collection('data.chunks'), gfs = new GridFSBucket(db, { bucketName: "data" });
-<<<<<<< HEAD
     if (!await files.indexExists('datetime_1')) files.createIndex({ datetime: 1 }, { expireAfterSeconds: 0 });
-=======
-    if (!await files.indexExists('dateTime_1')) files.createIndex({ dateTime: 1 }, { expireAfterSeconds: 0 });
->>>>>>> 67c1de61372b29399bd070075f43c2d174ca1971
 
     files.watch().on('change', next => {
         if (next.operationType == 'delete') {
@@ -41,11 +37,6 @@ app.use(express.json());
 app.use('/api/', require('./routes/api/index'));
 app.get('/', (_req, res) => res.render('index', { authKey: randomWords({ exactly: 3, maxLength: 3, join: '.' }) }));
 
-<<<<<<< HEAD
-=======
-app.get('/', (req, res) => res.render('index'));
-
->>>>>>> 67c1de61372b29399bd070075f43c2d174ca1971
 app.post("/upload/:name?", async (req, res) => {
     let name = await chooseName(req.params.name ? Buffer.from(req.params.name, 'base64').toString('utf-8') : null);
     multer({
@@ -62,7 +53,6 @@ app.post("/upload/:name?", async (req, res) => {
         if (err) return res.status(500).send(err);
         if (!req.file) return res.status(505).send('Looks like you never added a file.');
         if (req.fileValidationError) return res.send(req.fileValidationError);
-<<<<<<< HEAD
 
         try {
             var info = JSON.parse(req.body.data), date = new Date(info.datetime);
@@ -83,42 +73,6 @@ app.post("/upload/:name?", async (req, res) => {
         } catch (err) {
             res.status(500).send('Failed adding info to database');
             gfs.delete(ObjectId(req.file.id || req.file._id)).catch(err => console.log(err));
-=======
-        else if (!req.file) return res.status(417).send('Looks like you never added a file.');
-        else if (err instanceof multer.MulterError) return res.status(200).send(err);
-        else if (err) return res.status(200).send(err);
-
-        try {
-            
-            let info = JSON.parse(req.body.data), date = new Date(info.dateTime);
-            info.dateTime = date; info.userIP = (req.headers['x-forwarded-for'] || req.connection.remoteAddress).split(',')[0];
-            if (!!!new Date(info.dateTime).getDate()) return res.status(417).send('Given date is invalid');
-            if (info.limit && isNaN(info.limit)) return res.status(417).send('The given limit isn\'t a number');
-            if (info.limit && info.limit < 1) return res.status(417).send("Limit invalid. Leave empty for unlimited");
-            if ((info.ip && info.ip.length > 4) || (info.ip2 && info.ip2.length > 4)) return res.status(417).send('I can only accept 4 IPs');
-            if (info.pass) bcrypt.hash(info.pass, 10, (err, hash) => {
-                if (err) return res.status(500).send('There was an error hashing password');
-                info.pass = hash;
-            });
-
-            let checkIP = (ip, ip2) => {
-                if (ip) for (i = 0; i < ip.length; i++) {
-                    if (!ipRegex({ exact: true }).test(ip[i])) return `This IP "${ip[i]}" is invalid`;
-                    if (ip2 && ip2.includes(ip[i])) return `This IP "${ip[i]}" shouldn't be in both whitelist and blacklist box`;
-                };
-            },
-                ipCheck = checkIP(info.ip, info.ip2),
-                ip2Check = checkIP(info.ip2, info.ip);
-
-            if (ipCheck) return res.status(417).send(ipCheck);
-            if (ip2Check) return res.status(417).send(ip2Check);
-
-            await files.findOneAndUpdate({ filename: req.file.filename }, { $set: info });
-            return res.status(200).json({ url: req.file.filename });
-        } catch (err) {
-            res.status(500).send('Failed adding info to database');
-            return await gfs.delete(ObjectId(req.file._id));
->>>>>>> 67c1de61372b29399bd070075f43c2d174ca1971
         }
     });
 });
