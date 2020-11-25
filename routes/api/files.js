@@ -116,7 +116,7 @@ let get = (req, res, filename) =>
 
                 data.datetime = chosenDate;
                 await files.findOneAndUpdate({ filename: req.file.filename }, { $set: data });
-                return res.ok({ link: `${process.env.WEBURL}/files/${data.filename}`, authkey: data.authkey });
+                return res.ok({ link: `https://tempfile.site/files/${data.filename}`, authkey: data.authkey });
             } catch (err) {
                 if (info.ipblacklist && Array.isArray(info.ipblacklist)) res.err(0, 'DuplicateKey', `'ipblacklist' is repeated more than once. You must use one string separeted with a comma, eg. '-F ipblacklist="12.3.45, 678.9.0"'`);
                 else if (info.ipwhitelist && Array.isArray(info.ipwhitelist)) res.err(0, 'DuplicateKey', `'ipwhitelist' is repeated more than once. You must use one string separeted with a comma, eg. '-F ipwhitelist="12.3.45, 678.9.0"'`);
