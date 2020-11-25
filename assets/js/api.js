@@ -29,4 +29,8 @@ window.onload = () => {
         }
         else if (menuBox && menuBox.classList.contains('active') && el.target !== menuBox && !el.target.closest('.menuBox')) closeMenuBox();
     });
+
+    ['h2[id]', 'h1[id]'].forEach(str =>
+        document.querySelectorAll(str).forEach(e => e.addEventListener('click', (el) =>
+            location.href = location.origin + location.pathname + '#' + el.target.id)));
 };
