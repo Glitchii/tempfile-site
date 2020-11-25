@@ -334,6 +334,10 @@ header .item {
     margin-top: 20px;
 }
 
+.btnsInner .inner.others .backControl > svg{
+    transform: translateY(-1px);
+}
+
 .btnsInner .inner:not(.others) .backControl {
     left: 50%;
     position: absolute;
