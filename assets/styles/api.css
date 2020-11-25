@@ -18,7 +18,7 @@ body>#content {
     border: 1px solid #e1e4e8;
     padding: 10px 40px;
     padding-bottom: 20px;
-    border-radius: 2px;
+    border-radius: 6px;
     margin-left: auto;
     margin-right: auto;
     margin: 50px auto 0px auto;
@@ -34,6 +34,9 @@ hr {
     border: none;
 }
 
+h2[id], h1[id] {
+    cursor: pointer;
+}
 /** * Links */
 
 pre {
@@ -376,7 +379,6 @@ header .item {
         padding: 5px;
     }
     body>#content {
-        border-radius: 5px;
         margin: 20px auto 0px auto;
         padding: 0px 20px 20px 20px !important;
     }
