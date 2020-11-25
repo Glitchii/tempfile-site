@@ -202,7 +202,11 @@ window.onload = () => {
 
     document.querySelector('form').addEventListener('submit', e => {
         e.preventDefault();
+<<<<<<< HEAD
         let data = { datetime: new Date(local(timeGui.value)) },
+=======
+        let data = { dateTime: new Date(local(timeGui.value)) },
+>>>>>>> 67c1de61372b29399bd070075f43c2d174ca1971
             name = btnsInner.querySelector('.btn.name input').value,
             ip = Array.from(document.querySelector('.btns .inner').querySelectorAll('.btn.ipBlackList input')).filter(el => el.value).map(el => el.value.trim()),
             ip2 = Array.from(document.querySelector('.btns .inner').querySelectorAll('.btn.ipWhiteList input')).filter(el => el.value).map(el => el.value.trim()),
@@ -211,12 +215,20 @@ window.onload = () => {
 
         if (limit) data.limit = limit;
         if (pass) data.pass = pass;
+<<<<<<< HEAD
         if (ip.length > 0) data.ipblacklist = ip;
         if (ip2.length > 0) data.ipwhitelist = ip2;
         if ((data.datetime - new Date()) / (24 * 60 * 60 * 1000) > 31) return notify('Given date is over the limit');
         if (data.datetime < local()) return notify('Given date or time is behind');
         if (data.datetime < new Date()) return notify('Looks like that time is alittle behind');
         if (authKey) data.authkey = authKey;
+=======
+        if (ip.length > 0) data.ip = ip;
+        if (ip2.length > 0) data.ip2 = ip2;
+        if ((data.dateTime - new Date()) / (24 * 60 * 60 * 1000) > 31) return notify('Given date is over the allowed');
+        if (data.dateTime < local()) return notify('Given date or time is behind');
+        if (data.dateTime < new Date()) return notify('Looks like that time is alittle behind');
+>>>>>>> 67c1de61372b29399bd070075f43c2d174ca1971
         load();
 
         let formData = new FormData(e.target);
