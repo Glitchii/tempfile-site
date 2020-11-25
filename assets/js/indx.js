@@ -30,7 +30,18 @@ var ua = navigator.userAgent.match(/\sEdg\w\//), // For some reason Element.anim
                                 !!new Date(str).getDate() ? new Date(new Date(str).setMinutes(new Date(str).getMinutes() + 1)) :
                                     null
 
-        return new Date(local(obj)) > local(new Date((new Date).setMonth((new Date).getMonth() + 1))) || new Date(local(obj)) < local() ? null : new Date(obj);
+        return obj && new Date(local(obj)) > local(new Date((new Date).setMonth((new Date).getMonth() + 1))) || new Date(local(obj)) < local() ? null : new Date(obj);
+    },
+    dateFromValue = str => {
+        let digit = parseFloat(str.replace(/\D+$/, '')), obj = !str ? null : new Date(
+            str.endsWith('m') ? ((new Date).setMinutes((new Date).getMinutes() + digit)) :
+                str.endsWith('h') ? ((new Date).setHours((new Date).getHours() + digit)) :
+                    str.endsWith('d') ? ((new Date).setDate((new Date).getDate() + digit)) :
+                        str.endsWith('w') ? ((new Date).setDate((new Date).getDate() + (7 * digit))) :
+                            str.endsWith('mo') ? ((new Date).setMonth((new Date).getMonth() + digit)) :
+                                new Date(new Date(str).setMinutes(new Date(str).getMinutes() + 1))
+        );
+        return !obj.getDate() ? null : new Date(obj) > new Date((new Date).setMonth((new Date).getMonth() + 1)) ? 1 : new Date(obj) < new Date().setMinutes(new Date().getMinutes() + .5) ? 0 : new Date(obj);
     };
 
 window.onload = () => {
@@ -92,7 +103,7 @@ window.onload = () => {
 
         }, reset = () => {
             drag.classList.remove(...['hasFile', 'notImg']);
-            document.querySelectorAll('.btns .btn .input').forEach(i => i.value = '');
+            document.querySelectorAll('.btns .btn:not(.other) .input').forEach(i => i.value = '');
             uploadInput.value = '';
         };
 
@@ -116,7 +127,7 @@ window.onload = () => {
         else if (menuBox && menuBox.classList.contains('active') && el.target !== menuBox && !el.target.closest('.menuBox')) closeMenuBox();
     });
 
-    let timeGui = document.querySelector('.timeGui'), sel = document.querySelector('.dateTime select'), allOpts = sel.querySelectorAll('option');
+    let timeGui = document.querySelector('.timeGui'), sel = document.querySelector('.datetime select'), allOpts = sel.querySelectorAll('option');
     timeGui.min = local(), timeGui.max = local(new Date((new Date).setMonth((new Date).getMonth() + 1)));
     timeGui.value = local(dateFromValue(sel.querySelector('option[selected]').value));
     let createCust = () => {
@@ -157,12 +168,12 @@ window.onload = () => {
     document.querySelectorAll('.addMore').forEach(e => {
         e.addEventListener('click', el => {
             let btn = el.target.closest('.btn'), c = btn.cloneNode(true), cls = ('.btn.' + btn.classList[1]), all = document.querySelectorAll(cls), placeholder = all[all.length - 1].querySelector('input').placeholder;
-            if (all.length >= 4) return notify('You can only add up to 4');
+            if (all.length >= 5) return notify('You can only add up to 5');
             c.querySelector('.addMore').remove();
             let done = btn.parentNode.insertBefore((btn.parentNode.appendChild(c)), all[all.length - 1].nextSibling);
             done.querySelector('input').placeholder = all.length === 1 ? (placeholder + ' 2') : placeholder.slice(0, -1) + (parseInt(placeholder.slice(-1)) + 1);
             done.outerHTML = document.querySelector('.sep').outerHTML + done.outerHTML;
-            // if (document.querySelectorAll(cls).length >= 4) el.target.remove();
+            // if (document.querySelectorAll(cls).length >= 5) el.target.remove();
         });
     });
 
@@ -172,48 +183,59 @@ window.onload = () => {
         inp = document.querySelector('.urls input');
 
     document.querySelector('.urls .linkBtns .linkBtn.copy').addEventListener('click', () => {
-        inp.select();
-        inp.setSelectionRange(0, 99999);
-        document.execCommand("copy");
+        inp.select(); document.execCommand("copy");
     });
 
     document.querySelectorAll('.notif .notifCloseBtn').forEach(e =>
         e.addEventListener('click', el => closeBtn(el.target.parentNode))
     );
 
+    document.querySelectorAll('.qMark').forEach(e =>
+        e.addEventListener('click', el => {
+            let btn = el.target.closest('.btn');
+            if (btn.classList.contains('qMarkClicked')) btn.querySelector('.qMarkDesc').animate
+                ({ transform: 'translateY(-35px)', opacity: 0 },
+                    { duration: 300, easing: 'ease' })
+                .onfinish = () => btn.classList.remove('qMarkClicked')
+            else btn.classList.add('qMarkClicked');
+        }));
+
     document.querySelector('form').addEventListener('submit', e => {
         e.preventDefault();
-        let name = btnsInner.querySelector('.btn.name input').value, data = { dateTime: new Date(local(timeGui.value)) },
+        let data = { datetime: new Date(local(timeGui.value)) },
+            name = btnsInner.querySelector('.btn.name input').value,
             ip = Array.from(document.querySelector('.btns .inner').querySelectorAll('.btn.ipBlackList input')).filter(el => el.value).map(el => el.value.trim()),
             ip2 = Array.from(document.querySelector('.btns .inner').querySelectorAll('.btn.ipWhiteList input')).filter(el => el.value).map(el => el.value.trim()),
+            authKey = document.querySelector('.btnsInner .inner > .other  .inputOptions input').value,
             limit = btnsInner.querySelector('.btn.limit input').value, pass = btnsInner.querySelector('.btn.pass input').value;
 
         if (limit) data.limit = limit;
         if (pass) data.pass = pass;
-        if (name) data.name = name;
-        if (ip.length > 0) data.ip = ip;
-        if (ip2.length > 0) data.ip2 = ip2;
-        if ((data.dateTime - new Date()) / (24 * 60 * 60 * 1000) > 31) return notify('Given date is over the allowed');
-        if (data.dateTime < local()) return notify('Given date or time is behind');
-        if (data.dateTime < new Date()) return notify('Looks like that time is alittle behind');
-
+        if (ip.length > 0) data.ipblacklist = ip;
+        if (ip2.length > 0) data.ipwhitelist = ip2;
+        if ((data.datetime - new Date()) / (24 * 60 * 60 * 1000) > 31) return notify('Given date is over the limit');
+        if (data.datetime < local()) return notify('Given date or time is behind');
+        if (data.datetime < new Date()) return notify('Looks like that time is alittle behind');
+        if (authKey) data.authkey = authKey;
         load();
-        fetch(`/upload/${btoa(JSON.stringify(data))}`, {
-            method: "POST",
-            body: new FormData(e.target),
 
+        let formData = new FormData(e.target);
+        formData.append('data', JSON.stringify(data));
+
+        fetch('/upload/' + btoa(name), {
+            method: "POST",
+            body: formData
         })
             .then(res => {
                 if (res.status === 200)
                     res.json().then(res => {
-                        inp.value = `${window.location.protocol}//${window.location.host}/file/${res.url}`;
-                        inp.closest('.urls').querySelector('.linkBtns .linkBtn.del').href = inp.value.replace('/file/', '/del/');
+                        inp.value = `${window.location.protocol}//${window.location.host}/files/${res.link}`;
+                        inp.closest('.urls').querySelector('.linkBtns .linkBtn.del').href = inp.value.replace('/files/', '/del/');
                         inp.closest('.urls').querySelector('.linkBtns .linkBtn.goToLink').href = inp.value;
                         document.body.classList.add('showLinks');
                         loaded(); reset(); inp.select();
                     });
-                else if (res.status === 417) notify(res.responseText || res.statusText);
-                else notify(`Upload failed (${res.status}). [Report issue](https://github.com/Glitchii/tempfile.site/issues)?`);
+                else notify(res.status === 404 ? "File not found. Probably deleted" : res.status === 417 ? notify(res.responseText || res.statusText) : `Upload failed (${res.status}). [Report issue](https://github.com/Glitchii/tempfile.site/issues)?`);
                 loaded();
             });
     });
@@ -279,4 +301,47 @@ window.onload = () => {
             previewFile(data.files);
         }
     };
+
+    let backControl = document.querySelector('.btnsInner .inner > .controls  .backControl'),
+        backControl2 = document.querySelector('.btnsInner .inner > .other  .backControl');
+    backControl.addEventListener('click', () => {
+        backControl.animate([
+            { offset: 0 },
+            { transform: 'translate(70px)', opacity: 0, offset: 1 },
+        ], {
+            duration: 300,
+            easing: 'ease'
+        }).onfinish = () => {
+            backControl.closest('.inner').classList.add('others')
+            backControl2.animate([
+                { transform: 'translateX(-100px)', opacity: 0, offset: 0 },
+                { offset: 1 },
+            ], {
+                duration: 300,
+                easing: 'ease'
+            });
+            let inp = backControl2.closest('.inputOptions').firstElementChild, tmp = inp.value;
+            inp.focus();
+            inp.value = '', inp.value = tmp; // Put cursor at the end of text
+        };
+    });
+    backControl2.addEventListener('click', () => {
+        backControl2.animate([
+            { offset: 0 },
+            { transform: 'translateX(-100px)', opacity: 0, offset: 1 },
+        ], {
+            duration: 300,
+            easing: 'ease'
+        }).onfinish = () => {
+            backControl2.closest('.inner.others').classList.remove('others')
+            backControl.animate([
+                { transform: 'translate(70px)', opacity: 0, offset: 0 },
+                { offset: 1 },
+            ], {
+                duration: 300,
+                easing: 'ease'
+            })
+        };
+    });
+
 };

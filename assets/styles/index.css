@@ -30,7 +30,36 @@
     background: rgb(204, 204, 204);
 }
 
-a:hover {
+.colr {
+    color: #538ce8;
+}
+
+.URL {
+    text-decoration: none;
+    position: relative;
+    color: inherit;
+}
+
+.URL::after {
+    content: "";
+    width: 100%;
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    border: 1px solid;
+    transition: .5s ease;
+    display: block;
+}
+
+.URL::after {
+    border-color: #27303638;
+}
+
+.URL:hover::after {
+    border-color: #27303686;
+}
+
+a:not(.URL):hover {
     color: #538ce8;
     transition: .25s ease;
 }
@@ -280,6 +309,118 @@ header .item {
     z-index: 5;
 }
 
+.btnsInner .inner:not(.others) .btn.other, .btnsInner .inner:not(.others) .btn.other+.sep, .btnsInner .inner.others .btn:not(.other), .btnsInner .inner.others .btn:not(.other)+.sep {
+    display: none;
+}
+
+.btnsInner .inner.others>.controls {
+    display: none;
+}
+
+@keyframes backControl {
+    from {
+        opacity: 0;
+        transform: translateX(0);
+    }
+}
+
+.btnsInner .inner .backControl {
+    margin-top: 10px;
+}
+
+.btnsInner .inner.others .backControl {
+    animation: backControl .7s ease;
+    transform: translateX(-37px);
+    margin-top: 20px;
+}
+
+.btnsInner .inner:not(.others) .backControl {
+    left: 50%;
+    position: absolute;
+    transform: translate(-20%);
+}
+
+.btnsInner .inner .backControl {
+    opacity: .7;
+}
+
+.btnsInner .inner.others .btn .input {
+    padding: 10px;
+}
+
+.backControl {
+    display: flex;
+    cursor: pointer;
+    outline: none;
+}
+
+.backControl .controlText {
+    margin-left: 6px;
+    font-weight: bold;
+}
+
+.btnsInner .inner:not(.others) .backControl .controlText {
+    margin: 0 6px 0 0;
+}
+
+.inputOptions {
+    width: 80%;
+    grid-column: 1/3;
+    border-radius: 5px;
+    margin-left: 55px;
+}
+
+.inputOptions>.input {
+    width: 80%;
+    grid-column: 1/3;
+    padding: 7.5px;
+    border-radius: 5px;
+    box-shadow: 0px 0px 14px 0px rgb(0 0 0 / 4%);
+    border: 1px solid #b7bdbeba;
+    background: linear-gradient(45deg, transparent, #f2f2f27a, transparent);
+    width: 97%;
+}
+
+.inputOptions>.controls {
+    display: flex;
+    justify-content: center;
+}
+
+.qMarkAndTxt {
+    display: flex;
+}
+
+@keyframes qMarkDescAn {
+    from {
+        opacity: 0;
+        transform: translateY(-35px);
+    }
+}
+
+.btn:not(.qMarkClicked) .qMarkDesc {
+    display: none;
+}
+
+.qMarkDesc {
+    animation: qMarkDescAn .3s ease;
+    opacity: .5;
+    grid-column-start: 2;
+    transform: translateY(-20px);
+}
+
+.qMark>svg path {
+    fill: #27303696;
+}
+
+.qMark>svg {
+    transform: translateY(5px);
+    background-color: #d0d6e17a;
+    padding: 6px;
+    width: 22px;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
 .btns {
     margin-bottom: 115px;
 }
@@ -370,7 +511,7 @@ main {
     height: 1px;
 }
 
-.btnFollowUp.dateTime {
+.btnFollowUp.datetime {
     position: relative;
     margin-top: 10px;
 }
@@ -574,7 +715,7 @@ main {
     box-shadow: 0px 0px 20px 0px #00000024;
     background-color: #f0f0f0;
     opacity: .5;
-    animation: addMoreAn 2s ease;
+    /* animation: addMoreAn 2s ease; */
 }
 
 .btn:not(:hover) .addMore {
@@ -857,6 +998,21 @@ body.showLinks .ov {
     animation: closeBtnAn 1s ease;
 }
 
+@media screen and (min-width: 1125px) {
+    .btn.limit input {
+        width: 91.5%;
+    }
+    .addMore {
+        transform: translate(-40px, 10px);
+    }
+}
+
+@media screen and (max-width: 1920px) {
+    .addMore {
+        transform: translate(-50px, 10px);
+    }
+}
+
 @media screen and (max-width: 1125px) {
     main {
         display: block;
@@ -880,6 +1036,12 @@ body.showLinks .ov {
         position: unset;
         margin: 10% auto 10% auto;
         opacity: .8;
+    }
+    .addMore {
+        transform: translate(0, 10px);
+    }
+    .btnsInner .inner:not(.others) .backControl {
+        transform: translate(-50%, 50%);
     }
 }
 

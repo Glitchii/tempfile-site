@@ -12,7 +12,7 @@
     <meta property="og:site_name" content="TempFile">
     <meta property="og:type" content="object">
     <meta property="og:title" content="TempFile • File Delete">
-    <meta property="og:url" content="/">
+    <meta property="og:url" content="/del">
     <meta property="og:description" content="A website that temporarily stores files to a certain given date.">
     <title>TempFile • Delete</title>
     <link rel="icon" href="/assets/imgs/icon.png">
@@ -146,7 +146,7 @@
             <h2><%= locals.pass ? "Delete the file?" : "Delete this file?" %> </h2>
             <div class="file">
                 <% if (contentType.startsWith('image/') && !locals.pass) { %>
-                    <img src="/file/<%= filename %>" alt="">
+                    <img src="/files/<%= filename %>" alt="">
                 <% } else { %>
                     <div class="fileIcon">
                         <p><%= filename.split('.').pop().length <= 5 ? filename.split('.').pop() : filename.substr(0, 2) + '...' %> </p>
