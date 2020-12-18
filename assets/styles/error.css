@@ -127,6 +127,10 @@ main>svg {
     margin: 2% 10px 5% 10px;
 }
 
+main.err403>svg {
+    margin: 0 10px 5% 10px;
+}
+
 .main {
     transition: 1s ease;
     width: 80%;
@@ -304,33 +308,78 @@ h2 {
 
 .home .in {
     background: linear-gradient(30deg, #74adff, #7f94ff);
-    box-shadow: 0 0 20px 0 #5368fe33
-}
-
-.home .in {
+    box-shadow: 0 0 20px 0 #5368fe33;
     position: absolute;
     left: 50%;
     transform: translateX(-50%);
     border-radius: 3px;
     padding: 8px 20px;
-    display: flex
+    display: flex;
+}
+
+.home .in span {
+    color: #fff;
+    font-family: var(--font2);
+}
+
+main.err403 .home .in span::after {
+    content: "Home";
+    color: #fff;
+    font-family: var(--font2);
+}
+
+main.err403 .home.usingAuth .in span::after {
+    content: "Continue";
+}
+
+.home:not(.usingAuth) svg:last-of-type, .home.usingAuth svg:first-of-type {
+    display: none;
 }
 
 .home svg {
     width: 20px;
     height: 100%;
     margin-right: 10px;
-    pointer-events: none
+    pointer-events: none;
 }
 
-.home span {
-    color: #fff;
-    font-family: var(--font2);
-    pointer-events: none
+.home svg:last-of-type {
+    width: 17px;
+    margin: 0 0 0 10px;
+    display: flex;
+    transform: translateY(3px);
 }
 
 .leftPart a {
     color: #446eb1;
+}
+
+.sep {
+    width: 100%;
+    background: linear-gradient(to right, transparent, #cfcfcf, transparent);
+    height: 1px;
+}
+
+.useAuth {
+    width: 95%;
+    margin-top: 30px;
+}
+
+.useAuth .btn {
+    display: grid;
+    grid-template-columns: 45px 100%;
+    font-size: 15px;
+}
+
+.useAuth .btn .icon {
+    width: 40px;
+}
+
+.useAuth .btn input {
+    padding: 10px 10px 10px 5px;
+    font-size: 15px;
+    width: 100%;
+    margin-left: 5px;
 }
 
 @keyframes lineAn {
@@ -344,8 +393,13 @@ h2 {
 @media screen and (max-width:835px) {
     .rightPart h2 {
         font-size: 130px;
-        font-size: 130px;
         margin: 20px auto;
+    }
+    main.err403.rightPart h2 {
+        margin-top: 0;
+    }
+    main.err403>svg {
+        margin-bottom: 0;
     }
     .btn .input, .btn p {
         width: 100%;

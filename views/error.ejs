@@ -90,7 +90,7 @@
                 </div>
             </nav>
         </header>
-        <main>
+        <main class="err403">
             <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 1145.57 819.91">
                 <defs>
                     <linearGradient id="2f697947-2a6f-450c-95af-56e5336b1d5f" x1="591.3" y1="646.08" x2="591.3" y2="107.75"
@@ -290,6 +290,28 @@
                     <h2>You have no access.</h2>
                     <p><%= code == 1 ? "Looks like you're forbidden from viewing this file. This means your IP address was probably added as a restrition by the uploader or the uploader only set the file to be accessible from only certain IP addresses which don't include yours" : code == 2 ? "Looks like you don't have access to delete this file. This means your IP address doesn't match with the uploaders." : "Oops... It looks like you don't have permission to either delete or view this file" %>
                     </p>
+                    <div class="useAuth">
+                        <div class="btn">
+                            <div class="icon">
+                                <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:svgjs="http://svgjs.com/svgjs" version="1.1" x="0" y="0" viewBox="0 0 32 32" xml:space="preserve">
+                                    <g>
+                                        <path xmlns="http://www.w3.org/2000/svg" d="m26 32h-20c-3.314 0-6-2.686-6-6v-20c0-3.314 2.686-6 6-6h20c3.314 0 6 2.686 6 6v20c0 3.314-2.686 6-6 6z" data-original="#e3f8fa" style="fill: #dfe6ffbe;"></path>
+                                        <path xmlns="http://www.w3.org/2000/svg" d="m23.334 16h-14.668c-.368 0-.666-.298-.666-.667s.299-.667.667-.667h14.667c.368 0 .667.298.667.667s-.299.667-.667.667z" style="fill: #7c9aff;" data-original="#26c6da"></path>
+                                        <g xmlns="http://www.w3.org/2000/svg" fill="#8ce1eb">
+                                            <path d="m11.333 8h-1.333c-1.103 0-2 .897-2 2v1.333c0 .369.298.667.666.667s.667-.298.667-.667v-1.333c0-.368.299-.667.667-.667h1.333c.368 0 .667-.298.667-.666s-.299-.667-.667-.667z" style="fill: #7c9aff;" data-original="#8ce1eb"></path>
+                                            <path d="m11.333 22.667h-1.333c-.368 0-.667-.299-.667-.667v-1.333c0-.369-.299-.667-.667-.667s-.666.298-.666.667v1.333c0 1.103.897 2 2 2h1.333c.368 0 .667-.298.667-.667s-.299-.666-.667-.666z" style="fill: #7c9aff;" data-original="#8ce1eb"></path>
+                                            <path d="m22 8h-1.333c-.368 0-.667.298-.667.667s.299.667.667.667h1.333c.368 0 .667.299.667.667v1.333c0 .368.299.667.667.667s.666-.299.666-.668v-1.333c0-1.103-.897-2-2-2z" style="fill: #7c9aff;" data-original="#8ce1eb"></path>
+                                            <path d="m23.334 20c-.368 0-.667.298-.667.667v1.333c0 .368-.299.667-.667.667h-1.333c-.368 0-.667.298-.667.667s.299.666.667.666h1.333c1.103 0 2-.897 2-2v-1.333c0-.369-.298-.667-.666-.667z" style="fill: #7c9aff;" data-original="#8ce1eb"></path>
+                                        </g>
+                                        <path xmlns="http://www.w3.org/2000/svg" d="m21.3 15c.014-.145.034-.288.034-.435 0-2.517-2.067-4.565-4.609-4.565s-4.609 2.048-4.609 4.567c0 .149-.034.293-.084.433z" style="fill: #7c9aff;" data-original="#26c6da"></path>
+                                        <path xmlns="http://www.w3.org/2000/svg" d="m10.807 17-.025.04c-.076.12-.115.257-.115.395 0 .408.333.739.742.739h.708v1.174c0 .671.55 1.217 1.225 1.217.133 0 .26-.02.356-.055l.835-.251v1.24c0 .276.224.5.5.5h4.35c.276 0 .5-.224.5-.5v-2.404c0-.685.211-1.344.611-1.906.043-.061.074-.128.114-.19h-9.801z" style="fill: #7c9aff;" data-original="#26c6da"></path>
+                                    </g>
+                                </svg>
+                            </div>
+                            <input type="text" placeholder="Have an auth key?" autocomplete="off">
+                        </div>
+                        <div class="sep"></div>
+                    </div>
                     <div class="home">
                         <div class="in">
                             <svg xmlns="http://www.w3.org/2000/svg" version="1.1" xmlns:xlink="http://www.w3.org/1999/xlink"
@@ -339,7 +361,31 @@
                                     </g>
                                 </g>
                             </svg>
-                            <span>Home</span>
+                            <span></span>
+                            <svg xmlns="http://www.w3.org/2000/svg" version="1.1" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:svgjs="http://svgjs.com/svgjs" width="512" height="512" x="0" y="0" viewBox="0 0 492.004 492.004" xml:space="preserve">
+                                <g>
+                                    <g xmlns="http://www.w3.org/2000/svg">
+                                        <g>
+                                            <path d="M484.14,226.886L306.46,49.202c-5.072-5.072-11.832-7.856-19.04-7.856c-7.216,0-13.972,2.788-19.044,7.856l-16.132,16.136    c-5.068,5.064-7.86,11.828-7.86,19.04c0,7.208,2.792,14.2,7.86,19.264L355.9,207.526H26.58C11.732,207.526,0,219.15,0,234.002    v22.812c0,14.852,11.732,27.648,26.58,27.648h330.496L252.248,388.926c-5.068,5.072-7.86,11.652-7.86,18.864    c0,7.204,2.792,13.88,7.86,18.948l16.132,16.084c5.072,5.072,11.828,7.836,19.044,7.836c7.208,0,13.968-2.8,19.04-7.872    l177.68-177.68c5.084-5.088,7.88-11.88,7.86-19.1C492.02,238.762,489.228,231.966,484.14,226.886z" fill="#ffffff" data-original="#000000"></path>
+                                        </g>
+                                    </g>
+                                    <g xmlns="http://www.w3.org/2000/svg"></g>
+                                    <g xmlns="http://www.w3.org/2000/svg"></g>
+                                    <g xmlns="http://www.w3.org/2000/svg"></g>
+                                    <g xmlns="http://www.w3.org/2000/svg"></g>
+                                    <g xmlns="http://www.w3.org/2000/svg"></g>
+                                    <g xmlns="http://www.w3.org/2000/svg"></g>
+                                    <g xmlns="http://www.w3.org/2000/svg"></g>
+                                    <g xmlns="http://www.w3.org/2000/svg"></g>
+                                    <g xmlns="http://www.w3.org/2000/svg"></g>
+                                    <g xmlns="http://www.w3.org/2000/svg"></g>
+                                    <g xmlns="http://www.w3.org/2000/svg"></g>
+                                    <g xmlns="http://www.w3.org/2000/svg"></g>
+                                    <g xmlns="http://www.w3.org/2000/svg"></g>
+                                    <g xmlns="http://www.w3.org/2000/svg"></g>
+                                    <g xmlns="http://www.w3.org/2000/svg"></g>
+                                </g>
+                            </svg>
                         </div>
                     </div>
                 </div>

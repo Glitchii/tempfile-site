@@ -430,9 +430,7 @@ header .item {
 }
 
 .btn {
-    display: flex;
     display: grid;
-    grid-template-columns: 1fr 1fr;
     grid-template-columns: 45px 100%;
     font-size: 15px;
 }
