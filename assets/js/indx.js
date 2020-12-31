@@ -202,7 +202,6 @@ window.onload = () => {
 
     document.querySelector('form').addEventListener('submit', e => {
         e.preventDefault();
-        console.log(e)
         let data = { datetime: new Date(local(timeGui.value)) },
             name = btnsInner.querySelector('.btn.name input').value,
             ip = Array.from(document.querySelector('.btns .inner').querySelectorAll('.btn.ipBlackList input')).filter(el => el.value).map(el => el.value.trim()),
@@ -211,6 +210,7 @@ window.onload = () => {
             limit = btnsInner.querySelector('.btn.limit input').value, pass = btnsInner.querySelector('.btn.pass input').value;
 
         if (limit) data.limit = limit;
+        if (name) data.name = name;
         if (pass) data.pass = pass;
         if (ip.length > 0) data.ipblacklist = ip;
         if (ip2.length > 0) data.ipwhitelist = ip2;
@@ -222,7 +222,7 @@ window.onload = () => {
         let formData = new FormData(e.target);
         formData.append('data', JSON.stringify(data));
 
-        fetch('/upload/' + btoa(name), {
+        fetch('/upload/', {
             method: "POST",
             body: formData
         })

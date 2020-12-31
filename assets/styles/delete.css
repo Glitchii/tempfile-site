@@ -642,6 +642,6 @@ main.deleted .file:after {
 
 @media screen and (max-width:700px) {
     main {
-        margin: 50px
+        margin: 50px 20px;
     }
 }

@@ -1,7 +1,18 @@
-const ipRegex = require('ip-regex');
-
+const ipRegex = require('ip-regex'),
+    fs = require('fs'),
+    AWS = require('aws-sdk'),
+    logStream = fs.createWriteStream(require('path').join(__dirname, '/logs.log'), { flags: 'a' }),
+    S3 = new AWS.S3({
+        accessKeyId: process.env.ID,
+        secretAccessKey: process.env.secret
+    });
 module.exports = {
-    lookFor: filename => files.findOne({ filename: filename }),
+    lookFor: (name, hasExt) => S3.getObject({
+        Bucket: process.env.bucket,
+        Key: `${name.toLowerCase()}${hasExt ? '' : '.json'}`
+    }).promise()
+        .then(data => JSON.parse(data.Body.toString('utf-8')))
+        .catch(() => null),
     dateFromValue: str => {
         let digit = parseFloat(str.replace(/\D+$/, '')), date = !str ? null : new Date(
             str.endsWith('m') ? ((new Date).setMinutes((new Date).getMinutes() + digit)) :
@@ -11,22 +22,20 @@ module.exports = {
                             str.endsWith('mo') ? ((new Date).setMonth((new Date).getMonth() + digit)) :
                                 new Date(new Date(str).setMinutes(new Date(str).getMinutes() + 1))
         );
-        return !date.getDate() ? null : date > new Date((new Date).setMonth((new Date).getMonth() + 1)) ? 1 : date < new Date().setMinutes(new Date().getMinutes()+.5) ? 0 : date;
+        return !date.getDate() ? null : date > new Date((new Date).setMonth((new Date).getMonth() + 1)) ? 1 : date < new Date().setMinutes(new Date().getMinutes() + .5) ? 0 : date;
     },
-    chooseName: async (filename) => {
-        let name = filename && filename.trim().toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-_\.]/g, ''),
-            findName = async (name) => {
-                let arr = (await files.find({ filename: { $regex: ('^' + name + '((-\\d+)?\\..+)?$') } }).toArray()).sort((x, y) => {
-                    let re = new RegExp(/(?<!-\d+)\.\w+$/g), name1 = x.filename.toLowerCase().replace(/\.\w+$/, ''), name2 = y.filename.toLowerCase().replace(/\.\w+$/, '');
-                    if (re.test(name1) || re.test(name2)) return 0;
-                    else {
-                        if (name1 < name2) return -1;
-                        if (name1 > name2) return 1;
-                    }
-                    return 0;
+    chooseName: async (filename, ext) => {
+        let name = filename ? filename.trim().toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-_\.]/g, '') : null,
+            re = new RegExp(/(?<!-\d+)\.\w+$/g),
+            exp = new RegExp(`\\${ext}\\.json$`);
+        findName = async name => S3.listObjectsV2({ Bucket: process.env.bucket, }).promise()
+            .then(data => {
+                let arr = data.Contents.filter(x => new RegExp(`^${name}(-\\d+)?\\${ext}\\.json$`, 'gi').test(x.Key)).sort((x, y) => {
+                    let name1 = x.Key.replace(exp, ''), name2 = y.Key.replace(re, '');
+                    return re.test(name1) || re.test(name2) ? 0 : name1 < name2 ? -1 : name1 > name2 ? 1 : 0;
                 });
-                return arr.length !== 0 ? arr[arr.length - 1].filename.split('.')[0] : null;
-            };
+                return arr.length !== 0 ? arr[arr.length - 1].Key.replace(/\.[^\.]+?\.json$/g, '') : null;
+            }).catch(() => null);
 
         if (name && await findName(name)) {
             let found = await findName(name);
@@ -44,5 +53,10 @@ module.exports = {
             if (!ipRegex({ exact: true }).test(ip[i])) return `This IP "${ip[i]}" is invalid`;
             if (ip2 && ip2.includes(ip[i])) return `This IP "${ip[i]}" shouldn't be in both whitelist and blacklist box`;
         };
+    }, logger: {
+        info: (...msg) => logStream.write(`${new Date().toISOString()} INFO: ${msg.join(' ')}\n`),
+        warn: (...msg) => logStream.write(`${new Date().toISOString()} WARNING: ${msg.join(' ')}\n`),
+        error: (...msg) => logStream.write(`${new Date().toISOString()} ERROR: ${msg.join(' ')}\n`),
+        fatal: (...msg) => logStream.write(`${new Date().toISOString()} FATAL: ${msg.join(' ')}\n`),
     }
 };

@@ -46,6 +46,6 @@ window.onload = () => {
     })
         .then(res => res.status === 200 ? window.location.reload() : res.status !== 401 ? `Error—${res.statusText} (${res.status})` : deny()));
 
-    authKey.addEventListener('keyup', () =>
+    authKey && authKey.addEventListener('keyup', () =>
         !homeBtn.classList.contains('usingAuth') && homeBtn.classList.add('usingAuth'));
 };

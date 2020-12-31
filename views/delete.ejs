@@ -145,7 +145,7 @@
         <div class="topPart">
             <h2><%= locals.pass ? "Delete the file?" : "Delete this file?" %> </h2>
             <div class="file">
-                <% if (contentType.startsWith('image/') && !locals.pass) { %>
+                <% if ((locals.contentType || mimetype).startsWith('image/') && !locals.pass) { %>
                     <img src="/files/<%= filename %>" alt="">
                 <% } else { %>
                     <div class="fileIcon">
@@ -159,7 +159,6 @@
             </div>
         </div>
         <div class="other">
-            <p class="upOn">Expiring on <span class="dt"><%= uploadDate.toDateString() %></span></p>
             <div class="sep"></div>
             <div class="infos">
                 <h2 class="infoTitle">File Info</h2>
@@ -168,11 +167,10 @@
                 <% } else { %>
                     <div class="info name"><p>File name:</p><p><%= filename %></p></div>
                 <% } %> 
-                <div class="info length"><p>File length:</p><p><%= length %></p></div>
-                <div class="info type"><p>File type:</p><p><%= contentType %></p></div>
-                <div class="info"><p>Upload date:</p><p class="dt"><%= uploadDate.toDateString() %></p></div>
-                <div class="info"><p>Expires on:</p><p class="dt"><%= uploadDate.toDateString() %></p></div>
-                <% if (contentType.startsWith('image/') && locals.pass) { %>
+                <div class="info length"><p>File size:</p><p><%= size %></p></div>
+                <div class="info type"><p>File type:</p><p><%= locals.contentType || mimetype %></p></div>
+                <div class="info"><p>Expires on:</p><p class="dt"><%= new Date(datetime).toDateString() %></p></div>
+                <% if ((locals.contentType || mimetype).startsWith('image/') && locals.pass) { %>
                     <div class="info note"><p><b>Note:</b>&nbsp;Image is password protected</p><p class="dt">—Therefore invisible when added to any site</p></div>
                 <% } %>
             </div>
