@@ -11,7 +11,7 @@ var ua = navigator.userAgent.match(/\sEdg\w\//), // For some reason Element.anim
         if (ua) return _do();
         el.animate({ bottom: '-90px', opacity: '0' }, { duration: 500, easing: 'cubic-bezier(.68, -0.55, .27, 1.55)' }).onfinish = _do;
     }, notify = (text, type, ms) => {
-        text = text.replace(/</g, '&lt;').replace(/>/g, '&gt;') || "Hello world", type = type || 1, ms = ms || 5000;
+        text = text ? text.replace(/</g, '&lt;').replace(/>/g, '&gt;') : "Hello world", type = type || 1, ms = ms || 5000;
         let notif = document.querySelector(".notif"), normal = notif.querySelector(".normal"), success = notif.querySelector(".success"), nor = notif.querySelector('.normal[style*="display: flex;"]'), succ = notif.querySelector('.success[style*="display: flex;"]'), re = /\[(.+)\]\((.+)\)/ig.exec(text);
         let doNext = (elm) => {
             if (re && re.length === 3) text = text.replace(re[0], `<a class="lnk" target="_blank" href="${re[2]}">${re[1]}</a>`);
@@ -202,6 +202,7 @@ window.onload = () => {
 
     document.querySelector('form').addEventListener('submit', e => {
         e.preventDefault();
+        console.log(e)
         let data = { datetime: new Date(local(timeGui.value)) },
             name = btnsInner.querySelector('.btn.name input').value,
             ip = Array.from(document.querySelector('.btns .inner').querySelectorAll('.btn.ipBlackList input')).filter(el => el.value).map(el => el.value.trim()),
@@ -213,9 +214,8 @@ window.onload = () => {
         if (pass) data.pass = pass;
         if (ip.length > 0) data.ipblacklist = ip;
         if (ip2.length > 0) data.ipwhitelist = ip2;
-        if ((data.datetime - new Date()) / (24 * 60 * 60 * 1000) > 31) return notify('Given date is over the limit');
-        if (data.datetime < local()) return notify('Given date or time is behind');
-        if (data.datetime < new Date()) return notify('Looks like that time is alittle behind');
+        if ((data.datetime - new Date()) / (24 * 60 * 60 * 1000) > 31) return notify('Chosen duration is over the limit');
+        if (data.datetime < new Date(local())) return notify('Chosen duration is behind');
         if (authKey) data.authkey = authKey;
         load();
 
@@ -227,16 +227,15 @@ window.onload = () => {
             body: formData
         })
             .then(res => {
-                if (res.status === 200)
-                    res.json().then(res => {
-                        inp.value = `${window.location.protocol}//${window.location.host}/files/${res.link}`;
-                        inp.closest('.urls').querySelector('.linkBtns .linkBtn.del').href = inp.value.replace('/files/', '/del/');
-                        inp.closest('.urls').querySelector('.linkBtns .linkBtn.goToLink').href = inp.value;
-                        document.body.classList.add('showLinks');
-                        loaded(); reset(); inp.select();
-                    });
-                else notify(res.status === 404 ? "File not found. Probably deleted" : res.status === 417 ? notify(res.responseText || res.statusText) : `Upload failed (${res.status}). [Report issue](https://github.com/Glitchii/tempfile.site/issues)?`);
                 loaded();
+                res.json().then(res => {
+                    if (res.err) return notify(res.err);
+                    inp.value = `${window.location.protocol}//${window.location.host}/files/${res.link}`;
+                    inp.closest('.urls').querySelector('.linkBtns .linkBtn.del').href = inp.value.replace('/files/', '/del/');
+                    inp.closest('.urls').querySelector('.linkBtns .linkBtn.goToLink').href = inp.value;
+                    document.body.classList.add('showLinks');
+                    reset(); inp.select();
+                }).catch(() => notify(`Upload failed (${res.status}). [Report issue](https://github.com/Glitchii/tempfile.site/issues)?`));
             });
     });
 

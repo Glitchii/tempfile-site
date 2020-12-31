@@ -334,7 +334,7 @@ header .item {
     margin-top: 20px;
 }
 
-.btnsInner .inner.others .backControl > svg{
+.btnsInner .inner.others .backControl>svg {
     transform: translateY(-1px);
 }
 
@@ -559,7 +559,6 @@ main {
     display: none;
     justify-content: center;
     transition: 1s ease;
-    top: 50px;
     width: 100%;
     position: fixed;
     display: flex;
@@ -594,10 +593,16 @@ main {
     position: absolute;
     transition: .5s ease;
     display: none;
-    bottom: 90px;
+    bottom: 50px;
     margin: 0 10px;
     box-shadow: 0px 0px 20px 5px rgb(78 79 80 / 6%);
     pointer-events: all;
+}
+
+@media screen and (max-width: 360px) {
+    .notif .content {
+        bottom: 10px;
+    }
 }
 
 .notif .content:not(:hover) .notifCloseBtn {

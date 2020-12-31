@@ -50,24 +50,25 @@ app.post("/upload/:name?", async (req, res) => {
             }
         })
     }).single('file')(req, res, async (err) => {
-        if (err) return res.status(500).send(err);
-        if (!req.file) return res.status(505).send('Looks like you never added a file.');
-        if (req.fileValidationError) return res.send(req.fileValidationError);
+        if (err || req.fileValidationError) return res.json({ err: 'There was an internal error' });
+        if (!req.file) return res.json({ err: 'No file received' });
 
         try {
-            var info = JSON.parse(req.body.data), date = new Date(info.datetime);
-            info.datetime = date; info.userIP = res.ip;
-            if (!!!new Date(info.datetime).getDate()) return res.status(417).send('Given date is invalid');
-            if (info.limit && isNaN(info.limit)) return res.status(417).send('The given limit isn\'t a number');
-            if (info.limit && info.limit < 1) return res.status(417).send("Limit invalid. Leave empty for unlimited");
-            if ((info.ipblacklist && info.ipblacklist.length > 5) || (info.ipwhitelist && info.ipwhitelist.length > 5)) return res.status(417).send('I can only accept 5 IPs');
+            let info = JSON.parse(req.body.data);
+            info.datetime = new Date(info.datetime), info.userIP = res.ip;
+            if (!info.datetime.getDate()) return res.json({ err: 'Timestamp is invalid' });
+            if ((info.datetime - new Date()) / (24 * 60 * 60 * 1000) > 31) return res.json({ err: 'Duration cannot be more than a month' });
+            if (info.datetime < new Date()) return res.json({ err: 'Duration is behind' });
+            if (info.limit && isNaN(info.limit)) return res.json({ err: 'The given limit isn\'t a number' });
+            if (info.limit && info.limit < 1) return res.json({ err: "Limit invalid. Leave empty for unlimited" });
+            if ((info.ipblacklist && info.ipblacklist.length > 5) || (info.ipwhitelist && info.ipwhitelist.length > 5)) return res.json({ err: 'I can only accept 5 IPs' });
             if (info.pass) info.pass = await bcrypt.hash(info.pass, 10);
 
             let ipCheck = checkIP(info.ipblacklist, info.ipwhitelist),
                 ip2Check = checkIP(info.ipwhitelist, info.ipblacklist);
 
-            if (ipCheck) return res.status(417).send(ipCheck);
-            if (ip2Check) return res.status(417).send(ip2Check);
+            if (ipCheck) return res.json({ err: ipCheck });
+            if (ip2Check) return res.json({ err: ip2Check });
             await files.findOneAndUpdate({ filename: req.file.filename }, { $set: info });
             return res.status(200).json({ link: req.file.filename });
         } catch (err) {
