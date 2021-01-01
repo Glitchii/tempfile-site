@@ -202,25 +202,24 @@ window.onload = () => {
 
     document.querySelector('form').addEventListener('submit', e => {
         e.preventDefault();
-        let data = { datetime: new Date(local(timeGui.value)) },
-            name = btnsInner.querySelector('.btn.name input').value,
+        let name = btnsInner.querySelector('.btn.name input').value, data = {},
             ip = Array.from(document.querySelector('.btns .inner').querySelectorAll('.btn.ipBlackList input')).filter(el => el.value).map(el => el.value.trim()),
             ip2 = Array.from(document.querySelector('.btns .inner').querySelectorAll('.btn.ipWhiteList input')).filter(el => el.value).map(el => el.value.trim()),
-            authKey = document.querySelector('.btnsInner .inner > .other  .inputOptions input').value,
-            limit = btnsInner.querySelector('.btn.limit input').value, pass = btnsInner.querySelector('.btn.pass input').value;
+            authKey = document.querySelector('.btnsInner .inner > .other  .inputOptions input').value, limit = btnsInner.querySelector('.btn.limit input').value,
+            pass = btnsInner.querySelector('.btn.pass input').value, date = new Date(local(timeGui.value));
 
         if (limit) data.limit = limit;
         if (name) data.name = name;
         if (pass) data.pass = pass;
         if (ip.length > 0) data.ipblacklist = ip;
         if (ip2.length > 0) data.ipwhitelist = ip2;
-        if ((data.datetime - new Date()) / (24 * 60 * 60 * 1000) > 31) return notify('Chosen duration is over the limit');
-        if (data.datetime < new Date(local())) return notify('Chosen duration is behind');
+        if ((date - new Date()) / (24 * 60 * 60 * 1000) > 31) return notify('Chosen duration is over the limit');
+        if (date < new Date(local())) return notify('Chosen duration is behind');
         if (authKey) data.authkey = authKey;
         load();
 
         let formData = new FormData(e.target);
-        formData.append('data', JSON.stringify(data));
+        formData.append('data', JSON.stringify({ ...data, diff: Math.ceil((date - new Date()) / (60 * 1000)) }));
 
         fetch('/upload/', {
             method: "POST",

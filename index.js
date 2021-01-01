@@ -25,17 +25,17 @@ app.use((req, res, next) => (res.ip = (req.headers['x-forwarded-for'] || req.con
 app.post("/upload/", async (req, res) => {
     multer({
         storage: multer.memoryStorage({
-            destination: (req, file, callback) => callback(null, '')
+            destination: (_req, _file, callback) => callback(null, '')
         })
     }).single('file')(req, res, async (err) => {
         if (err || req.fileValidationError) return res.json({ err: 'There was an internal error' });
         if (!req.file) return res.json({ err: 'No file received' });
         try {
-            let info = JSON.parse(req.body.data);
-            info.datetime = new Date(info.datetime), info.userIP = res.ip;
-            if (!info.datetime.getDate()) return res.json({ err: 'Timestamp is invalid' });
-            if ((info.datetime - new Date()) / (24 * 60 * 60 * 1000) > 31) return res.json({ err: 'Duration cannot be more than a month' });
-            if (info.datetime < new Date()) return res.json({ err: 'Duration is behind' });
+            let info = JSON.parse(req.body.data), date = info.diff && !isNaN(info.diff) && new Date(new Date().setMinutes(new Date().getMinutes() + info.diff));
+            if (!date || !date.getDate()) return res.json({ err: 'Recieved invalid date' });
+            info.datetime = date, info.userIP = res.ip;
+            if ((date - new Date()) / (24 * 60 * 60 * 1000) > 31) return res.json({ err: 'Duration cannot be more than a month' });
+            if (date < new Date()) return res.json({ err: 'Duration is behind' });
             if (info.limit && isNaN(info.limit)) return res.json({ err: 'The given limit isn\'t a number' });
             if (info.limit && info.limit < 1) return res.json({ err: "Limit invalid. Leave empty for unlimited" });
             if ((info.ipblacklist && info.ipblacklist.length > 5) || (info.ipwhitelist && info.ipwhitelist.length > 5)) return res.json({ err: 'I can only accept 5 IPs' });
