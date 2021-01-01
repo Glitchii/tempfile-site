@@ -4,7 +4,7 @@ Written in NodeJS, hosted on Heroku, and the files are stored in MongDB.
 
 # Using Requests
 Requests can be done on the api path (/api/files/). After each request, a json response will be returned containing an 'ok' key (bool) to signify if it was successful or not. For example after a successful post request to upload a file, the output should look something like this:  
-`{"ok":true,"link":"https://tempfile.site/files/fileame.png"}`
+`{"ok":true,"link":"https://tempfile.site/files/filename.png"}`
 
 
 ## Getting a file
@@ -18,13 +18,13 @@ curl -O http://tempfile.site/api/files/filename.png -H "pass: the password"
 ```
 
 ## Uploading a file
-To upload a file, you must send a post request to the website with the file and the expiry date / time, eg.
+Use a post request to upload files with the file and the expiry date / time, eg.
 ```bash
 curl -F datetime=1m -F file=@/path/to/file.png http://tempfile.site/api/files
 ```
 For the expiry date, you can either use a timestamp string or a number with a unit eg. `3m` for 3 minutes, `1w` for a week, `1mo` for 1 month or `2002-05-19T:08:00.000Z` for my birthday (just make sure it's not in the past)
 
-To use a custome file name, pass in the name parameter (`-F name=file-name`). Name should have special characters that aren't url friendly&mdash;in other words, it should follow this pattern `[a-z0-9-_\.]`.
+To use a custom filename, use a form argument with a name parameter (`-F name=file-name`). filenames should not have special characters that aren't url friendly&mdash;in other words, it should follow this pattern `[a-z0-9-_\.]`.
 
 **Other options:**
 ```yaml
@@ -36,7 +36,7 @@ ipblacklist: An IP to blacklist from downloading file. (-F ipblacklist="69.80.31
 
 ipwhitelist: If added, file will only be downloaded from this IP. And as mentioned above, you can seperate by a command if more than one.
 
-authkey: Without this key, you won't be able to delete the file if it wasn't posted from the same IP. If you don't give a custom authkey parameter, it'll be gerenerated for you and returned alongside the file link in response
+authkey: Without this key, you won't be able to delete the file if it was not posted from the same IP. If you don't give a custom authkey parameter, it will be gerenerated for you and returned alongside the file link in response
 ```
 *All options must be lowercase.*
 ## Deleting a file
