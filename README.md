@@ -1,6 +1,4 @@
-A website that temporarily stores files that get deleted at a certain (chosen) time or date.  
-Files can be stored to a maximum of a month.  
-Written in NodeJS, hosted on Heroku, and the files are stored in MongDB.  
+A website that temporarily stores files to a certain date or time.
 
 # Using Requests
 Requests can be done on the api path (/api/files/). After each request, a json response will be returned containing an 'ok' key (bool) to signify if it was successful or not. For example after a successful post request to upload a file, the output should look something like this:  
