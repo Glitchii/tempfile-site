@@ -96,7 +96,7 @@
             Requests can be done on the api path (/api/files/). After each request, a json response will be returned
             containing an 'ok' key to signify if it was successful or not. For example after a successful post
             request to upload a file, the output should look something like this: <br />
-            <code>{"ok":true,"link":"https://tempfile.site/files/fileame.png"}</code>
+            <code>{"ok":true,"link":"https://tempfile.site/files/filename.png"}</code>
         </p>
         <h2 id="getting-a-file">Getting a file</h2>
         <p>Use a get request to get a file eg.</p>
@@ -104,7 +104,7 @@
         <p>If a file requires a password, send the password in a header with a pass key eg.</p>
         <pre><code class="bash language-bash">curl -O http://tempfile.site/api/files/filename.png -H "pass: the password"</code></pre>
         <h2 id="uploading-a-file">Uploading a file</h2>
-        <p>To upload a file, you must send a post request to the website with the file and the expiry date / time, eg.
+        <p>Use a post request to upload files with the file and the expiry date / time, eg.
         </p>
         <pre><code class="bash language-bash">curl -F datetime=1m -F file=@/path/to/file.png http://tempfile.site/api/files</code></pre>
         <p>
@@ -113,8 +113,7 @@
             my
             birthday (just make sure it's not in the past)
         </p>
-        <p>To use a custome file name, pass in the name parameter (<code>-F name=file-name</code>). Name should have
-            special characters that aren't url friendly—in other words, it should follow this pattern
+        <p>To use a custom filename, use a form argument with a name parameter (<code>-F name=file-name</code>). Filenames should not have special characters that aren't url friendly, in other words, it should follow this pattern
             <code>[a-z0-9-_\.]</code>.
         </p>
         <p><strong>Other options:</strong></p>
@@ -126,7 +125,7 @@ ipblacklist: An IP to blacklist from downloading file. (-F ipblacklist="69.80.31
 
 ipwhitelist: If added, file will only be downloaded from this IP. And as mentioned above, you can seperate by a command if more than one.
 
-authkey: Without this key, you won't be able to delete the file if it wasn't posted from the same IP. If you don't give a custom authkey parameter, it'll be gerenerated for you and returned alongside the file url in response</code></pre>
+authkey: Without this key, you won't be able to delete the file if it was not posted from the same IP. If you don't give a custom authkey parameter, it will be gerenerated for you and returned alongside the file url in response</code></pre>
         <p><em>All options must be lowercase.</em></p>
         <h2 id="deleting-a-file">Deleting a file</h2>
         <p>To delete a file you'll need to send a delete request to the file eg.</p>

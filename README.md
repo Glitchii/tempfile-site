@@ -24,7 +24,7 @@ curl -F datetime=1m -F file=@/path/to/file.png http://tempfile.site/api/files
 ```
 For the expiry date, you can either use a timestamp string or a number with a unit eg. `3m` for 3 minutes, `1w` for a week, `1mo` for 1 month or `2002-05-19T:08:00.000Z` for my birthday (just make sure it's not in the past)
 
-To use a custom filename, use a form argument with a name parameter (`-F name=file-name`). filenames should not have special characters that aren't url friendly&mdash;in other words, it should follow this pattern `[a-z0-9-_\.]`.
+To use a custom filename, use a form argument with a name parameter (`-F name=file-name`). Filenames should not have special characters that aren't url friendly, in other words, it should follow this pattern `[a-z0-9-_\.]`.
 
 **Other options:**
 ```yaml
