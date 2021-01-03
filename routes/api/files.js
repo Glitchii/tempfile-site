@@ -12,7 +12,6 @@ const { lookFor, chooseName, dateFromValue, logger } = require('../../assets/com
     });
 
 router.use((req, res, next) => {
-    res.header("Access-Control-Allow-Origin", "*");
     res.ip = (req.headers['x-forwarded-for'] || req.connection.remoteAddress).split(',')[0],
         res.ok = (obj) => res.json(obj && { ok: true, ...obj } || { ok: true }),
         res.err = (status, type, msg) => res.status(status || 500).json({
