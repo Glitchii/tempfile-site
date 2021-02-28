@@ -1,7 +1,7 @@
 require('dotenv').config();
 const { lookFor, chooseName, checkIP, logger } = require('./assets/components'),
     randomWords = require("random-words"),
-    PORT = process.env.PORT || 2020,
+    PORT = process.env.PORT || 65535, // Because.
     cookies = require('cookies'),
     express = require('express'),
     bcrypt = require('bcrypt'),
@@ -20,7 +20,7 @@ app.use(express.static(path.join(__dirname)));
 app.use(express.json());
 app.use('/api/', require('./routes/api/index'));
 app.get('/', (_req, res) => res.render('index', { authKey: randomWords({ exactly: 3, maxLength: 3, join: '.' }) }));
-app.use((req, res, next) => (res.ip = (req.headers['x-forwarded-for'] || req.connection.remoteAddress).split(',')[0]) && next());
+app.use((req, res, next) => (res.ip = (req.headers['x-real-ip'] || req.headers['x-forwarded-for'] || req.connection.remoteAddress).reverse()[0]) && next());
 
 app.post("/upload/", async (req, res) => {
     multer({
@@ -33,7 +33,7 @@ app.post("/upload/", async (req, res) => {
         try {
             let info = JSON.parse(req.body.data), date = info.diff && !isNaN(info.diff) && new Date(new Date().setMinutes(new Date().getMinutes() + info.diff));
             if (!date || !date.getDate()) return res.json({ err: 'Recieved invalid date' });
-            info.datetime = date, info.userIP = res.ip;
+            info.datetime = date, info.userIP = await bcrypt.hash(res.ip, 10);
             if ((date - new Date()) / (24 * 60 * 60 * 1000) > 31) return res.json({ err: 'Duration cannot be more than a month' });
             if (date < new Date()) return res.json({ err: 'Duration is behind' });
             if (info.limit && isNaN(info.limit)) return res.json({ err: 'The given limit isn\'t a number' });
@@ -45,6 +45,8 @@ app.post("/upload/", async (req, res) => {
                 ip2Check = checkIP(info.ipwhitelist, info.ipblacklist);
             if (ipCheck) return res.json({ err: ipCheck });
             if (ip2Check) return res.json({ err: ip2Check });
+            info.ipblacklist && info.ipblacklist.forEach(async (ip, i) => info.ipblacklist[i] = await bcrypt.hash(ip, 10))
+            info.ipwhitelist && info.ipwhitelist.forEach(async (ip, i) => info.ipwhitelist[i] = await bcrypt.hash(ip, 10))
 
             let ext = '.' + req.file.originalname.split('.').pop(),
                 name = await chooseName(info.name, ext) + ext, data = {
@@ -55,7 +57,6 @@ app.post("/upload/", async (req, res) => {
                 };
             if (req.file.mimetype) data.mimetype = req.file.mimetype;
             if (req.file.contentType) data.contentType = req.file.contentType;
-
             S3.putObject({
                 Bucket: process.env.bucket,
                 Key: name.toLowerCase() + '.json',
@@ -72,7 +73,23 @@ app.get("/files/:name", async (req, res) => {
     try {
         let find = await lookFor(req.params.name), hds = req.headers, cookie = req.cookies.get('_tmpfle');
         if (!find) return res.status(404).render('error', { type: 404 });
-        if (find.ipblacklist && find.ipblacklist.includes(res.ip) || find.ipwhitelist && !find.ipwhitelist.includes(res.ip)) return req.method == "GET" ? res.status(403).render('error', { code: 1, type: 403 }) : res.status(403).send('You have no access to view this file');
+        if (find.ipblacklist) {
+            for (var ip of find.ipblacklist){
+                if (await bcrypt.compare(res.ip, ip)) {
+                    return req.method == "GET" ? res.status(403).render('error', { code: 1, type: 403, noKey: true }) : res.status(403).send('You are forbidden from viewing this file.');
+                }
+            }
+        }
+        if (find.ipwhitelist) {
+            let passed;
+            for (var ip of find.ipwhitelist){
+                if (await bcrypt.compare(res.ip, ip))
+                    passed = true;
+                    break;
+            }
+            if (!passed)
+                return req.method == "GET" ? res.status(403).render('error', { code: 1, type: 403 }) : res.status(403).send('You have no access to view this file');
+        }
         if (find.pass) {
             if (!cookie) return res.render('auth');
             if (!await bcrypt.compare(find.pass, cookie)) return req.method == "GET" ? res.status(403).render('error', { code: 1, type: 403 }) : res.status(403).send('You have no access to view this file');
@@ -121,7 +138,7 @@ const remove = (req, res, filename) =>
             let cookie = req.cookies.get('_tmpfle');
             if (err) return res.status(500).render('error', { code: 1, type: 500, text: 'There was an error fetching file' });
             if (!find) return res.status(404).render('error', { type: 404 });
-            if (find.userIP !== res.ip && !cookie) return res.status(403).render('error', { code: 2, type: 403 });
+            if (!await bcrypt.compare(req.ip, find.userIP) && !cookie) return res.status(403).render('error', { code: 2, type: 403 });
             if (cookie) {
                 if (!await bcrypt.compare(find.pass || find.authkey, cookie)) return res.status(403).render('error', { code: 2, type: 403 });
                 req.cookies.set('_tmpfle', '', { maxAge: 0, sameSite: 'Lax' });
@@ -164,4 +181,4 @@ app.route("/del/:name?")
 app.get("/forbidden/:code?", (req, res) => res.render('error', { code: req.params.code, type: 403 }));
 app.get('/contact', (_req, res) => res.status(302).redirect('https://github.com/Glitchii/'));
 app.use((_req, res) => res.status(404).render('error', { type: 404 }));
-app.listen(PORT, () => console.log(`Listening on port ${PORT}`));
+app.listen(PORT, () => console.log(`Listening on port ${PORT} -> http://127.0.0.1:${PORT}`));

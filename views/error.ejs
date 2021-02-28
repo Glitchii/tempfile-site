@@ -290,7 +290,7 @@
                     <h2>You have no access.</h2>
                     <p><%= code == 1 ? "Looks like you're forbidden from viewing this file. This means your IP address was probably added as a restrition by the uploader or the uploader only set the file to be accessible from only certain IP addresses which don't include yours" : code == 2 ? "Looks like you don't have access to delete this file. This means your IP address doesn't match with the uploaders." : "Oops... It looks like you don't have permission to either delete or view this file" %>
                     </p>
-                    <div class="useAuth">
+                    <div class="useAuth <%= locals.noKey ? 'noKey' : '' %>">
                         <div class="btn">
                             <div class="icon">
                                 <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:svgjs="http://svgjs.com/svgjs" version="1.1" x="0" y="0" viewBox="0 0 32 32" xml:space="preserve">

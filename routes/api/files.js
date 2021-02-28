@@ -12,7 +12,7 @@ const { lookFor, chooseName, dateFromValue, logger } = require('../../assets/com
     });
 
 router.use((req, res, next) => {
-    res.ip = (req.headers['x-forwarded-for'] || req.connection.remoteAddress).split(',')[0],
+    res.ip = (req.headers['x-real-ip'] || req.headers['x-forwarded-for'] || req.connection.remoteAddress).reverse()[0],
         res.ok = (obj) => res.json(obj && { ok: true, ...obj } || { ok: true }),
         res.err = (status, type, msg) => res.status(status || 500).json({
             ok: false,
@@ -26,11 +26,27 @@ router.use((req, res, next) => {
 
 let get = (req, res, filename) =>
     // Examples
-    //  curl -O http://tempfile.site/api/files/fileame.png
-    //  curl -O http://tempfile.site/api/files/fileame.png -H "pass: a password"
+    //  curl -O https://tempfile.site/api/files/fileame.png
+    //  curl -O https://tempfile.site/api/files/fileame.png -H "pass: a password"
     lookFor(filename).then(async (find, err) => {
         if (err || !find) return res.err(404, "NotFound", "File not found");
-        if (find.ipblacklist && find.ipblacklist.includes(req.ip) || find.ipwhitelist && !find.ipwhitelist.includes(req.ip)) return res.err(403, 'Forbidden', 'Your IP address is either blacklisted or not included in the list of whitelisted IPs');
+
+        if (find.ipblacklist) {
+            for (var ip of find.ipblacklist){
+                if (await bcrypt.compare(res.ip, ip))
+                return res.err(403, 'Forbidden', 'Your IP address is blacklisted from accessing this file.');
+            }
+        }
+        if (find.ipwhitelist) {
+            let passed;
+            for (var ip of find.ipwhitelist){
+                if (await bcrypt.compare(res.ip, ip))
+                    passed = true;
+                    break;
+            }
+            if (!passed)
+                return res.err(403, 'Forbidden', 'You are not allowed to access this file.');
+        }
         if (find.pass) {
             if (!req.headers.pass) return res.err(403, "NoPass", "File requires password. A header with a key 'pass' with the password as value is required");
             if (!(await bcrypt.compare(req.headers.pass, find.pass))) return res.err(403, "WrongPass", "Incorrect password recieved");
@@ -56,14 +72,14 @@ let get = (req, res, filename) =>
     }),
     del = async (req, res, filename) => {
         // Examples:
-        //  curl -X DELETE http://tempfile.site/api/files/fileame.png"
-        //  curl -X DELETE http://tempfile.site/api/files/fileame.png -H "authkey: a key"
+        //  curl -X DELETE https://tempfile.site/api/files/fileame.png"
+        //  curl -X DELETE https://tempfile.site/api/files/fileame.png -H "authkey: a key"
         try {
             if (!filename) return res.err(404, "MissingFilename", "Filename not recieved");
             lookFor(filename).then(async (find, err) => {
                 if (err) return res.err();
                 if (!find) return res.err(404, "NotFound", `File not found`);
-                if (find.userIP !== req.ip) {
+                if (!await bcrypt.compare(res.ip, find.userIP)) {
                     if (find.authkey) {
                         let key = req.headers.authkey;
                         if (!key) return res.err(400, "MissingAuthKey", "An 'authkey' header with the auth key is required");
@@ -85,12 +101,12 @@ let get = (req, res, filename) =>
         }
     }, add = async (req, res) => {
         // Examples:
-        //  curl -F datetime=1m -F file=@/path/to/file.png http://tempfile.site/api/files
-        //  curl -F datetime=1m -F name=a-name -F ipblacklist=68.80.31.225 -F file=@/path/to/file.png http://tempfile.site/api/files
-        //  curl -F datetime=1m -F name=a-name -F ipwhitelist="68.80.31.225, 50.90.30.222" -F authkey="a key" pass="a password" -F file=@/path/to/file.png http://tempfile.site/api/files
+        //  curl -F datetime=1m -F file=@/path/to/file.png https://tempfile.site/api/files
+        //  curl -F datetime=1m -F name=a-name -F ipblacklist=68.80.31.225 -F file=@/path/to/file.png https://tempfile.site/api/files
+        //  curl -F datetime=1m -F name=a-name -F ipwhitelist="68.80.31.225, 50.90.30.222" -F authkey="a key" pass="a password" -F file=@/path/to/file.png https://tempfile.site/api/files
         multer({
             storage: multer.memoryStorage({
-                destination: (req, file, callback) => callback(null, '')
+                destination: (_req, _file, callback) => callback(null, '')
             })
         }).single('file')(req, res, async (err) => {
             try {
@@ -98,20 +114,22 @@ let get = (req, res, filename) =>
                 else if (!req.file) return res.err(400, "MissingFile", "No file recieved");
                 if (!req.body.datetime) return res.err(400, "MissingDateTime", "Request must include a 'datetime' key");
                 var info = JSON.parse(JSON.stringify(req.body || {})), chosenDate = dateFromValue(info.datetime),
-                    data = { authkey: info.authkey || randomWords({ exactly: 3, maxLength: 3, join: '.' }), filename: `${await chooseName(info.name)}${path.extname(req.file.originalname)}`, userIP: req.ip },
+                    data = { authkey: info.authkey || randomWords({ exactly: 3, maxLength: 3, join: '.' }), filename: `${await chooseName(info.name)}${path.extname(req.file.originalname)}`, userIP: res.ip },
                     ipblacklist = info.ipblacklist && info.ipblacklist.split(/\s*,\s*/g).filter(x => x),
                     ipwhitelist = info.ipwhitelist && info.ipwhitelist.split(/\s*,\s*/g).filter(x => x);
                 if (ipblacklist) {
                     if (ipblacklist.length > 5) return res.err(400, "IP Limit Exceeded", "Only up to 5 IPs allowed");
+                    ipblacklist.forEach(async (ip, i) => ipblacklist[i] = await bcrypt.hash(ip, 10))
                     data.ipblacklist = ipblacklist;
                 }
                 if (ipwhitelist) {
                     if (ipwhitelist.length > 5) return res.err(400, "IP Limit Exceeded", "Only up to 5 IPs allowed");
+                    ipwhitelist.forEach(async (ip, i) => ipwhitelist[i] = await bcrypt.hash(ip, 10))
                     data.ipwhitelist = ipwhitelist;
                 }
-                if (!chosenDate) return res.err(400, "InvalidDate", "Given date or time is invalid");
                 if (chosenDate === 0) return res.err(400, "TooLow", "Time must be atleast a minute ahead");
                 if (chosenDate === 1) return res.err(400, "TooHigh", "Given date or time is over the limit");
+                if (!chosenDate) return res.err(400, "InvalidDate", "Given date or time is invalid");
                 if (info.pass) data.pass = await bcrypt.hash(info.pass, 10);
                 if (info.limit) {
                     if (isNaN(info.limit) || info.limit <= 0) return res.err(400, "InvalidLimit", "Limit must be a number more than 0");

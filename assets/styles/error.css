@@ -360,6 +360,10 @@ main.err403 .home.usingAuth .in span::after {
     height: 1px;
 }
 
+.useAuth.noKey {
+    display: none;
+}
+
 .useAuth {
     width: 95%;
     margin-top: 30px;
