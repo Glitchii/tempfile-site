@@ -20,7 +20,7 @@ app.use(express.static(path.join(__dirname)));
 app.use(express.json());
 app.use('/api/', require('./routes/api/index'));
 app.get('/', (_req, res) => res.render('index', { authKey: randomWords({ exactly: 3, maxLength: 3, join: '.' }) }));
-app.use((req, res, next) => (res.ip = (req.headers['x-real-ip'] || req.headers['x-forwarded-for'] || req.connection.remoteAddress).reverse()[0]) && next());
+app.use((req, res, next) => (res.ip = (req.headers['x-real-ip'] || req.headers['x-forwarded-for'] || req.connection.remoteAddress).split(',').reverse()[0]) && next());
 
 app.post("/upload/", async (req, res) => {
     multer({
@@ -138,7 +138,7 @@ const remove = (req, res, filename) =>
             let cookie = req.cookies.get('_tmpfle');
             if (err) return res.status(500).render('error', { code: 1, type: 500, text: 'There was an error fetching file' });
             if (!find) return res.status(404).render('error', { type: 404 });
-            if (!await bcrypt.compare(req.ip, find.userIP) && !cookie) return res.status(403).render('error', { code: 2, type: 403 });
+            if (!await bcrypt.compare(res.ip, find.userIP) && !cookie) return res.status(403).render('error', { code: 2, type: 403 });
             if (cookie) {
                 if (!await bcrypt.compare(find.pass || find.authkey, cookie)) return res.status(403).render('error', { code: 2, type: 403 });
                 req.cookies.set('_tmpfle', '', { maxAge: 0, sameSite: 'Lax' });
