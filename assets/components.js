@@ -1,7 +1,7 @@
 const ipRegex = require('ip-regex'),
     fs = require('fs'),
     AWS = require('aws-sdk'),
-    logStream = fs.createWriteStream(require('path').join(__dirname, '/logs.log'), { flags: 'a' }),
+    logStream = fs.createWriteStream(require('path').join(__dirname, '/errors.log'), { flags: 'a' }),
     S3 = new AWS.S3({
         accessKeyId: process.env.ID,
         secretAccessKey: process.env.secret
