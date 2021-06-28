@@ -33,7 +33,7 @@ window.onload = () => {
         };
 
     document.querySelector('.del').addEventListener('click', (el) =>
-        fetch("/del", { method: "POST" })
+        fetch(`/del/${location.pathname.split('/').pop()}`, { method: "POST" })
             .then(res => {
                 if (res.status !== 200) return notify(`Error—${res.statusText} (${res.status})`);
                 document.querySelector('main').classList.add('deleted');
