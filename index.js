@@ -1,7 +1,7 @@
 require('dotenv').config();
 const { lookFor, chooseName, checkIP, logger } = require('./assets/components'),
     randomWords = require("random-words"),
-    PORT = process.env.PORT || 65535, // Because.
+    PORT = process.env.PORT || 8089 // Because.
     cookies = require('cookies'),
     express = require('express'),
     bcrypt = require('bcrypt'),

@@ -277,6 +277,8 @@ header .logo img {
 
 header .logo {
     position: relative;
+    user-select: none;
+    cursor: default;
 }
 
 header {
@@ -1113,5 +1115,11 @@ body.showLinks .ov {
 @media screen and (max-width: 1200px) {
     .btnsInner .inner {
         transform: translate(0px);
+    }
+}
+
+@media screen and (max-height: 815px) {
+    .submit {
+        margin-bottom: 150px;
     }
 }

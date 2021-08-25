@@ -72,7 +72,7 @@ let get = (req, res, filename) =>
     }),
     del = async (req, res, filename) => {
         // Examples:
-        //  curl -X DELETE https://tempfile.site/api/files/fileame.png"
+        //  curl -X DELETE https://tempfile.site/api/files/fileame.png
         //  curl -X DELETE https://tempfile.site/api/files/fileame.png -H "authkey: a key"
         try {
             if (!filename) return res.err(404, "MissingFilename", "Filename not recieved");
