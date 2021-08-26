@@ -1,4 +1,4 @@
-const { lookFor, chooseName, dateFromValue, logger } = require('../../assets/components'),
+const { lookFor, chooseName, dateFromValue } = require('../../assets/components'),
     randomWords = require("random-words"),
     express = require('express'),
     bcrypt = require('bcrypt'),
@@ -13,7 +13,7 @@ const { lookFor, chooseName, dateFromValue, logger } = require('../../assets/com
 
 router.use((req, res, next) => {
     res.ip = (req.headers['x-real-ip'] || req.headers['x-forwarded-for'] || req.connection.remoteAddress).split(',').reverse()[0],
-        res.ok = (obj) => res.json(obj && { ok: true, ...obj } || { ok: true }),
+        res.ok = obj => res.json(obj ? { ok: true, ...obj } : { ok: true }),
         res.err = (status, type, msg) => res.status(status || 500).json({
             ok: false,
             error: {
@@ -32,17 +32,18 @@ let get = (req, res, filename) =>
         if (err || !find) return res.err(404, "NotFound", "File not found");
 
         if (find.ipblacklist) {
-            for (var ip of find.ipblacklist){
+            for (let ip of find.ipblacklist) {
                 if (await bcrypt.compare(res.ip, ip))
-                return res.err(403, 'Forbidden', 'Your IP address is blacklisted from accessing this file.');
+                    return res.err(403, 'Forbidden', 'Your IP address is blacklisted from accessing this file.');
             }
         }
         if (find.ipwhitelist) {
             let passed;
-            for (var ip of find.ipwhitelist){
-                if (await bcrypt.compare(res.ip, ip))
+            for (let ip of find.ipwhitelist) {
+                if (await bcrypt.compare(res.ip, ip)) {
                     passed = true;
                     break;
+                }
             }
             if (!passed)
                 return res.err(403, 'Forbidden', 'You are not allowed to access this file.');
@@ -59,16 +60,16 @@ let get = (req, res, filename) =>
             if (find.limit == 0) S3.deleteObject({
                 Bucket: process.env.bucket,
                 Key: find.filename + '.json',
-            }, err => err && logger.fatal(`Error deleting file (${find.filename}) with 0 limits: ${err}`));
+            }, err => err && console.log(`Error deleting file (${find.filename}) with 0 limits: ${err}`));
             else S3.putObject({
                 Bucket: process.env.bucket,
                 Key: find.filename + '.json',
                 Body: JSON.stringify(find)
-            }, err => err && logger.fatal(`Error reducing file (${find.filename}) limit: ${err}`));
+            }, err => err && console.log(`Error reducing file (${find.filename}) limit: ${err}`));
         };
     }).catch(err => {
         res.err();
-        logger.error('From api/get/', err);
+        console.log('From api/get/', err);
     }),
     del = async (req, res, filename) => {
         // Examples:
@@ -97,7 +98,7 @@ let get = (req, res, filename) =>
             });
         } catch (err) {
             res.err();
-            logger.error('From api/del/', err);
+            console.log('From api/del/', err);
         }
     }, add = async (req, res) => {
         // Examples:
@@ -148,7 +149,7 @@ let get = (req, res, filename) =>
                 if (info.ipblacklist && Array.isArray(info.ipblacklist)) res.err(0, 'DuplicateKey', `'ipblacklist' is repeated more than once. You must use one string separeted with a comma, eg. '-F ipblacklist="12.3.45, 678.9.0"'`);
                 else if (info.ipwhitelist && Array.isArray(info.ipwhitelist)) res.err(0, 'DuplicateKey', `'ipwhitelist' is repeated more than once. You must use one string separeted with a comma, eg. '-F ipwhitelist="12.3.45, 678.9.0"'`);
                 else res.err(0, 0, "Failed adding file due to an internal server error");
-                logger.error('From api/add/', err);
+                console.log('From api/add/', err);
             }
         });
     }

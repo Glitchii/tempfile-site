@@ -1,7 +1,5 @@
 const ipRegex = require('ip-regex'),
-    fs = require('fs'),
     AWS = require('aws-sdk'),
-    logStream = fs.createWriteStream(require('path').join(__dirname, '/errors.log'), { flags: 'a' }),
     S3 = new AWS.S3({
         accessKeyId: process.env.ID,
         secretAccessKey: process.env.secret
@@ -53,10 +51,5 @@ module.exports = {
             if (!ipRegex({ exact: true }).test(ip[i])) return `This IP "${ip[i]}" is invalid`;
             if (ip2 && ip2.includes(ip[i])) return `This IP "${ip[i]}" shouldn't be in both whitelist and blacklist box`;
         };
-    }, logger: {
-        info: (...msg) => logStream.write(`${new Date().toISOString()} INFO: ${msg.join(' ')}\n`),
-        warn: (...msg) => logStream.write(`${new Date().toISOString()} WARNING: ${msg.join(' ')}\n`),
-        error: (...msg) => logStream.write(`${new Date().toISOString()} ERROR: ${msg.join(' ')}\n`),
-        fatal: (...msg) => logStream.write(`${new Date().toISOString()} FATAL: ${msg.join(' ')}\n`),
     }
 };

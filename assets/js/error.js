@@ -42,7 +42,7 @@ window.onload = () => {
     homeBtn.addEventListener('click', () => !homeBtn.classList.contains('usingAuth') ? (window.location.href = '/') : !authKey.value ? deny() : fetch("/auth", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: `{ "key": "${authKey.value}" }`
+        body: `{ "key": "${authKey.value}", "name": "${location.pathname.split('/').pop()}" }`
     })
         .then(res => res.status === 200 ? window.location.reload() : res.status !== 401 ? `Error—${res.statusText} (${res.status})` : deny()));
 

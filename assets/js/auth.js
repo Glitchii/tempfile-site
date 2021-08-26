@@ -76,7 +76,7 @@ window.onload = () => {
         fetch("/auth", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: `{ "data": "${input.value}" }`
+            body: `{ "data": "${input.value}", "name": "${location.pathname.split('/').pop()}" }`
         })
             .then(res => res.status === 200 ? window.location.reload() : notify(res.status === 401 ? 'Incorect password' : `Error—${res.statusText} (${res.status})`));
     };
