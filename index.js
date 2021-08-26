@@ -20,7 +20,7 @@ app.use(express.static(path.join(__dirname)));
 app.use(express.json());
 app.use('/api/', require('./routes/api/index'));
 app.get('/', (_req, res) => res.render('index', { authKey: randomWords({ exactly: 3, maxLength: 3, join: '.' }) }));
-app.use((req, res, next) => (res.ip = (req.headers['x-real-ip'] || req.headers['x-forwarded-for'] || req.connection.remoteAddress).split(',').reverse()[0]) && next());
+app.use((req, res, next) => (res.ip = (req.headers['x-real-ip'] || req.headers['x-forwarded-for'] || req.connection.remoteAddress).split(',').reverse()[0].trim()) && next());
 
 app.post("/upload/", async (req, res) => {
     multer({
@@ -46,6 +46,8 @@ app.post("/upload/", async (req, res) => {
                 ip2Check = checkIP(info.ipwhitelist, info.ipblacklist);
             if (ipCheck) return res.json({ err: ipCheck });
             if (ip2Check) return res.json({ err: ip2Check });
+
+            // let leIP = [info.ipwhitelist[0], info.ipwhitelist[1]] // Debug
             info.ipblacklist && info.ipblacklist.forEach(async (ip, i) => info.ipblacklist[i] = await bcrypt.hash(ip, 10));
             info.ipwhitelist && info.ipwhitelist.forEach(async (ip, i) => info.ipwhitelist[i] = await bcrypt.hash(ip, 10));
 
@@ -57,7 +59,7 @@ app.post("/upload/", async (req, res) => {
                     ...info
                 };
 
-            // console.log({ ...data, ...info, ip: res.ip }); // Debug
+            // console.log({ ...data, ...info, actip: res.ip, actWhitelist: leIP }); // Debug
             if (req.file.mimetype) data.mimetype = req.file.mimetype;
             if (req.file.contentType) data.contentType = req.file.contentType;
             S3.putObject({
@@ -86,6 +88,7 @@ app.get("/files/:name", async (req, res) => {
         if (find.ipwhitelist) {
             let passed;
             for (let ip of find.ipwhitelist) {
+                // console.log(res.ip, ip) // Debug
                 if (await bcrypt.compare(res.ip, ip)) {
                     passed = true;
                     break;
