@@ -20,7 +20,7 @@ app.use(express.static(path.join(__dirname)));
 app.use(express.json());
 app.use('/api/', require('./routes/api/index'));
 app.get('/', (_req, res) => res.render('index', { authKey: randomWords({ exactly: 3, maxLength: 3, join: '.' }) }));
-app.use((req, res, next) => (res.ip = (req.headers['x-real-ip'] || req.headers['x-forwarded-for'] || req.connection.remoteAddress).split(',').reverse()[0].trim()) && next());
+app.use((req, res, next) => ((res.ip = (req.headers['x-real-ip'] || req.headers['x-forwarded-for'] || req.connection.remoteAddress).split(',').reverse()[0]).trim()) && next());
 
 app.post("/upload/", async (req, res) => {
     multer({
