@@ -1012,6 +1012,12 @@ textarea {
     font-size: initial !important;
 }
 
+@media screen and (min-width: 1125px) {
+    textarea {
+        margin-bottom: 30px;
+    }
+}
+
 body.text :is(.drag .partInner .img, .uploadBtn), body:not(.text) textarea {
     /* body.text :is(.drag .partInner .img), body:not(.text) textarea { */
     display: none;
