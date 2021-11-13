@@ -1,0 +1,458 @@
+@import url(/static/styles/global.css);
+
+:root {
+    --font1: 'Heebo', sans-serif;
+    --font2: 'Ubuntu', sans-serif;
+    --font3: Montserrat, sans-serif;
+    --font4: "Open Sans", "Helvetica Neue", "Segoe UI", "Calibri", "Arial", sans-serif
+}
+
+*, ::after, ::before, body, html {
+    margin: 0;
+    border: 0;
+    box-sizing: border-box;
+    scrollbar-width: thin;
+    outline: 0;
+    font-family: var(--font1);
+    text-decoration: none;
+    color: #273036;
+    -webkit-tap-highlight-color: transparent
+}
+
+::-webkit-scrollbar {
+    width: 7px
+}
+
+::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0)
+}
+
+::-webkit-scrollbar-thumb {
+    background: #ccc
+}
+
+a:hover {
+    color: #538ce8;
+    transition: .25s ease
+}
+
+ul {
+    padding-inline-start: 0
+}
+
+header {
+    margin: auto
+}
+
+@keyframes uploadBtnAn {
+    from {
+        opacity: 0;
+        transform: translateY(100%)
+    }
+}
+
+header .logoText, header .logoText span {
+    font-size: 28px;
+    font-family: var(--font2)
+}
+
+header .logoText svg path {
+    fill: #273036
+}
+
+header .logoText svg {
+    width: 33px;
+    height: 33px;
+    position: relative;
+    bottom: -5px
+}
+
+header .logo .item {
+    display: inline-block
+}
+
+header .logo {
+    position: relative
+}
+
+header {
+    padding: 10px 5%;
+    display: flex
+}
+
+header li {
+    list-style: none;
+    display: inline-block
+}
+
+header header nav>ul li {
+    display: inline-block
+}
+
+header nav>ul li~li {
+    padding: 0 10px
+}
+
+header nav {
+    position: absolute;
+    right: 10px;
+    font-size: 15px;
+    padding: 10px 10px 10px 0
+}
+
+header .item {
+    z-index: 5
+}
+
+@keyframes mainAn {
+    from {
+        opacity: 0;
+    }
+}
+
+main {
+    animation: mainAn 3s ease;
+    transition: 1s ease;
+    position: absolute;
+    top: 10%;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 100%;
+}
+
+main>svg {
+    width: 400px;
+    position: relative;
+    left: 50%;
+    transform: translate(-50%);
+    margin: 2% 10px 5% 10px;
+}
+
+main.err403>svg {
+    margin: 0 10px 5% 10px;
+}
+
+.main {
+    transition: 1s ease;
+    width: 80%;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    position: relative;
+    top: 20%;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+h2 {
+    font-family: var(--font2);
+    transition: 1s ease;
+    font-size: 30px;
+}
+
+@keyframes leftPartAn {
+    from {
+        opacity: 0;
+    }
+}
+
+.leftPart {
+    animation: leftPartAn 5s ease;
+}
+
+.leftPart h2:first-of-type {
+    margin: 10px 0 30px 0;
+}
+
+.rightPart h2 {
+    font-size: 200px;
+    display: flex;
+    justify-content: center;
+}
+
+@keyframes inputAn {
+    from {
+        opacity: 0
+    }
+}
+
+@keyframes comeUp {
+    from {
+        bottom: -50px
+    }
+}
+
+@keyframes addMoreAn {
+    from {
+        opacity: 0
+    }
+}
+
+.menu {
+    position: relative;
+    z-index: 2;
+    display: none
+}
+
+@keyframes menuBoxAn {
+    0% {
+        opacity: 0;
+        top: 30px
+    }
+    50% {
+        opacity: 1;
+        top: 50px
+    }
+}
+
+.menu .menuBox:not(.active) {
+    display: none
+}
+
+.menu .menuBox {
+    animation: menuBoxAn .7s ease;
+    padding: 10px;
+    border-radius: 5px;
+    box-shadow: 0 0 20px 5px rgb(62 41 82 / 33%);
+    width: 300px;
+    top: 40px;
+    position: relative;
+    background: linear-gradient(0deg, #272e36, #272a36)
+}
+
+.menu ul li:hover a {
+    color: #539afe;
+}
+
+.menu ul li a {
+    color: #fff
+}
+
+.bottomBtns a {
+    padding-left: 5px;
+    position: relative;
+}
+
+.bottomBtns a svg {
+    height: 25px;
+    width: 25px;
+    position: relative;
+    margin-top: 20px
+}
+
+.menu ul li {
+    display: block;
+    padding-left: 5px;
+    cursor: pointer
+}
+
+.menu .lines {
+    cursor: pointer;
+    transform: scale(-1);
+    position: absolute;
+    right: 0;
+    top: 0
+}
+
+.menu .lines div:first-of-type {
+    width: 25px
+}
+
+.menu .lines div:nth-of-type(2) {
+    width: 15px
+}
+
+.menu .lines div:last-of-type {
+    width: 22px
+}
+
+.menu .lines:hover div {
+    width: 25px
+}
+
+.menu .lines div {
+    user-select: none;
+    pointer-events: none;
+    height: 3px;
+    background: #273036;
+    margin: 5px;
+    transition: .5s ease
+}
+
+@keyframes loaderAn {
+    from {
+        opacity: 0
+    }
+}
+
+@keyframes closeBtnAn {
+    from {
+        right: -30px;
+        opacity: 0
+    }
+}
+
+.file {
+    margin: 50px 5px;
+    overflow-x: hidden;
+    position: relative;
+    transition: 1s ease
+}
+
+.home {
+    position: relative;
+    left: 50%;
+    transform: translateX(-50%);
+    transition: 1s ease;
+    cursor: pointer;
+    margin-top: 50px
+}
+
+.home .in {
+    background: linear-gradient(30deg, #74adff, #7f94ff);
+    box-shadow: 0 0 20px 0 #5368fe33;
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    border-radius: 3px;
+    padding: 8px 20px;
+    display: flex;
+}
+
+.home .in span {
+    color: #fff;
+    font-family: var(--font2);
+}
+
+main.err403 .home .in span::after {
+    content: "Home";
+    color: #fff;
+    font-family: var(--font2);
+}
+
+main.err403 .home.usingAuth .in span::after {
+    content: "Continue";
+}
+
+.home:not(.usingAuth) svg:last-of-type, .home.usingAuth svg:first-of-type {
+    display: none;
+}
+
+.home svg {
+    width: 20px;
+    height: 100%;
+    margin-right: 10px;
+    pointer-events: none;
+}
+
+.home svg:last-of-type {
+    width: 17px;
+    margin: 0 0 0 10px;
+    display: flex;
+    transform: translateY(3px);
+}
+
+.leftPart a {
+    color: #446eb1;
+}
+
+.sep {
+    width: 100%;
+    background: linear-gradient(to right, transparent, #cfcfcf, transparent);
+    height: 1px;
+}
+
+.useAuth.noKey {
+    display: none;
+}
+
+.useAuth {
+    width: 95%;
+    margin-top: 30px;
+}
+
+.useAuth .btn {
+    display: grid;
+    grid-template-columns: 45px 100%;
+    font-size: 15px;
+}
+
+.useAuth .btn .icon {
+    width: 40px;
+}
+
+.useAuth .btn input {
+    padding: 10px 10px 10px 5px;
+    font-size: 15px;
+    width: 100%;
+    margin-left: 5px;
+}
+
+@keyframes lineAn {
+    from {
+        opacity: 0;
+        left: -500px;
+        width: 20%
+    }
+}
+
+@media screen and (max-width:835px) {
+    .rightPart h2 {
+        font-size: 130px;
+        margin: 20px auto;
+    }
+    main.err403.rightPart h2 {
+        margin-top: 0;
+    }
+    main.err403>svg {
+        margin-bottom: 0;
+    }
+    .btn .input, .btn p {
+        width: 100%;
+    }
+}
+
+@media screen and (max-width:650px) {
+    header .logoText svg {
+        width: 28px;
+        height: 28px;
+        position: relative;
+        bottom: -5px
+    }
+    header .logoText, header .logoText span {
+        font-size: 25px
+    }
+    nav {
+        top: 6px
+    }
+    .main {
+        display: flex;
+        flex-direction: column-reverse;
+    }
+    main>svg {
+        width: 300px;
+    }
+}
+
+@media screen and (max-width:540px) {
+    header .logoText, header .logoText span {
+        display: none
+    }
+}
+
+@media screen and (max-width:430px) {
+    header nav>ul {
+        display: none
+    }
+    .menu {
+        display: block
+    }
+}
+
+@media screen and (max-width:350px) {
+    main>svg {
+        width: 90%;
+    }
+    .rightPart h2 {
+        font-size: 100px;
+    }
+}
