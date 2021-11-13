@@ -1,4 +1,4 @@
-const { lookFor, chooseName, dateFromValue } = require('../../assets/components'),
+const { lookFor, chooseName, dateFromValue } = require('../../assets/static/components'),
     randomWords = require("random-words"),
     express = require('express'),
     bcrypt = require('bcrypt'),

@@ -1,37 +1,52 @@
 require('dotenv').config();
-const { lookFor, chooseName, checkIP } = require('./assets/components'),
-    randomWords = require("random-words"),
-    PORT = process.env.PORT || 65535, // Because.
-    cookies = require('cookies'),
-    express = require('express'),
-    bcrypt = require('bcrypt'),
-    multer = require('multer'),
+const express = require('express'),
     path = require('path'),
     app = express(),
+    multer = require('multer'),
     AWS = require('aws-sdk'),
-    S3 = new AWS.S3({
-        accessKeyId: process.env.ID,
-        secretAccessKey: process.env.secret
-    });
+    bcrypt = require('bcrypt'),
+    cookies = require('cookies'),
+    randomWords = require("random-words"),
+    PORT = process.env.PORT || 65535,
+    { lookFor, chooseName, checkIP } = require('./assets/static/components'),
+    rateLimit = require("express-rate-limit"),
+    rateMsg = "Too many requests, chill out.",
+    limiter = rateLimit({ rateMsg, windowMs: 1 * 60 * 1000, max: 30, headers: true }),
+    S3 = new AWS.S3({ accessKeyId: process.env.ID, secretAccessKey: process.env.secret });
 
-app.use(cookies.express());
 app.set('view engine', 'ejs');
-app.use(express.static(path.join(__dirname)));
+app.use("/upload/", limiter);
+app.use(cookies.express());
+app.use(express.static(path.join(__dirname, 'assets')));
 app.use(express.json());
 app.use('/api/', require('./routes/api/index'));
-app.get('/', (_req, res) => res.render('index', { authKey: randomWords({ exactly: 3, maxLength: 3, join: '.' }) }));
 app.use((req, res, next) => ((res.ip = (req.headers['x-real-ip'] || req.headers['x-forwarded-for'] || req.connection.remoteAddress).split(',').reverse()[0]).trim()) && next());
+app.get('/', (_req, res) =>
+    res.render('index', {
+        authKey: randomWords({ exactly: 3, maxLength: 3, join: '.' })
+    }));
+
+const upload = multer({
+    storage: multer.memoryStorage(),
+    limits: {
+        fileSize: 5 * 1024 * 1024 * 1024,
+    }
+})
 
 app.post("/upload/", async (req, res) => {
-    multer({
-        storage: multer.memoryStorage({
-            destination: (_req, _file, callback) => callback(null, '')
-        })
-    }).single('file')(req, res, async (err) => {
-        if (err || req.fileValidationError) return res.json({ err: 'There was an internal error' });
-        if (!req.file) return res.json({ err: 'No file received' });
+    upload.single('file')(req, res, async err => {
+        if (err) {
+            if (err.code === 'LIMIT_FILE_SIZE')
+                return res.status(400).send({ err: 'File is too large.' });
+            return res.status(400).send({ err: 'Error fetching file' });
+        }
+
         try {
-            let info = JSON.parse(req.body.data), date = !isNaN(info?.diff) && new Date(new Date().setMinutes(new Date().getMinutes() + info.diff));
+            let info = JSON.parse(req.body.data),
+                date = !isNaN(info?.diff) && new Date(new Date().setMinutes(new Date().getMinutes() + info.diff));
+
+            if (!info.text)
+                if (!req.file) return res.json({ err: 'No file received' });
 
             if (!date || !date.getDate()) return res.json({ err: 'Recieved invalid date' });
             info.datetime = date, info.userIP = await bcrypt.hash(res.ip, 10);
@@ -47,21 +62,25 @@ app.post("/upload/", async (req, res) => {
             if (ipCheck) return res.json({ err: ipCheck });
             if (ip2Check) return res.json({ err: ip2Check });
 
-            // let leIP = [info.ipwhitelist[0], info.ipwhitelist[1]] // Debug
             info.ipblacklist && info.ipblacklist.forEach(async (ip, i) => info.ipblacklist[i] = await bcrypt.hash(ip, 10));
             info.ipwhitelist && info.ipwhitelist.forEach(async (ip, i) => info.ipwhitelist[i] = await bcrypt.hash(ip, 10));
 
-            let ext = '.' + req.file.originalname.split('.').pop(),
-                name = await chooseName(info.name, ext) + ext, data = {
+            // return res.json({ err: 'Received' }); //Debug
+            let nameExt = req.file?.originalname.split('.'),
+                // ext = req.file && '.' + nameExt,
+                ext = nameExt.length > 1 ? ('.' + (nameExt.pop() || 'txt')) : '',
+                name = await chooseName(info.name, ext) + ext,
+                data = {
                     filename: name.toLowerCase(),
-                    buffer: req.file.buffer,
-                    size: req.file.size,
+                    size: req.file?.size || info.text.length,
                     ...info
                 };
 
-            // console.log({ ...data, ...info, actip: res.ip, actWhitelist: leIP }); // Debug
-            if (req.file.mimetype) data.mimetype = req.file.mimetype;
-            if (req.file.contentType) data.contentType = req.file.contentType;
+            // console.log({ ...data, ...info, ext }); // Debug
+            if (req.file) data.buffer = req.file.buffer;
+            if (req.file?.mimetype) data.mimetype = req.file.mimetype;
+            if (req.file?.contentType) data.contentType = req.file.contentType;
+
             S3.putObject({
                 Bucket: process.env.bucket,
                 Key: name.toLowerCase() + '.json',
@@ -69,8 +88,9 @@ app.post("/upload/", async (req, res) => {
             }, err => err ? res.json({ err: 'Error uploading, file may not be uploaded.' }) : res.status(200).json({ link: name }));
         } catch (err) {
             console.error(err)
-            res.status(500).send('Failed adding info to database');
+            res.status(500).send('Failed uploading file information.');
         }
+
     });
 });
 
@@ -107,8 +127,12 @@ app.get("/files/:name", async (req, res) => {
         cookie && req.cookies.set('_tmpfle', '', { maxAge: 0, sameSite: 'Lax' });
 
         res.setHeader('Access-Control-Allow-Origin', '*');
-        res.type(find.mimetype || find.contentType)
-        res.end(Buffer.from(find.buffer, 'binary'));
+
+        if (find.text)
+            res.setHeader('Content-Type', 'text/plain').send(find.text);
+        else
+            res.type(find.mimetype || find.contentType).end(Buffer.from(find.buffer, 'binary'));
+
         if (find.limit && ((hds['sec-fetch-site'] === 'same-origin' && hds['sec-fetch-mode'] !== 'no-cors') || hds['sec-fetch-site'] !== 'same-origin')) {
             find.limit--;
             if (find.limit == 0)
@@ -185,12 +209,16 @@ const remove = (req, res, filename) =>
     };
 
 checkExpired() && setInterval(checkExpired, 60_000);
+
 app.route("/del/:name?")
     .get((req, res) => req.params.name ? remove(req, res, req.params.name) : res.render('deleteSearch'))
     .post((req, res) => remove(req, res, req.params.name || req.headers.referer.split('/').pop()))
+
 app.get("/forbidden/:code?", (req, res) => res.render('error', { code: req.params.code, type: 403 }));
+
 app.get('/contact', (_req, res) => res.status(302).redirect('https://github.com/Glitchii/'));
 
 app.use((_req, res) => res.status(404).render('error', { type: 404 }));
 
+app.disable('x-powered-by');
 app.listen(PORT, () => console.log(`Listening on port ${PORT} -> http://127.0.0.1:${PORT}`));
