@@ -68,16 +68,19 @@ app.post("/upload/", async (req, res) => {
             // return res.json({ err: 'Received' }); //Debug
             let nameExt = req.file?.originalname.split('.'),
                 // ext = req.file && '.' + nameExt,
-                ext = nameExt.length > 1 ? ('.' + (nameExt.pop() || 'txt')) : '',
+                ext = nameExt?.length > 1 ? ('.' + (nameExt.pop() || 'txt')) : '',
                 name = await chooseName(info.name, ext) + ext,
                 data = {
                     filename: name.toLowerCase(),
-                    size: req.file?.size || info.text.length,
                     ...info
                 };
 
             // console.log({ ...data, ...info, ext }); // Debug
-            if (req.file) data.buffer = req.file.buffer;
+            if (req.file) {
+                data.buffer = req.file.buffer
+                data.size = req.file?.size
+            };
+            
             if (req.file?.mimetype) data.mimetype = req.file.mimetype;
             if (req.file?.contentType) data.contentType = req.file.contentType;
 

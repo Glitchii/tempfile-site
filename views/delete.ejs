@@ -147,7 +147,7 @@
         <div class="topPart">
             <h2><%= locals.pass ? "Delete the file?" : "Delete this file?" %> </h2>
             <div class="file">
-                <% if ((locals.contentType || mimetype).startsWith('image/') && !locals.pass) { %>
+                <% if ((locals.contentType || locals.mimetype)?.startsWith('image/') && !locals.pass) { %>
                     <img src="/files/<%= filename %>" alt="">
                 <% } else { %>
                     <div class="fileIcon">
@@ -169,11 +169,11 @@
                 <% } else { %>
                     <div class="info name"><p>File name:</p><p><%= filename %></p></div>
                 <% } %> 
-                <div class="info length"><p>File size:</p><p><%= size %></p></div>
-                <div class="info type"><p>File type:</p><p><%= locals.contentType || mimetype %></p></div>
+                <div class="info length"><p>File size:</p><p><%= locals.size || locals.text?.length || '??' %></p></div>
+                <div class="info type"><p>File type:</p><p><%= locals.contentType || locals.mimetype || (locals.text ? 'text/plain' : '??') %></p></div>
                 <div class="info"><p>Expires on:</p><p class="dt"><%= new Date(datetime).toDateString() %></p></div>
-                <% if ((locals.contentType || mimetype).startsWith('image/') && locals.pass) { %>
-                    <div class="info note"><p><b>Note:</b>&nbsp;Image is password protected</p><p class="dt">—Therefore invisible when added to any site</p></div>
+                <% if (locals.pass) { %>
+                    <div class="info note"><p><b>Note:</b>&nbsp;File is password protected</p><p class="dt">—Therefore invisible when added to any site</p></div>
                 <% } %>
             </div>
             <div class="del">
