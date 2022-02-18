@@ -1,34 +1,8 @@
-@import url(/static/styles/global.css);
-:root {
-    --font1: 'Heebo', sans-serif;
-    --font2: 'Ubuntu', sans-serif;
-    --font3: Montserrat, sans-serif;
-    --font4: "Open Sans", "Helvetica Neue", "Segoe UI", "Calibri", "Arial", sans-serif;
-}
+@import url(/static/styles/include.css);
 
 ::after, ::before, body, html, * {
     margin: 0;
     border: 0;
-    box-sizing: border-box;
-    scrollbar-width: thin;
-    outline: 0;
-    font-family: var(--font1);
-    text-decoration: none;
-    color: #273036;
-    transition: .5s ease;
-    -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
-}
-
-::-webkit-scrollbar {
-    width: 7px;
-}
-
-::-webkit-scrollbar-track {
-    background: rgba(255, 255, 255, 0);
-}
-
-::-webkit-scrollbar-thumb {
-    background: rgb(204, 204, 204);
 }
 
 .colr {
@@ -63,14 +37,6 @@
 a:not(.URL):hover {
     color: #538ce8;
     transition: .25s ease;
-}
-
-ul {
-    padding-inline-start: 0;
-}
-
-header, .cont {
-    margin: auto;
 }
 
 .fileIcon .textBack p {
@@ -195,12 +161,6 @@ header, .cont {
     box-shadow: 0px 0px 30px 0px #6182ffc9;
 }
 
-@keyframes uploadBtnAn {
-    from {
-        opacity: 0;
-    }
-}
-
 .partInner .desc span {
     display: none;
     margin: auto 10%;
@@ -242,75 +202,7 @@ header, .cont {
     top: 190px;
     box-shadow: 0px 0px 20px 0px #539afe61;
     background: linear-gradient(to bottom, #539afe, #536ffe);
-    animation: uploadBtnAn .5s ease-in;
-}
-
-header .logoText, header .logoText span {
-    font-size: 28px;
-    font-family: var(--font2);
-}
-
-header .logoText .small {
-    font-size: 17px;
-    font-family: var(--font1);
-}
-
-header .logoText svg path {
-    fill: #273036;
-}
-
-header .logoText svg {
-    width: 33px;
-    height: 33px;
-    position: relative;
-    bottom: -5px;
-}
-
-header .logo .item {
-    display: inline-block;
-}
-
-header .logo img {
-    width: 50px;
-    pointer-events: none;
-}
-
-header .logo {
-    position: relative;
-    user-select: none;
-    cursor: default;
-}
-
-header {
-    display: flex;
-    justify-content: space-between;
-    padding: 8.5px 5%;
-    box-shadow: 0px 0px 50px -12px rgba(0, 0, 0, 0.36);
-    box-shadow: 0px 0px 50px -12px rgb(0 0 0 / 21%);
-}
-
-header li {
-    list-style: none;
-    display: inline-block;
-}
-
-header header nav>ul li {
-    display: inline-block;
-}
-
-header nav>ul li~li {
-    padding: 0 10px;
-}
-
-header nav {
-    /* position: absolute; */
-    right: 10px;
-    font-size: 15px;
-    padding: 10px 10px 10px 0;
-}
-
-header .item {
-    z-index: 5;
+    animation: fadeIn .5s ease-in;
 }
 
 .btnsInner .inner:not(.others) .btn.other, .btnsInner .inner:not(.others) .btn.other+.sep, .btnsInner .inner.others .btn:not(.other), .btnsInner .inner.others .btn:not(.other)+.sep {
@@ -534,7 +426,7 @@ main {
     transition: .5s ease;
     cursor: pointer;
     margin-top: 100px;
-    animation: uploadBtnAn .5s ease-in;
+    animation: fadeIn .5s ease-in;
 }
 
 .submit .in {
@@ -707,12 +599,6 @@ main {
     opacity: 1;
 }
 
-@keyframes addMoreAn {
-    from {
-        opacity: 0;
-    }
-}
-
 .addMore {
     position: relative;
     transform: translate(0, 10px);
@@ -726,7 +612,7 @@ main {
     box-shadow: 0px 0px 20px 0px #00000024;
     background-color: #f0f0f0;
     opacity: .5;
-    /* animation: addMoreAn 2s ease; */
+    /* animation: fadeIn 2s ease; */
 }
 
 .btn:not(:hover) .addMore {
@@ -911,12 +797,6 @@ body.showLinks .ov {
     animation: linksAn .5s ease;
 }
 
-@keyframes ovAn {
-    from {
-        opacity: 0;
-    }
-}
-
 .ov {
     background: #00000026;
     width: 100%;
@@ -924,18 +804,12 @@ body.showLinks .ov {
     position: fixed;
     z-index: 2;
     transition: .5s ease;
-    animation: ovAn .5s ease;
+    animation: fadeIn .5s ease;
 }
 
 .closeBtn svg {
     width: 15px;
     opacity: .5;
-}
-
-@keyframes loaderAn {
-    from {
-        opacity: 0;
-    }
 }
 
 .loader {
@@ -947,7 +821,7 @@ body.showLinks .ov {
     background: #00000000;
     border-radius: 100%;
     z-index: 11;
-    animation: loaderAn .5s ease;
+    animation: fadeIn .5s ease;
     display: none;
 }
 
@@ -1128,9 +1002,6 @@ body.text .partInner .uploadBtn {
 }
 
 @media screen and (max-width: 445px) {
-    header nav>ul {
-        display: none;
-    }
     .menu {
         display: block;
     }
@@ -1146,9 +1017,6 @@ body.text .partInner .uploadBtn {
     .btnsInner .inner {
         padding: 150px 5% 5% 5%;
         padding-top: 120px;
-    }
-    header .logoText, header .logoText span {
-        display: none;
     }
     .drag h2 {
         margin-top: 0;
@@ -1184,18 +1052,6 @@ body.text .partInner .uploadBtn {
     }
     .partInner .desc span {
         display: block;
-    }
-    header .logoText svg {
-        width: 28px;
-        height: 28px;
-        position: relative;
-        bottom: -5px;
-    }
-    header .logoText, header .logoText span {
-        font-size: 25px;
-    }
-    nav {
-        top: 6px;
     }
 }
 

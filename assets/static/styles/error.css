@@ -1,47 +1,13 @@
-@import url(/static/styles/global.css);
+@import url(/static/styles/include.css);
 
-:root {
-    --font1: 'Heebo', sans-serif;
-    --font2: 'Ubuntu', sans-serif;
-    --font3: Montserrat, sans-serif;
-    --font4: "Open Sans", "Helvetica Neue", "Segoe UI", "Calibri", "Arial", sans-serif
-}
-
-*, ::after, ::before, body, html {
+::after, ::before, body, html, * {
     margin: 0;
     border: 0;
-    box-sizing: border-box;
-    scrollbar-width: thin;
-    outline: 0;
-    font-family: var(--font1);
-    text-decoration: none;
-    color: #273036;
-    -webkit-tap-highlight-color: transparent
-}
-
-::-webkit-scrollbar {
-    width: 7px
-}
-
-::-webkit-scrollbar-track {
-    background: rgba(255, 255, 255, 0)
-}
-
-::-webkit-scrollbar-thumb {
-    background: #ccc
 }
 
 a:hover {
     color: #538ce8;
     transition: .25s ease
-}
-
-ul {
-    padding-inline-start: 0
-}
-
-header {
-    margin: auto
 }
 
 @keyframes uploadBtnAn {
@@ -51,67 +17,8 @@ header {
     }
 }
 
-header .logoText, header .logoText span {
-    font-size: 28px;
-    font-family: var(--font2)
-}
-
-header .logoText svg path {
-    fill: #273036
-}
-
-header .logoText svg {
-    width: 33px;
-    height: 33px;
-    position: relative;
-    bottom: -5px
-}
-
-header .logo .item {
-    display: inline-block
-}
-
-header .logo {
-    position: relative
-}
-
-header {
-    padding: 10px 5%;
-    display: flex
-}
-
-header li {
-    list-style: none;
-    display: inline-block
-}
-
-header header nav>ul li {
-    display: inline-block
-}
-
-header nav>ul li~li {
-    padding: 0 10px
-}
-
-header nav {
-    position: absolute;
-    right: 10px;
-    font-size: 15px;
-    padding: 10px 10px 10px 0
-}
-
-header .item {
-    z-index: 5
-}
-
-@keyframes mainAn {
-    from {
-        opacity: 0;
-    }
-}
-
 main {
-    animation: mainAn 3s ease;
+    animation: fadeIn 3s ease;
     transition: 1s ease;
     position: absolute;
     top: 10%;
@@ -149,14 +56,8 @@ h2 {
     font-size: 30px;
 }
 
-@keyframes leftPartAn {
-    from {
-        opacity: 0;
-    }
-}
-
 .leftPart {
-    animation: leftPartAn 5s ease;
+    animation: fadeIn 5s ease;
 }
 
 .leftPart h2:first-of-type {
@@ -198,6 +99,7 @@ h2 {
         opacity: 0;
         top: 30px
     }
+
     50% {
         opacity: 1;
         top: 50px
@@ -400,12 +302,15 @@ main.err403 .home.usingAuth .in span::after {
         font-size: 130px;
         margin: 20px auto;
     }
+
     main.err403.rightPart h2 {
         margin-top: 0;
     }
+
     main.err403>svg {
         margin-bottom: 0;
     }
+
     .btn .input, .btn p {
         width: 100%;
     }
@@ -418,16 +323,20 @@ main.err403 .home.usingAuth .in span::after {
         position: relative;
         bottom: -5px
     }
+
     header .logoText, header .logoText span {
         font-size: 25px
     }
+
     nav {
         top: 6px
     }
+
     .main {
         display: flex;
         flex-direction: column-reverse;
     }
+
     main>svg {
         width: 300px;
     }
@@ -443,6 +352,7 @@ main.err403 .home.usingAuth .in span::after {
     header nav>ul {
         display: none
     }
+
     .menu {
         display: block
     }
@@ -452,6 +362,7 @@ main.err403 .home.usingAuth .in span::after {
     main>svg {
         width: 90%;
     }
+
     .rightPart h2 {
         font-size: 100px;
     }

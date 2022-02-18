@@ -1,47 +1,8 @@
-@import url(/static/styles/global.css);
+@import url(/static/styles/include.css);
 
-:root {
-    --font1: 'Heebo', sans-serif;
-    --font2: 'Ubuntu', sans-serif;
-    --font3: Montserrat, sans-serif;
-    --font4: "Open Sans", "Helvetica Neue", "Segoe UI", "Calibri", "Arial", sans-serif
-}
-
-*, ::after, ::before, body, html {
+::after, ::before, body, html, * {
     margin: 0;
     border: 0;
-    box-sizing: border-box;
-    scrollbar-width: thin;
-    outline: 0;
-    font-family: var(--font1);
-    text-decoration: none;
-    color: #273036;
-    -webkit-tap-highlight-color: transparent
-}
-
-::-webkit-scrollbar {
-    width: 7px
-}
-
-::-webkit-scrollbar-track {
-    background: rgba(255, 255, 255, 0)
-}
-
-::-webkit-scrollbar-thumb {
-    background: #ccc
-}
-
-a:hover {
-    color: #538ce8;
-    transition: .25s ease
-}
-
-ul {
-    padding-inline-start: 0
-}
-
-header {
-    margin: auto
 }
 
 @keyframes uploadBtnAn {
@@ -49,59 +10,6 @@ header {
         opacity: 0;
         transform: translateY(100%)
     }
-}
-
-header .logoText, header .logoText span {
-    font-size: 28px;
-    font-family: var(--font2)
-}
-
-header .logoText svg path {
-    fill: #273036
-}
-
-header .logoText svg {
-    width: 33px;
-    height: 33px;
-    position: relative;
-    bottom: -5px
-}
-
-header .logo .item {
-    display: inline-block
-}
-
-header .logo {
-    position: relative
-}
-
-header {
-    padding: 10px 5%;
-    display: flex
-}
-
-header li {
-    list-style: none;
-    display: inline-block
-}
-
-header header nav>ul li {
-    display: inline-block
-}
-
-header nav>ul li~li {
-    padding: 0 10px
-}
-
-header nav {
-    position: absolute;
-    right: 10px;
-    font-size: 15px;
-    padding: 10px 10px 10px 0
-}
-
-header .item {
-    z-index: 5
 }
 
 input {

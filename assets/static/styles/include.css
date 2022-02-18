@@ -1,0 +1,162 @@
+@font-face {
+    font-family: 'Ubuntu';
+    font-style: normal;
+    font-weight: 700;
+    font-display: swap;
+    src: url(../fonts/Ubuntu.woff2) format('woff2');
+    unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+@font-face {
+    font-family: 'Heebo';
+    font-style: normal;
+    font-weight: 400;
+    font-display: swap;
+    src: url(../fonts/Heebo.woff2) format('woff2');
+    unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+:root {
+    --font1: 'Heebo', sans-serif;
+    --font2: 'Ubuntu', sans-serif;
+    --font3: Montserrat, sans-serif;
+    --font4: "Open Sans", "Helvetica Neue", "Segoe UI", "Calibri", "Arial", sans-serif;
+}
+
+::after, ::before, body, html, * {
+    box-sizing: border-box;
+    scrollbar-width: thin;
+    outline: 0;
+    font-family: var(--font1);
+    text-decoration: none;
+    color: #273036;
+    transition: .5s ease;
+    -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
+}
+
+::-webkit-scrollbar {
+    width: 7px;
+}
+
+::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0);
+}
+
+::-webkit-scrollbar-thumb {
+    background: rgb(204, 204, 204);
+}
+
+
+header .logoText, header .logoText span {
+    font-size: 28px;
+    font-family: var(--font2);
+}
+
+header .logoText .small {
+    font-size: 17px;
+    font-family: var(--font1);
+}
+
+header .logoText svg path {
+    fill: #273036;
+}
+
+header .logoText svg {
+    width: 33px;
+    height: 33px;
+    position: relative;
+    bottom: -5px;
+}
+
+header .logo .item {
+    display: inline-block;
+}
+
+header .logo img {
+    width: 50px;
+    pointer-events: none;
+}
+
+header .logo {
+    position: relative;
+    user-select: none;
+    cursor: default;
+}
+
+header {
+    display: flex;
+    justify-content: space-between;
+    padding: 8.5px 5%;
+}
+
+header:not(.no-shadow) {
+    box-shadow: 0px 0px 50px -12px rgba(0, 0, 0, 0.36);
+    box-shadow: 0px 0px 50px -12px rgb(0 0 0 / 21%);
+}
+
+header li {
+    list-style: none;
+    display: inline-block;
+}
+
+header header nav>ul li {
+    display: inline-block;
+}
+
+ul {
+    padding-inline-start: 0
+}
+
+header nav>ul li~li {
+    padding: 0 10px;
+}
+
+header nav {
+    /* position: absolute; */
+    right: 10px;
+    font-size: 15px;
+    padding: 10px 10px 10px 0;
+}
+
+header .item {
+    z-index: 5;
+}
+
+header, .cont {
+    margin: auto;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+}
+
+@media screen and (max-width: 460px) {
+    header nav>ul {
+        display: none;
+    }
+}
+
+@media screen and (max-width: 585px) {
+    header .logoText, header .logoText span {
+        display: none;
+    }
+}
+
+@media screen and (max-width: 650px) {
+    header .logoText svg {
+        width: 28px;
+        height: 28px;
+        position: relative;
+        bottom: -5px;
+    }
+
+    header .logoText, header .logoText span {
+        font-size: 25px;
+    }
+
+    nav {
+        top: 6px;
+    }
+}

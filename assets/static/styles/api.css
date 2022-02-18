@@ -1,28 +1,25 @@
-@import url(/static/styles/global.css);
+@import url(/static/styles/include.css);
 
 body {
     font: 400 16px/1.5 "Helvetica Neue", Helvetica, Arial, sans-serif;
     color: #111;
     background-color: #fdfdfd;
     -webkit-text-size-adjust: 100%;
-    -webkit-font-feature-settings: "kern" 1;
-    -moz-font-feature-settings: "kern" 1;
-    -o-font-feature-settings: "kern" 1;
     font-feature-settings: "kern" 1;
     font-kerning: normal;
-    padding: 0px 30px 30px 30px;
+    /* padding: 0px 30px 30px 30px; */
 }
 
 body>#content {
     margin: 0px;
-    max-width: 900px;
+    max-width: 985px;
     border: 1px solid #e1e4e8;
     padding: 10px 40px;
     padding-bottom: 20px;
     border-radius: 6px;
     margin-left: auto;
     margin-right: auto;
-    margin: 50px auto 0px auto;
+    margin: 40px auto 0px auto;
 }
 
 hr {
@@ -35,10 +32,9 @@ hr {
     border: none;
 }
 
-h2[id], h1[id] {
+:is(h1, h2)[id] {
     cursor: pointer;
 }
-/** * Links */
 
 pre {
     background-color: #f6f8fa;
@@ -205,74 +201,6 @@ a:hover {
     transition: .25s ease
 }
 
-ul {
-    padding-inline-start: 0
-}
-
-header {
-    margin: auto
-}
-
-@keyframes uploadBtnAn {
-    from {
-        opacity: 0;
-        transform: translateY(100%)
-    }
-}
-
-header .logoText, header .logoText span {
-    font-size: 28px;
-    font-family: var(--font2)
-}
-
-header .logoText svg path {
-    fill: #273036
-}
-
-header .logoText svg {
-    width: 33px;
-    height: 33px;
-    position: relative;
-    bottom: -5px
-}
-
-header .logo .item {
-    display: inline-block
-}
-
-header .logo {
-    position: relative
-}
-
-header {
-    padding: 10px 5%;
-    display: flex
-}
-
-header li {
-    list-style: none;
-    display: inline-block
-}
-
-header header nav>ul li {
-    display: inline-block
-}
-
-header nav>ul li~li {
-    padding: 0 10px
-}
-
-header nav {
-    position: absolute;
-    right: 10px;
-    font-size: 15px;
-    padding: 10px 10px 10px 0
-}
-
-header .item {
-    z-index: 5
-}
-
 .menu {
     position: relative;
     z-index: 2;
@@ -382,36 +310,5 @@ header .item {
     body>#content {
         margin: 20px auto 0px auto;
         padding: 0px 20px 20px 20px !important;
-    }
-}
-
-@media screen and (max-width:430px) {
-    header nav>ul {
-        display: none
-    }
-    .menu {
-        display: block
-    }
-}
-
-@media screen and (max-width:540px) {
-    header .logoText, header .logoText span {
-        display: none
-    }
-}
-
-@media screen and (max-width:650px) {
-    header .logoText svg {
-        width: 28px;
-        height: 28px;
-        position: relative;
-        bottom: -5px
-    }
-    header .logoText, header .logoText span {
-        font-size: 25px;
-        transform: translateY(-10px);
-    }
-    nav {
-        top: 6px
     }
 }
