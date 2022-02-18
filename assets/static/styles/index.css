@@ -282,8 +282,9 @@ header .logo {
 }
 
 header {
-    padding: 10px 5%;
     display: flex;
+    justify-content: space-between;
+    padding: 8.5px 5%;
     box-shadow: 0px 0px 50px -12px rgba(0, 0, 0, 0.36);
     box-shadow: 0px 0px 50px -12px rgb(0 0 0 / 21%);
 }
@@ -302,7 +303,7 @@ header nav>ul li~li {
 }
 
 header nav {
-    position: absolute;
+    /* position: absolute; */
     right: 10px;
     font-size: 15px;
     padding: 10px 10px 10px 0;
@@ -772,7 +773,8 @@ main {
     box-shadow: 0 0 20px 5px rgb(62 41 82 / 29%);
     width: 300px;
     top: 40px;
-    position: relative;
+    right: 5px;
+    position: absolute;
     background: linear-gradient(0deg, #272936, #273036);
 }
 
@@ -804,7 +806,7 @@ main {
 
 .menu .lines {
     cursor: pointer;
-    transform: scale(-1);
+    transform: translateY(-10px) scale(-1);
     position: absolute;
     right: 0;
     top: 0;
@@ -1125,7 +1127,7 @@ body.text .partInner .uploadBtn {
     }
 }
 
-@media screen and (max-width: 430px) {
+@media screen and (max-width: 445px) {
     header nav>ul {
         display: none;
     }
@@ -1140,7 +1142,7 @@ body.text .partInner .uploadBtn {
     }
 }
 
-@media screen and (max-width: 540px) {
+@media screen and (max-width: 585px) {
     .btnsInner .inner {
         padding: 150px 5% 5% 5%;
         padding-top: 120px;
