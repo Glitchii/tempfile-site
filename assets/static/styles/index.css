@@ -1,5 +1,9 @@
 @import url(/static/styles/include.css);
 
+body {
+    background: #ff;
+}
+
 ::after, ::before, body, html, * {
     margin: 0;
     border: 0;
