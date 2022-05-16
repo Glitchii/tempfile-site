@@ -4,21 +4,21 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="A website that temporarily stores files to a chosen date.">
-    <link rel="fluid-icon" href="/static/imgs/icon.png" title="TempFile">
-    <meta name="twitter:image:src" content="/static/imgs/icon.png">
+    <link rel="fluid-icon" href="/media/favicon.ico" title="TempFile">
+    <meta name="twitter:image:src" content="/media/favicon.ico">
     <meta name="twitter:card" content="summary">
     <meta name="twitter:title" content="TempFile">
     <meta name="twitter:description" content="A website that temporarily stores files to a chosen date.">
-    <meta property="og:image" content="/static/imgs/icon.png">
+    <meta property="og:image" content="/media/favicon.ico">
     <meta property="og:site_name" content="TempFile">
     <meta property="og:type" content="object">
     <meta property="og:title" content="TempFile">
     <meta property="og:url" content="/">
     <meta property="og:description" content="A website that temporarily stores files to a chosen date.">
     <title>TempFile.site</title>
-    <link rel="icon" href="/static/imgs/icon.png">
-    <link rel="stylesheet" href="/static/styles/index.css">
-    <script src="/static/js/indx.js"></script>
+    <link rel="icon" href="/media/favicon.ico">
+    <link rel="stylesheet" href="/css/index.css">
+    <script src="/js/home.js"></script>
 </head>
 
 <body>
@@ -65,7 +65,7 @@
     </div>
     <%- include('include/header.ejs', { nohome: true, shadow: true, del: true }) %>
     <div class="loader">
-        <svg version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+        <svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
             x="0px" y="0px" width="150px" height="150px" viewBox="0 0 150 150" enable-background="new 0 0 150 150"
             xml:space="preserve">
 
@@ -193,7 +193,7 @@
                     <input class="input" type="text">
                 </div>
                 <div class="linkBtns">
-                    <a class="linkBtn del" href="/del">
+                    <a class="linkBtn del" href="/delete">
                         <svg xmlns="http://www.w3.org/2000/svg" version="1.1" xmlns:xlink="http://www.w3.org/1999/xlink"
                             xmlns:svgjs="http://svgjs.com/svgjs" x="0" y="0" viewBox="0 0 512.016 512.016"
                             xml:space="preserve">
@@ -320,7 +320,7 @@
                 <div class="dragParent">
                     <label class="part drag" for="upload">
                         <div class="partInner">
-                            <img class="img mainImg" src="/static/imgs/upload.svg" alt="" width="250px" height="100%">
+                            <img class="img mainImg" src="/media/upload.svg" alt="" width="250px" height="100%">
                             <img class="img otherImg" src="" alt="" width="250px" height="100%">
                             <div class="img fileIcon">
                                 <p>File</p>

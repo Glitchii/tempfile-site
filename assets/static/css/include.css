@@ -46,6 +46,9 @@
     background: rgb(204, 204, 204);
 }
 
+body {
+	background: #fff;
+}
 
 header .logoText, header .logoText span {
     font-size: 28px;
