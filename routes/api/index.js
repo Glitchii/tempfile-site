@@ -10,6 +10,6 @@ router.use((req, res, next) => {
 })
 
 router.use('/files', filesRouter);
-router.get('/', (_req, res) => res.render('api'));
+router.get('/', (_req, res) => res.render('api', { apiPage: true }));
 
 export { router };

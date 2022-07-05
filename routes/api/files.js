@@ -126,7 +126,7 @@ export const add = async (req, res) => {
                     data = {
                         authkey: info.authkey || randomWords({ exactly: 3, maxLength: 3, join: '.' }),
                         filename: `${await chooseName(info.name)}${path.extname(req.file.originalname)}`,
-                        userIP: res.ip
+                        userIP: await bcrypt.hash(res.ip, 10)
                     };
 
                 if (chosenDate === 0)

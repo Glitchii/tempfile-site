@@ -923,6 +923,7 @@ body.text .partInner .uploadBtn {
     right: 10px;
     border-radius: 100%;
     background: linear-gradient(30deg, #74adff82, #7f94ff66);
+    background: linear-gradient(30deg, #74adff99, #7f94ffa6);
     padding: 7px;
     clip-path: circle();
     transition: cubic-bezier(0.175, 0.885, 0.32, 1.275) .5s ease;

@@ -21,10 +21,12 @@
         <ul>
             <% if (!locals.nohome) { %> <li><a href="/">Home</a></li> <% } %>
             <% if (locals.del) { %> <li><a href="/delete">Delete a file</a></li> <% } %>
-            <li><a target="_blank" href="/contact">Contact</a></li>
+            <% if (!locals.apiPage) { %> <li><a href="/api">API</a></li> <% } %>
             <li><a target="_blank" href="https://github.com/Glitchii/tempfile.site">Source</a></li>
-            <li><a target="_blank" href="//paypal.me/qurty">Support me</a></li>
+            <li><a target="_blank" href="/contact">Contact</a></li>
+            <li><a target="_blank" href="https://paypal.me/qurty">Support me</a></li>
         </ul>
+
         <div class="menu">
             <div class="lines">
                 <div></div>
@@ -35,8 +37,9 @@
                 <ul>
                     <% if (!locals.nohome) { %> <li><a href="/">Home Page</a></li> <% } %>
                     <% if (locals.del) { %> <li><a href="/delete">Delete a file</a></li> <% } %>
-                    <li><a target="_blank" href="/contact">Contact</a></li>
+                    <% if (!locals.apiPage) { %> <li><a href="/api">API</a></li> <% } %>
                     <li><a target="_blank" href="https://github.com/Glitchii/tempfile.site">Source</a></li>
+                    <li><a target="_blank" href="/contact">Contact</a></li>
                     <li><a target="_blank" href="//paypal.me/qurty">Support me</a></li>
                 </ul>
                 <div class="bottomBtns">
