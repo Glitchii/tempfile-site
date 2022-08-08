@@ -5,6 +5,7 @@ import bcrypt from 'bcrypt';
 import cookies from 'cookies';
 import randomWords from 'random-words';
 import rateLimit from 'express-rate-limit';
+import requestIp from 'request-ip';
 
 import { lookFor, chooseName, checkIP, S3, __dirname as assets } from './assets/components.js';
 import { router as apiRouter } from './routes/api/index.js';
@@ -15,12 +16,18 @@ const rateMsg = "Too many requests, chill out.";
 const limiter = rateLimit({ rateMsg, windowMs: 1 * 60 * 1000, max: 30, headers: true });
 
 app.set('view engine', 'ejs');
+app.set('trust proxy', true);
+
 app.use("/upload/", limiter);
+app.use(requestIp.mw());
 app.use(cookies.express());
 app.use(express.static(path.join(assets, 'static')));
 app.use(express.json());
 app.use('/api/', apiRouter);
-app.use((req, res, next) => ((res.ip = (req.headers['x-real-ip'] || req.headers['x-forwarded-for'] || req.connection.remoteAddress).split(',').reverse()[0]).trim()) && next());
+app.use((req, res, next) => {
+    res.ip = req.ip || req.clientIp || (req.headers['x-real-ip'] || req.headers['x-forwarded-for'] || req.connection.remoteAddress).split(',').pop().trim();
+    next();
+});
 
 app.get('/favicon.ico', (req, res) => res.sendFile(path.join(assets, 'static', 'media', 'favicon.ico')));
 
@@ -85,6 +92,7 @@ app.post("/upload/", async (req, res) => {
                 Bucket: process.env.bucket,
                 Key: name.toLowerCase() + '.json',
                 Body: JSON.stringify({ ...data, ...info }),
+                StorageClass: 'GLACIER_IR', // https://aws.amazon.com/s3/pricing/
             }, err => err ? res.json({ err: 'Error uploading, file may not be uploaded.' }) : res.status(200).json({ link: name }));
         } catch (err) {
             console.error(err)
@@ -128,8 +136,9 @@ app.get("/files/:name", async (req, res) => {
         else
             res.type(find.mimetype || find.contentType).end(Buffer.from(find.buffer, 'binary'));
 
+        // Access limit reached?
         if (find.limit && ((hds['sec-fetch-site'] === 'same-origin' && hds['sec-fetch-mode'] !== 'no-cors') || hds['sec-fetch-site'] !== 'same-origin'))
-            if (--find.limit == 0)
+            if (--find.limit <= 0)
                 await S3.deleteObject({
                     Bucket: process.env.bucket,
                     Key: find.filename + '.json',
@@ -138,7 +147,8 @@ app.get("/files/:name", async (req, res) => {
                 await S3.putObject({
                     Bucket: process.env.bucket,
                     Key: find.filename + '.json',
-                    Body: JSON.stringify(find)
+                    Body: JSON.stringify(find),
+                    StorageClass: 'GLACIER_IR',
                 }).promise();
     } catch (e) {
         console.log('From /files/', e);
@@ -164,13 +174,16 @@ app.post("/auth/", (req, res) => {
 const remove = (req, res, filename) =>
     lookFor(filename).then(async (find, err) => {
         if (req.method !== "POST") {
-            let cookie = req.cookies.get('_tmpfle');
+            const cookie = req.cookies.get('_tmpfle');
+
             if (err) return res.status(500).render('error', { code: 1, type: 500, text: 'There was an error fetching file' });
             if (!find?.filename) return res.status(404).render('error', { type: 404 });
             if (!await bcrypt.compare(res.ip, find.userIP) && !cookie) return res.status(403).render('error', { code: 2, type: 403 });
             if (cookie && !await bcrypt.compare(find.pass || find.authkey, cookie)) return res.status(403).render('error', { code: 2, type: 403 });
+
             return res.render('delete', find);
         }
+
         S3.deleteObject({
             Bucket: process.env.bucket,
             Key: find.filename.toLowerCase() + '.json',
@@ -183,23 +196,22 @@ const remove = (req, res, filename) =>
         req.method == "GET" ? res.status(500).render('error', { code: 1, type: 500 }) : res.status(500).send('There was an internal server error');
     }), checkExpired = async () => {
         try {
-            console.log('Checking for expired files');
             S3.listObjectsV2({ Bucket: process.env.bucket, }).promise()
                 .then(async data => {
                     for (const item of data.Contents) {
                         const find = await lookFor(item.Key, true);
                         const stamp = new Date(find?.datetime || undefined);
-                        console.log(item.LastModified, stamp, find.datetime);
+
                         if (!stamp || !stamp.getDate() || new Date() > stamp)
-                            S3.deleteObject({
-                                Bucket: process.env.bucket,
-                                Key: item.Key,
-                            }, err => err && console.log(`Error deleting file (${item.Key}): ${err}`));
+                            S3.deleteObject({ Bucket: process.env.bucket, Key: item.Key, }, err => {
+                                if (!err) return;
+                                console.error('Error deleting file (${item.Key}):', err)
+                            });
                     }
                 })
-                .catch(err => console.log(`Error in main interval (promise): ${err}`))
+                .catch(err => console.error('Error in main interval (promise):', err))
         } catch (err) {
-            console.log(`Error in main interval: ${err}`)
+            console.error('Error in main interval:', err);
         }
     };
 

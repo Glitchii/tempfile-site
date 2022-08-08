@@ -9,7 +9,7 @@ import { lookFor, chooseName, dateFromValue, S3 } from '../../assets/components.
 const router = Router();
 
 router.use((req, res, next) => {
-    res.ip = ((req.headers['x-real-ip'] || req.headers['x-forwarded-for'] || req.connection.remoteAddress).split(',').reverse()[0]).trim(),
+    res.ip = req.ip || req.clientIp || (req.headers['x-real-ip'] || req.headers['x-forwarded-for'] || req.connection.remoteAddress).split(',').pop().trim(),
         res.ok = obj => res.json({ ok: true, ...(obj ? obj : {}) }),
         res.err = (status, type, msg, usage) => res.status(status || 500).json({
             ok: false,
@@ -57,16 +57,15 @@ export const get = (req, res, filename) =>
 
             if (find.limit)
                 if (--find.limit <= 0)
-                    S3.deleteObject({
-                        Bucket: process.env.bucket,
-                        Key: find.filename + '.json',
-                    }, err => err && console.log(`Error deleting file "${find.filename}" which has reached its download limit: ${err}`));
+                    S3.deleteObject({ Bucket: process.env.bucket, Key: find.filename + '.json', }, err => {
+                        if (!err) return;
+                        console.error(`Error deleting file "${find.filename}" which has reached its download limit:`, err)
+                    });
                 else
-                    S3.putObject({
-                        Bucket: process.env.bucket,
-                        Key: find.filename + '.json',
-                        Body: JSON.stringify(find)
-                    }, err => err && console.log(`Error reducing download limit on file "${find.filename}": ${err}`));
+                    S3.putObject({ Bucket: process.env.bucket, Key: find.filename + '.json', Body: JSON.stringify(find), StorageClass: 'GLACIER_IR' }, err => {
+                        if (!err) return;
+                        console.error(`Error reducing download limit on file "${find.filename}":`, err)
+                    });
         }).catch(err => {
             res.err();
             console.log('From /api/get/', err);
@@ -161,7 +160,8 @@ export const add = async (req, res) => {
                 S3.putObject({
                     Bucket: process.env.bucket,
                     Key: data.filename + '.json',
-                    Body: JSON.stringify(data)
+                    Body: JSON.stringify(data),
+                    StorageClass: 'GLACIER_IR',
                 }, (err, _data) => {
                     if (err) return res.err(0, 0, 'Error uploading, file may not be uploaded.');
                     res.ok({ link: `https://tempfile.site/files/${data.filename}`, authkey: data.authkey });
