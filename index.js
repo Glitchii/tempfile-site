@@ -75,7 +75,7 @@ app.post("/upload/", async (req, res) => {
 
             if (req.file) {
                 data.buffer = req.file.buffer,
-                data.size = req.file?.size;
+                    data.size = req.file?.size;
             };
 
             if (req.file?.mimetype) data.mimetype = req.file.mimetype;
@@ -183,24 +183,28 @@ const remove = (req, res, filename) =>
         req.method == "GET" ? res.status(500).render('error', { code: 1, type: 500 }) : res.status(500).send('There was an internal server error');
     }), checkExpired = async () => {
         try {
+            console.log('Checking for expired files');
             S3.listObjectsV2({ Bucket: process.env.bucket, }).promise()
-                .then(data =>
-                    data.Contents.map(item => item.Key).forEach(async name => {
-                        const find = await lookFor(name, true);
+                .then(async data => {
+                    for (const item of data.Contents) {
+                        const find = await lookFor(item.Key, true);
                         const stamp = new Date(find?.datetime || undefined);
+                        console.log(item.LastModified, stamp, find.datetime);
                         if (!stamp || !stamp.getDate() || new Date() > stamp)
                             S3.deleteObject({
                                 Bucket: process.env.bucket,
-                                Key: name,
-                            }, err => err && console.log(`Error deleting file (${name}): ${err}`));
-                    }))
+                                Key: item.Key,
+                            }, err => err && console.log(`Error deleting file (${item.Key}): ${err}`));
+                    }
+                })
                 .catch(err => console.log(`Error in main interval (promise): ${err}`))
         } catch (err) {
             console.log(`Error in main interval: ${err}`)
         }
     };
 
-checkExpired() && setInterval(checkExpired, 60_000);
+checkExpired()
+setInterval(checkExpired, 60_000);
 
 app.get("/del/:name?", (req, res) => res.redirect(`/delete/${req.params.name || ''}`));
 app.route("/delete/:name?")

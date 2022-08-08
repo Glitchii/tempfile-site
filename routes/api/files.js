@@ -123,9 +123,10 @@ export const add = async (req, res) => {
                     chosenDate = dateFromValue(info.datetime),
                     ipblacklist = info.ipblacklist && info.ipblacklist.split(/\s*,\s*/g).filter(x => x),
                     ipwhitelist = info.ipwhitelist && info.ipwhitelist.split(/\s*,\s*/g).filter(x => x),
+                    ext = path.extname(req.file.originalname),
                     data = {
                         authkey: info.authkey || randomWords({ exactly: 3, maxLength: 3, join: '.' }),
-                        filename: `${await chooseName(info.name)}${path.extname(req.file.originalname)}`,
+                        filename: `${await chooseName(info.name, ext)}${ext}`,
                         userIP: await bcrypt.hash(res.ip, 10)
                     };
 
