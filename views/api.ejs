@@ -17,13 +17,14 @@
     <meta property="og:url" content="/api">
     <meta property="og:description" content="A website that temporarily stores files to a chosen date.">
     <title>TempFile • API</title>
-    <link rel="icon" href="/media/favicon.ico">
+    <%- include('include/head.ejs') %> 
     <link rel="stylesheet" href="/css/api.css">
     <script src="/js/api.js"></script>
 </head>
 
 <body>
     <%- include('include/header.ejs') %>
+    <!--sse-->
     <div id="content">
         <h1 id="using-requests">Using Requests</h1>
         <p>
@@ -71,6 +72,7 @@ authkey: Without this key, you won't be able to delete the file if it was not po
         </p>
         <pre><code class="bash language-bash">curl -X DELETE http://tempfile.site/api/files/filename.png -H "authkey: the key"</code></pre>
     </div>
+    <!--/sse-->
 </body>
 
 </html>

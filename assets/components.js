@@ -15,8 +15,8 @@ export const S3 = new AWS.S3({
     secretAccessKey: process.env.secret
 });
 
-export const lookFor = (name, hasExt) =>
-    S3.getObject({ Bucket: process.env.bucket, Key: `${name.toLowerCase()}${hasExt ? '' : '.json'}` }).promise()
+export const lookFor = (obj, hasExt) =>
+    S3.getObject({ Bucket: process.env.bucket, ...obj, ...(obj.Key && { Key: `${obj.Key.toLowerCase()}${hasExt ? '' : '.json'}` }) }).promise()
         .then(data => JSON.parse(data.Body.toString('utf-8')))
         .catch(() => null)
 

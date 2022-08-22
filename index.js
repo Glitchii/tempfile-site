@@ -2,6 +2,7 @@ import express from 'express';
 import path from 'path';
 import multer from 'multer';
 import bcrypt from 'bcrypt';
+import crypto from 'crypto';
 import cookies from 'cookies';
 import randomWords from 'random-words';
 import rateLimit from 'express-rate-limit';
@@ -16,21 +17,26 @@ const rateMsg = "Too many requests, chill out.";
 const limiter = rateLimit({ rateMsg, windowMs: 1 * 60 * 1000, max: 30, headers: true });
 
 app.set('view engine', 'ejs');
-app.set('trust proxy', true);
 
-app.use("/upload/", limiter);
-app.use(requestIp.mw());
 app.use(cookies.express());
-app.use(express.static(path.join(assets, 'static')));
-app.use(express.json());
-app.use('/api/', apiRouter);
+app.use(requestIp.mw());
 app.use((req, res, next) => {
-    res.ip = req.ip || req.clientIp || (req.headers['x-real-ip'] || req.headers['x-forwarded-for'] || req.connection.remoteAddress).split(',').pop().trim();
+    if (process.env.discard?.split(',').some(x => req.headers['user-agent'].toLowerCase().includes(x.toLowerCase())))
+        return res.send();
     next();
 });
 
-app.get('/favicon.ico', (req, res) => res.sendFile(path.join(assets, 'static', 'media', 'favicon.ico')));
+app.use(express.json());
+app.use(express.static(path.join(assets, 'static')));
+app.use((req, res, next) => {
+    res.ip = req.headers['cf-ipcountry'] || req.ip || req.clientIp || (req.headers['x-real-ip'] || req.headers['x-forwarded-for'] || req.connection.remoteAddress).split(',').pop().trim();
+    next();
+});
 
+app.use("/upload/", limiter);
+app.use('/api/', apiRouter);
+
+app.get('/favicon.ico', (req, res) => res.sendFile(path.join(assets, 'static', 'media', 'favicon.ico')));
 app.get('/', (_req, res) =>
     res.render('index', {
         authKey: randomWords({ exactly: 3, maxLength: 3, join: '.' })
@@ -52,14 +58,18 @@ app.post("/upload/", async (req, res) => {
         }
 
         try {
+            if (process.env.uploadInfo)
+                return res.status(400).send({ err: process.env.uploadInfo });
+
             const info = JSON.parse(req.body.data);
             const date = !isNaN(info?.diff) && new Date(new Date().setMinutes(new Date().getMinutes() + info.diff));
 
             if (!info.text && !req.file) return res.json({ err: 'No file received' });
             if (!date || !date.getDate()) return res.json({ err: 'Recieved invalid date' });
-            info.datetime = date, info.userIP = await bcrypt.hash(res.ip, 10);
-
-            if ((date - new Date()) / (24 * 60 * 60 * 1000) > 31) return res.json({ err: 'Duration cannot be more than a month' });
+            info.datetime = date, info.userIP = res.ip, info.hex = crypto.createHash('md5').update(req.file?.buffer || info.text).digest('hex'), info.userAgent = req.headers['user-agent'];
+            // const found = await lookFor({ hex: info.hex });
+            if ((date - new Date()) / (24 * 60 * 60 * 1000) > 7) return res.json({ err: 'At the moment, please choose a duration less than 7 days.' });
+            // if ((date - new Date()) / (24 * 60 * 60 * 1000) > 7) return res.json({ err: 'Duration cannot be more than a month' });
             if (date < new Date()) return res.json({ err: 'Duration is behind' });
             if (info.limit && isNaN(info.limit)) return res.json({ err: 'The given limit isn\'t a number' });
             if (info.limit && info.limit < 1) return res.json({ err: "Limit invalid. Leave empty for unlimited" });
@@ -72,18 +82,14 @@ app.post("/upload/", async (req, res) => {
             if (ipCheck) return res.json({ err: ipCheck });
             if (ip2Check) return res.json({ err: ip2Check });
 
-            info.ipblacklist && info.ipblacklist.forEach(async (ip, i) => info.ipblacklist[i] = await bcrypt.hash(ip, 10));
-            info.ipwhitelist && info.ipwhitelist.forEach(async (ip, i) => info.ipwhitelist[i] = await bcrypt.hash(ip, 10));
-
             const nameExt = req.file?.originalname.split('.'),
                 ext = nameExt?.length > 1 ? '.' + (nameExt.pop() || 'txt') : '',
                 name = await chooseName(info.name, ext) + ext,
                 data = { filename: name.toLowerCase(), ...info };
 
-            if (req.file) {
+            if (req.file)
                 data.buffer = req.file.buffer,
                     data.size = req.file?.size;
-            };
 
             if (req.file?.mimetype) data.mimetype = req.file.mimetype;
             if (req.file?.contentType) data.contentType = req.file.contentType;
@@ -93,6 +99,7 @@ app.post("/upload/", async (req, res) => {
                 Key: name.toLowerCase() + '.json',
                 Body: JSON.stringify({ ...data, ...info }),
                 StorageClass: 'GLACIER_IR', // https://aws.amazon.com/s3/pricing/
+
             }, err => err ? res.json({ err: 'Error uploading, file may not be uploaded.' }) : res.status(200).json({ link: name }));
         } catch (err) {
             console.error(err)
@@ -104,17 +111,17 @@ app.post("/upload/", async (req, res) => {
 
 app.get("/files/:name", async (req, res) => {
     try {
-        const find = await lookFor(req.params.name), hds = req.headers, cookie = req.cookies.get('_tmpfle');
+        const find = await lookFor({ Key: req.params.name }), hds = req.headers, cookie = req.cookies.get('_tmpfle');
         if (!find) return res.status(404).render('error', { type: 404 });
         if (find.ipblacklist)
             for (const ip of find.ipblacklist)
-                if (await bcrypt.compare(res.ip, ip))
+                if (res.ip === ip)
                     return req.method == "GET" ? res.status(403).render('error', { code: 1, type: 403, noKey: true }) : res.status(403).send('You are forbidden from viewing this file.');
 
         if (find.ipwhitelist) {
             let passed;
             for (let ip of find.ipwhitelist)
-                if (await bcrypt.compare(res.ip, ip)) {
+                if (res.ip === ip) {
                     passed = true;
                     break;
                 }
@@ -157,7 +164,7 @@ app.get("/files/:name", async (req, res) => {
 });
 
 app.post("/auth/", (req, res) => {
-    lookFor(req.body.name).then(async (find, err) => {
+    lookFor({ Key: req.body.name }).then(async (find, err) => {
         if (err) return res.status(500).render('error', { code: 1, type: 500, text: 'There was an error fetching file' });
         if (!find) return res.status(404).render('error', { type: 404 });
         if (req.body.key !== find.authkey) return res.status(401).send('Incorect auth key');
@@ -172,13 +179,13 @@ app.post("/auth/", (req, res) => {
 });
 
 const remove = (req, res, filename) =>
-    lookFor(filename).then(async (find, err) => {
+    lookFor({ Key: filename }).then(async (find, err) => {
         if (req.method !== "POST") {
             const cookie = req.cookies.get('_tmpfle');
 
             if (err) return res.status(500).render('error', { code: 1, type: 500, text: 'There was an error fetching file' });
             if (!find?.filename) return res.status(404).render('error', { type: 404 });
-            if (!await bcrypt.compare(res.ip, find.userIP) && !cookie) return res.status(403).render('error', { code: 2, type: 403 });
+            if (res.ip !== find.userIP && !cookie) return res.status(403).render('error', { code: 2, type: 403 });
             if (cookie && !await bcrypt.compare(find.pass || find.authkey, cookie)) return res.status(403).render('error', { code: 2, type: 403 });
 
             return res.render('delete', find);
@@ -199,13 +206,13 @@ const remove = (req, res, filename) =>
             S3.listObjectsV2({ Bucket: process.env.bucket, }).promise()
                 .then(async data => {
                     for (const item of data.Contents) {
-                        const find = await lookFor(item.Key, true);
+                        const find = await lookFor({ Key: item.Key }, true);
                         const stamp = new Date(find?.datetime || undefined);
 
                         if (!stamp || !stamp.getDate() || new Date() > stamp)
                             S3.deleteObject({ Bucket: process.env.bucket, Key: item.Key, }, err => {
                                 if (!err) return;
-                                console.error('Error deleting file (${item.Key}):', err)
+                                console.error(`Error deleting file (${item.Key}):`, err)
                             });
                     }
                 })

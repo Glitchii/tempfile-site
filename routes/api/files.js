@@ -9,16 +9,17 @@ import { lookFor, chooseName, dateFromValue, S3 } from '../../assets/components.
 const router = Router();
 
 router.use((req, res, next) => {
-    res.ip = req.ip || req.clientIp || (req.headers['x-real-ip'] || req.headers['x-forwarded-for'] || req.connection.remoteAddress).split(',').pop().trim(),
-        res.ok = obj => res.json({ ok: true, ...(obj ? obj : {}) }),
-        res.err = (status, type, msg, usage) => res.status(status || 500).json({
-            ok: false,
-            error: {
-                type: type || 'InternalServerError',
-                message: msg || "There was an internal server error",
-                ...(usage ? { usage } : {})
-            }
-        });
+    res.ok = obj => res.json({ ok: true, ...(obj ? obj : {}) });
+    res.err = (status, type, msg, usage) => res.status(status || 500).json({
+        ok: false,
+        error: {
+            type: type || 'InternalServerError',
+            message: msg || "There was an internal server error",
+            ...(usage ? { usage } : {})
+        }
+    });
+    
+    console.log({ date: new Date().toUTCString(), url: req.url, userAgent: req.headers['user-agent'], geo: req.ip }); // Debug
     next();
 });
 
@@ -27,19 +28,19 @@ export const get = (req, res, filename) =>
     //  curl -O https://tempfile.site/api/files/fileame.png
     //  curl -O https://tempfile.site/api/files/fileame.png -H "pass: a password"
     !filename ? res.err(400, 'BadRequest', 'No filename provided', `${req.protocol}://${req.get('host')}${req.baseUrl}/<filename>`) :
-        lookFor(filename).then(async (find, err) => {
+        lookFor({ Key: filename }).then(async (find, err) => {
             if (err || !find)
                 return res.err(404, "NotFound", "File not found");
 
             if (find.ipblacklist)
                 for (const ip of find.ipblacklist)
-                    if (await bcrypt.compare(res.ip, ip))
+                    if (res.ip === ip)
                         return res.err(403, 'Forbidden', 'Your IP address is blacklisted from accessing this file.');
 
             if (find.ipwhitelist) {
                 let passed;
                 for (let ip of find.ipwhitelist)
-                    if (await bcrypt.compare(res.ip, ip)) {
+                    if (res.ip === ip) {
                         passed = true;
                         break;
                     }
@@ -79,10 +80,10 @@ export const del = async (req, res, filename) => {
         if (!filename)
             return res.err(404, "MissingFilename", "No file provided to delete", `${req.protocol}://${req.get('host')}${req.baseUrl}/<filename>`);
 
-        lookFor(filename).then(async (find, err) => {
+        lookFor({ Key: filename }).then(async (find, err) => {
             if (err) return res.err();
             if (!find) return res.err(404, "NotFound", `File not found`);
-            if (!await bcrypt.compare(res.ip, find.userIP)) {
+            if (res.ip !== find.userIP) {
                 if (!find.authkey)
                     return res.err(403, "Unauthorized", "You can't delete the file as it wasn't uploaded from the current IP address and no auth key was provided");
 
@@ -126,7 +127,7 @@ export const add = async (req, res) => {
                     data = {
                         authkey: info.authkey || randomWords({ exactly: 3, maxLength: 3, join: '.' }),
                         filename: `${await chooseName(info.name, ext)}${ext}`,
-                        userIP: await bcrypt.hash(res.ip, 10)
+                        userIP: res.ip
                     };
 
                 if (chosenDate === 0)
@@ -136,7 +137,7 @@ export const add = async (req, res) => {
                 if (!chosenDate)
                     return res.err(400, "InvalidDate", "Given date or time is invalid");
                 if (info.pass)
-                    data.pass = await bcrypt.hash(info.pass, 10);
+                    data.pass = info.pass;
                 if (info.limit) {
                     if (isNaN(info.limit) || info.limit <= 0)
                         return res.err(400, "InvalidLimit", "Limit must be a number more than 0");
@@ -145,22 +146,18 @@ export const add = async (req, res) => {
                 if (ipblacklist) {
                     if (ipblacklist.length > 5)
                         return res.err(400, "IP Limit Exceeded", "Only up to 5 IPs allowed");
-                    ipblacklist.forEach(async (ip, i) => ipblacklist[i] = await bcrypt.hash(ip, 10))
                     data.ipblacklist = ipblacklist;
                 }
                 if (ipwhitelist) {
                     if (ipwhitelist.length > 5)
                         return res.err(400, "IP Limit Exceeded", "Only up to 5 IPs allowed");
-                    ipwhitelist.forEach(async (ip, i) => ipwhitelist[i] = await bcrypt.hash(ip, 10))
                     data.ipwhitelist = ipwhitelist;
                 }
-
-                data = { mimetype: req.file.mimetype, size: req.file.size, buffer: req.file.buffer, ...data, datetime: chosenDate };
 
                 S3.putObject({
                     Bucket: process.env.bucket,
                     Key: data.filename + '.json',
-                    Body: JSON.stringify(data),
+                    Body: JSON.stringify({ mimetype: req.file.mimetype, size: req.file.size, buffer: req.file.buffer, ...data, datetime: chosenDate, api: true, hex: crypto.createHash('md5').update(req.file?.buffer || info.text).digest('hex'), userAgent: req.headers['user-agent'] }),
                     StorageClass: 'GLACIER_IR',
                 }, (err, _data) => {
                     if (err) return res.err(0, 0, 'Error uploading, file may not be uploaded.');
