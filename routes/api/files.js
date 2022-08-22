@@ -18,7 +18,7 @@ router.use((req, res, next) => {
             ...(usage ? { usage } : {})
         }
     });
-    
+
     console.log({ date: new Date().toUTCString(), url: req.url, userAgent: req.headers['user-agent'], geo: req.ip }); // Debug
     next();
 });
@@ -112,12 +112,16 @@ export const add = async (req, res) => {
     //  curl -F datetime=1m -F file=@/path/to/file.png https://tempfile.site/api/files
     //  curl -F datetime=1m -F name=a-name -F ipblacklist=68.80.31.225 -F file=@/path/to/file.png https://tempfile.site/api/files
     //  curl -F datetime=1m -F name=a-name -F ipwhitelist="68.80.31.225, 50.90.30.222" -F authkey="a key" pass="a password" -F file=@/path/to/file.png https://tempfile.site/api/files
-    multer({ storage: multer.memoryStorage({ destination: (_req, _file, callback) => callback(null, '') }) })
+
+    multer({ storage: multer.memoryStorage(), limits: { fileSize: 1 * 1024 * 1024 * 1024 } })
         .single('file')(req, res, async (err) => {
             try {
-                if (err || req.fileValidationError) return res.err(0, 0, "There was an error while processing the file");
-                else if (!req.file) return res.err(400, "MissingFile", "No file recieved");
-                else if (!req.body.datetime) return res.err(400, "MissingDateTime", "Request must include a 'datetime' key");
+                if (process.env.uploadInfo) return res.status(400).send({ err: process.env.uploadInfo });
+                if (err?.code === 'LIMIT_FILE_SIZE') return res.status(400).send({ err: 'File is too large.' });
+                else if (err) return res.status(400).send({ err: 'There was an error while processing the file' });
+
+                if (!req.file) return res.err(400, "MissingFile", "No file recieved");
+                if (!req.body.datetime) return res.err(400, "MissingDateTime", "Request must include a 'datetime' key");
 
                 var info = JSON.parse(JSON.stringify(req.body || {})),
                     chosenDate = dateFromValue(info.datetime),

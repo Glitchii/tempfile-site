@@ -51,6 +51,8 @@ const upload = multer({
 
 app.post("/upload/", async (req, res) => {
     upload.single('file')(req, res, async err => {
+        if (process.env.uploadInfo)
+            return res.status(400).send({ err: process.env.uploadInfo });
         if (err) {
             if (err.code === 'LIMIT_FILE_SIZE')
                 return res.status(400).send({ err: 'File is too large.' });
@@ -58,9 +60,6 @@ app.post("/upload/", async (req, res) => {
         }
 
         try {
-            if (process.env.uploadInfo)
-                return res.status(400).send({ err: process.env.uploadInfo });
-
             const info = JSON.parse(req.body.data);
             const date = !isNaN(info?.diff) && new Date(new Date().setMinutes(new Date().getMinutes() + info.diff));
 

@@ -55,14 +55,14 @@ export const chooseName = async (filename, ext) => {
         const found = await findName(name, ext);
         return (found.match(/-\d+$/g) ? `${found.slice(0, -2)}-${parseInt(found.slice(-1)) + 1}` : found + '-1');
     } else if (!name) {
-        const min = 1,
-            max = 6,
-            check = async () => {
-                const name2 = [...Array(Math.floor(Math.random() * (max - min + min) + 1))].map(i => (~~(Math.random() * 36)).toString(36)).join('').toLowerCase();
-                if (await findName(name2, ext))
-                    await check();
-                return name2;
-            }
+        const min = 1;
+        const max = 20;
+        const check = async () => {
+            const name2 = [...Array(Math.floor(Math.random() * (max - min + min) + 1))].map(i => (~~(Math.random() * 36)).toString(36)).join('').toLowerCase();
+            if (await findName(name2, ext))
+                await check();
+            return name2;
+        }
         return await check();
     }
 
