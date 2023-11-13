@@ -1,4 +1,4 @@
-A website that temporarily stores files to a certain date or time.
+(Discontinued) A website that temporarily stores files to a certain date or time.
 
 # Using Requests
 Requests are done on the api path (/api/files/). After each request, a json response will be returned containing an 'ok' key (bool) to signify if it was successful or not. For example after a successful post request to upload a file, the output should look something like this:  
