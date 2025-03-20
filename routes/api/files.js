@@ -1,10 +1,11 @@
-import randomWords from 'random-words';
+import path from 'path';
 import bcrypt from 'bcrypt';
 import multer from 'multer';
-import path from 'path';
+import { generate } from 'random-words';
 
 import { Router } from 'express';
-import { lookFor, chooseName, dateFromValue, S3 } from '../../assets/components.js';
+import { lookFor, chooseName, dateFromValue, s3Client } from '../../assets/components.js';
+import { DeleteObjectCommand, PutObjectCommand } from '@aws-sdk/client-s3';
 
 const router = Router();
 
@@ -58,12 +59,20 @@ export const get = (req, res, filename) =>
 
             if (find.limit)
                 if (--find.limit <= 0)
-                    S3.deleteObject({ Bucket: process.env.bucket, Key: find.filename + '.json', }, err => {
+                    s3Client.send(new DeleteObjectCommand({ 
+                        Bucket: process.env.AWS_BUCKET, 
+                        Key: find.filename + '.json'
+                    })).catch(err => {
                         if (!err) return;
                         console.error(`Error deleting file "${find.filename}" which has reached its download limit:`, err)
                     });
                 else
-                    S3.putObject({ Bucket: process.env.bucket, Key: find.filename + '.json', Body: JSON.stringify(find), StorageClass: 'GLACIER_IR' }, err => {
+                    s3Client.send(new PutObjectCommand({ 
+                        Bucket: process.env.AWS_BUCKET, 
+                        Key: find.filename + '.json', 
+                        Body: JSON.stringify(find), 
+                        StorageClass: 'GLACIER_IR' 
+                    })).catch(err => {
                         if (!err) return;
                         console.error(`Error reducing download limit on file "${find.filename}":`, err)
                     });
@@ -93,13 +102,15 @@ export const del = async (req, res, filename) => {
 
             }
 
-            S3.deleteObject({
-                Bucket: process.env.bucket,
-                Key: find.filename + '.json',
-            }, (err, _data) => {
-                err && res.err();
+            try {
+                await s3Client.send(new DeleteObjectCommand({
+                    Bucket: process.env.AWS_BUCKET,
+                    Key: find.filename + '.json',
+                }));
                 res.ok();
-            })
+            } catch (err) {
+                res.err();
+            }
         });
     } catch (err) {
         res.err();
@@ -129,7 +140,7 @@ export const add = async (req, res) => {
                     ipwhitelist = info.ipwhitelist && info.ipwhitelist.split(/\s*,\s*/g).filter(x => x),
                     ext = path.extname(req.file.originalname),
                     data = {
-                        authkey: info.authkey || randomWords({ exactly: 3, maxLength: 3, join: '.' }),
+                        authkey: info.authkey || generate({ exactly: 3, maxLength: 3, separator: '.' }),
                         filename: `${await chooseName(info.name, ext)}${ext}`,
                         userIP: res.ip
                     };
@@ -158,15 +169,17 @@ export const add = async (req, res) => {
                     data.ipwhitelist = ipwhitelist;
                 }
 
-                S3.putObject({
-                    Bucket: process.env.bucket,
-                    Key: data.filename + '.json',
-                    Body: JSON.stringify({ mimetype: req.file.mimetype, size: req.file.size, buffer: req.file.buffer, ...data, datetime: chosenDate, api: true, hex: crypto.createHash('md5').update(req.file?.buffer || info.text).digest('hex'), userAgent: req.headers['user-agent'] }),
-                    StorageClass: 'GLACIER_IR',
-                }, (err, _data) => {
-                    if (err) return res.err(0, 0, 'Error uploading, file may not be uploaded.');
+                try {
+                    await s3Client.send(new PutObjectCommand({
+                        Bucket: process.env.AWS_BUCKET,
+                        Key: data.filename + '.json',
+                        Body: JSON.stringify({ mimetype: req.file.mimetype, size: req.file.size, buffer: req.file.buffer, ...data, datetime: chosenDate, api: true, hex: crypto.createHash('md5').update(req.file?.buffer || info.text).digest('hex'), userAgent: req.headers['user-agent'] }),
+                        StorageClass: 'GLACIER_IR',
+                    }));
                     res.ok({ link: `https://tempfile.site/files/${data.filename}`, authkey: data.authkey });
-                })
+                } catch (err) {
+                    res.err(0, 0, 'Error uploading, file may not be uploaded.');
+                }
             } catch (err) {
                 if (info.ipblacklist && Array.isArray(info.ipblacklist)) res.err(0, 'DuplicateKey', `'ipblacklist' is repeated more than once. You must use one string separeted with a comma, eg. '-F ipblacklist="12.3.45, 678.9.0"'`);
                 else if (info.ipwhitelist && Array.isArray(info.ipwhitelist)) res.err(0, 'DuplicateKey', `'ipwhitelist' is repeated more than once. You must use one string separeted with a comma, eg. '-F ipwhitelist="12.3.45, 678.9.0"'`);
