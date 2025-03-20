@@ -1,5 +1,5 @@
 import ipRegex from 'ip-regex';
-import AWS from 'aws-sdk';
+import { S3Client, GetObjectCommand, PutObjectCommand, ListObjectsV2Command, DeleteObjectCommand } from "@aws-sdk/client-s3";
 import path from 'path';
 
 import { config } from 'dotenv';
@@ -10,15 +10,29 @@ export const __dirname = path.dirname(__filename);
 
 config({ path: path.join(__dirname, '../.env') });
 
-export const S3 = new AWS.S3({
-    accessKeyId: process.env.ID,
-    secretAccessKey: process.env.secret
+export const s3Client = new S3Client({
+    region: process.env.AWS_REGION || 'us-east-1',
+    credentials: {
+        accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+        secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY
+    },
+    forcePathStyle: true
 });
 
-export const lookFor = (obj, hasExt) =>
-    S3.getObject({ Bucket: process.env.bucket, ...obj, ...(obj.Key && { Key: `${obj.Key.toLowerCase()}${hasExt ? '' : '.json'}` }) }).promise()
-        .then(data => JSON.parse(data.Body.toString('utf-8')))
-        .catch(() => null)
+export const lookFor = async (obj, hasExt) => {
+    try {
+        const command = new GetObjectCommand({ 
+            Bucket: process.env.AWS_BUCKET, 
+            ...obj, 
+            ...(obj.Key && { Key: `${obj.Key.toLowerCase()}${hasExt ? '' : '.json'}` })
+        });
+        const response = await s3Client.send(command);
+        const str = await response.Body.transformToString();
+        return JSON.parse(str);
+    } catch (error) {
+        return null;
+    }
+}
 
 export const dateFromValue = str => {
     const digit = +str.replace(/\D+$/, '');
@@ -35,17 +49,20 @@ export const dateFromValue = str => {
 
 export const findName = async (name, ext) => {
     const re = new RegExp(/(?<!-\d+)\.\w+$/g), exp = new RegExp(`\\${ext}\\.json$`)
-    return S3.listObjectsV2({ Bucket: process.env.bucket, }).promise()
-        .then(data => {
-            const arr = data.Contents.filter(obj =>
-                new RegExp(`^${name}(-\\d+)?\\${ext}\\.json$`, 'gi')
-                    .test(obj.Key)).sort((x, y) => {
-                        const noExt = x.Key.replace(exp, ''), onlyExt = y.Key.replace(re, '');
-                        return re.test(noExt) || re.test(onlyExt) ? 0 : noExt < onlyExt ? -1 : noExt > onlyExt ? 1 : 0;
-                    });
+    try {
+        const command = new ListObjectsV2Command({ Bucket: process.env.AWS_BUCKET });
+        const response = await s3Client.send(command);
+        const arr = response.Contents.filter(obj =>
+            new RegExp(`^${name}(-\\d+)?\\${ext}\\.json$`, 'gi')
+                .test(obj.Key)).sort((x, y) => {
+                    const noExt = x.Key.replace(exp, ''), onlyExt = y.Key.replace(re, '');
+                    return re.test(noExt) || re.test(onlyExt) ? 0 : noExt < onlyExt ? -1 : noExt > onlyExt ? 1 : 0;
+                });
 
-            return arr.length !== 0 ? arr[arr.length - 1].Key.replace(/\.[^\.]+?\.json$/g, '') : null;
-        }).catch(() => null);
+        return arr.length !== 0 ? arr[arr.length - 1].Key.replace(/\.[^\.]+?\.json$/g, '') : null;
+    } catch (error) {
+        return null;
+    }
 }
 
 export const chooseName = async (filename, ext) => {
