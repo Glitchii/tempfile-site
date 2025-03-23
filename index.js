@@ -50,7 +50,7 @@ app.use('/api/', apiRouter);
 app.get('/', (_req, res) => {
     try {
         console.log('Attempting to render index page');
-        const authKey = generate({ exactly: 3, maxLength: 3, separator: '.' });
+        const authKey = generate({ exactly: 3, maxLength: 3}).join('.');
         console.log('Generated authKey:', authKey);
         res.render('index', { authKey }, (err, html) => {
             if (err) {
