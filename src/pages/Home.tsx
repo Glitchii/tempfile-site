@@ -40,6 +40,27 @@ export default function Home() {
                 <div className="part btns btnsInner">
                     <h2 className="optsTitle">Options</h2>
                     <div className="inner">
+                        <div className="btn limit">
+                            <div className="icon">
+                                <DownloadLimitIcon />
+                            </div>
+                            <input className="input" type="number" min="1" placeholder="Download limit (empty = unliminted)" />
+                        </div>
+                        <div className="sep"></div>
+                        <div className="btn pass">
+                            <div className="icon">
+                                <PasswordIcon />
+                            </div>
+                            <input className="input" type="password" placeholder="Password Protect" />
+                        </div>
+                        <div className="sep"></div>
+                        <div className="btn name">
+                            <div className="icon">
+                                <NameIcon />
+                            </div>
+                            <input className="input" type="text" placeholder="Custom file name" />
+                        </div>
+                        <div className="sep"></div>
                         <div className="btn ipBlackList">
                             <div className="icon">
                                 <IpBlacklistIcon />
@@ -63,27 +84,6 @@ export default function Home() {
                                     <PlusIcon />
                                 </div>
                             </div>
-                        </div>
-                        <div className="sep"></div>
-                        <div className="btn limit">
-                            <div className="icon">
-                                <DownloadLimitIcon />
-                            </div>
-                            <input className="input" type="number" min="1" placeholder="Download limit (empty = unliminted)" />
-                        </div>
-                        <div className="sep"></div>
-                        <div className="btn pass">
-                            <div className="icon">
-                                <PasswordIcon />
-                            </div>
-                            <input className="input" type="password" placeholder="Password Protect" />
-                        </div>
-                        <div className="sep"></div>
-                        <div className="btn name">
-                            <div className="icon">
-                                <NameIcon />
-                            </div>
-                            <input className="input" type="text" placeholder="Name" />
                         </div>
                         <div className="sep"></div>
                         <div className="btn datetime">
