@@ -27,8 +27,8 @@ export default function Header() {
       <nav className="item link">
         <ul>
           {links.map(link => (
-            link.to != location.pathname && <li key={link.to}>
-              <NavLink to={link.to} className={({ isActive }) => isActive ? "underline" : ""} target={link.target}>{link.label}</NavLink>
+            !(link.to == '/' && location.pathname == '/') && <li key={link.to}>
+              <NavLink to={link.to} className={({ isActive }) => isActive ? "#underline" : ""} target={link.target}>{link.label}</NavLink>
             </li>
           ))}
         </ul>

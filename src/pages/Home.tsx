@@ -45,7 +45,8 @@ export default function Home() {
                                 <IpBlacklistIcon />
                             </div>
                             <div className="inputAndAddMore">
-                                <input className="input" type="text" placeholder="Restricted IP" />
+                                {/* <input className="input" type="text" placeholder="Restricted IP" /> */}
+                                <input className="input" type="text" placeholder="Restrict access to an IP" />
                                 <div className="addMore">
                                     <PlusIcon />
                                 </div>
@@ -68,7 +69,7 @@ export default function Home() {
                             <div className="icon">
                                 <DownloadLimitIcon />
                             </div>
-                            <input className="input" type="number" min="0" placeholder="Download limit (empty = unliminted)" />
+                            <input className="input" type="number" min="1" placeholder="Download limit (empty = unliminted)" />
                         </div>
                         <div className="sep"></div>
                         <div className="btn pass">
@@ -91,7 +92,7 @@ export default function Home() {
                             </div>
                             <p className="input">Auto delete in</p>
                         </div>
-                        <div className="btn datetime">
+                        <div className="btn datetime-picker">
                             <select autoComplete="off" className="select btnUnder btnPad time" defaultValue="5m">
                                 <option value="1m">1 Minute</option>
                                 <option value="5m">5 Minutes</option>

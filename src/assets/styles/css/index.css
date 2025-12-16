@@ -365,7 +365,7 @@ a:not(.URL):hover {
     display: flex;
     box-shadow: 0px 0px 20px 0px #539afe61;
     background: linear-gradient(to bottom, #539afe, #536ffe);
-    animation: fadeIn .5s ease-in;
+    /* animation: fadeIn .5s ease-in; */
 }
 
 .btnsInner .inner:not(.others) .btn.other, .btnsInner .inner:not(.others) .btn.other+.sep, .btnsInner .inner.others .btn:not(.other), .btnsInner .inner.others .btn:not(.other)+.sep {
@@ -489,17 +489,17 @@ a:not(.URL):hover {
     margin-bottom: 115px;
 } */
 
+.btns > .inner {
+	display: flex;
+	flex-direction: column;
+	gap: 5px;
+}
+
 .btn {
     display: grid;
     grid-template-columns: 45px calc(100% - 45px);
     font-size: 15px;
     /* display: flex; */
-}
-
-.btnPad {
-    --btnPad-margin: 55px;
-    margin-left: var(--btnPad-margin);
-    margin-bottom: 5px;
 }
 
 .btn .btnUnder {
@@ -525,9 +525,9 @@ a:not(.URL):hover {
     background: linear-gradient(45deg, transparent, #f2f2f27a, transparent);
 }
 
-.btn~.btn {
+/* .btn~.btn {
     margin: 5px 0;
-}
+} */
 
 .btn .input, .btn p {
     padding: 10px 10px 10px 5px;
@@ -536,8 +536,9 @@ a:not(.URL):hover {
     margin-left: 5px;
 }
 
-.btn .icon {
-    width: 40px;
+.btn .icon svg {
+	height: 100%;
+	width: 40px;
 }
 
 main {
@@ -548,6 +549,7 @@ main {
     /* transform: translateY(10px); */
     width: 100%;
     height: calc(100vh - var(--header-height));
+    place-items: center;
 }
 
 main > * {
@@ -556,14 +558,12 @@ main > * {
     flex-direction: column;
     place-content: space-between;
     place-content: space-evenly;
-}
-
-main > form {
-    transform: translateY(-20px);
+    transform: translateY(-15px);
 }
 
 main > :not(form) {
     gap: 50px;
+    min-width: 73%;
 }
 
 /* .btnsInner .inner {
@@ -591,14 +591,20 @@ main > :not(form) {
     height: 1px;
 }
 
-.btn.datetime {
+/* .btn.datetime {
     position: relative;
     margin-top: 10px;
-}
+} */
 
-.btn.datetime~.btn.datetime {
+.btn.datetime-picker {
     display: flex;
     flex-direction: column;
+}
+
+.btn.datetime-picker >* {
+    --btnPad-margin: 55px;
+    margin-left: var(--btnPad-margin);
+    margin-bottom: 5px;
 }
 
 .submit span {
@@ -613,7 +619,7 @@ main > :not(form) {
     transition: .5s ease;
     cursor: pointer;
     /* margin-top: 100px; */
-    animation: fadeIn .5s ease-in;
+    /* animation: fadeIn .5s ease-in; */
 }
 
 .submit .in {
@@ -1198,9 +1204,9 @@ body.text .partInner .uploadBtn {
     /* .addMore {
         transform: translate(0, 10px);
     } */
-    .btnsInner .inner:not(.others) .backControl {
+    /* .btnsInner .inner:not(.others) .backControl {
         transform: translate(-50%, 50%);
-    }
+    } */
 }
 
 @media screen and (max-width: 445px) {
