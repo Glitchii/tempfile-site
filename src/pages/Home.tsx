@@ -51,7 +51,7 @@ export default function Home() {
                             <div className="icon">
                                 <PasswordIcon />
                             </div>
-                            <input className="input" type="password" placeholder="Password Protect" />
+                            <input className="input" type="password" placeholder="Password protect" />
                         </div>
                         <div className="sep"></div>
                         <div className="btn name">
