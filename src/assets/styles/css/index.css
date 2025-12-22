@@ -54,6 +54,8 @@
 body {
 	background: #fff;
     --header-height: 60px;
+    width: 100vw;
+    height: 100vh;
 }
 
 body>* {
@@ -246,10 +248,10 @@ a:not(.URL):hover {
     width: 100%;
 }
 
-.dragParent {
+/* .dragParent {
     width: 100%;
     height: auto;
-}
+} */
 
 .drag {
     position: relative;
@@ -322,9 +324,8 @@ a:not(.URL):hover {
     box-shadow: 0px 0px 30px 0px #6182ffc9;
 }
 
-.partInner .desc span {
+.partInner .desc span:last-of-type {
     display: none;
-    margin: auto 10%;
 }
 
 .partInner .desc::after {
@@ -332,22 +333,9 @@ a:not(.URL):hover {
     color: #626364;
 }
 
-.drag .partInner .desc::after {
-    content: "Drag and drop a file or click anywere here to browse your computer.\AYou can also paste images";
-    transition: 1s ease;
-}
-
-.drag.hasFile .partInner .desc::after {
-    opacity: .5;
-}
-
-.drag .partInner h2::after {
-    content: "Drag File Here";
-}
-
-.drag.hasFile .partInner h2::after {
-    content: "Ready to upload";
-}
+/* .dragParent {
+	transform: translateY(55px);
+} */
 
 .partInner div img {
     border-radius: 5px;
@@ -368,11 +356,11 @@ a:not(.URL):hover {
     /* animation: fadeIn .5s ease-in; */
 }
 
-.btnsInner .inner:not(.others) .btn.other, .btnsInner .inner:not(.others) .btn.other+.sep, .btnsInner .inner.others .btn:not(.other), .btnsInner .inner.others .btn:not(.other)+.sep {
-    display: none;
-}
-
-.btnsInner .inner.others>.controls {
+form > :last-of-type .inner:not(.others) .btn.other,
+form > :last-of-type .inner:not(.others) .btn.other+.sep,
+form > :last-of-type .inner.others .btn:not(.other),
+form > :last-of-type .inner.others .btn:not(.other)+.sep,
+form > :last-of-type .inner.others>.controls {
     display: none;
 }
 
@@ -542,23 +530,21 @@ a:not(.URL):hover {
 }
 
 main {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    place-content: center;
-    /* position: absolute; */
-    /* transform: translateY(10px); */
-    width: 100%;
-    height: calc(100vh - var(--header-height));
-    place-items: center;
+	height: calc(100vh - var(--header-height));
+	display: flex;
+	place-content: center;
+	place-items: center;
 }
 
 main > * {
-    /* display: grid; */
-    display: flex;
-    flex-direction: column;
-    place-content: space-between;
-    place-content: space-evenly;
-    transform: translateY(-15px);
+	place-content: space-evenly;
+	place-content: space-around;
+	transform: translateY(-15px);
+	width: 100%;
+	flex-direction: row;
+	display: flex;
+	height: 100%;
+	place-items: center;
 }
 
 main > :not(form) {
@@ -576,12 +562,19 @@ main > :not(form) {
     transition: 1s ease;
 } */
 
+form > :first-of-type {
+	transform: translateY(-10px);
+}
+
+form > :last-of-type {
+	min-width: 556px;
+}
+
 .optsTitle {
     display: flex;
     justify-content: center;
-    /* padding-top: 30px;
-    padding-top: 52px; */
     transform: translateX(-20px);
+    margin-bottom: 25px;
 }
 
 .sep {
@@ -620,6 +613,7 @@ main > :not(form) {
     cursor: pointer;
     /* margin-top: 100px; */
     /* animation: fadeIn .5s ease-in; */
+    margin-top: 5%;
 }
 
 .submit .in {
@@ -1095,11 +1089,11 @@ textarea {
     font-size: initial !important;
 }
 
-@media screen and (min-width: 1125px) {
+/* @media screen and (min-width: 1125px) {
     textarea {
         margin-bottom: 30px;
     }
-}
+} */
 
 body.text :is(.drag .partInner .img, .uploadBtn), body:not(.text) textarea {
     /* body.text :is(.drag .partInner .img), body:not(.text) textarea { */
@@ -1177,36 +1171,39 @@ body.text .partInner .uploadBtn {
     }
 } */
 
-@media screen and (max-width: 1125px) {
+@media screen and (max-width: 1450px) {
     main {
-        display: block;
+        padding: 0;
     }
-    .btnsInner .inner {
-        padding: 150px 14% 5% 20%;
-        padding: 150px 10% 5% 10%;
-    }
-    .drag .partInner {
-        margin: 0;
-        padding-top: 10px;
+}
+
+@media screen and (max-width: 1250px) {
+    /* .optsTitle {
+        display: none;
+    } */
+    main > * {
+        place-content: space-between;
+        flex-direction: column;
+        transform: none;
+        gap: 20px;
+        gap: 5%;
+        padding: 5% 0;
     }
     .dragParent {
-        top: 50px;
-        position: relative;
+        transform: none;
     }
     .optsTitle {
-        display: none;
+        transform: none;
     }
-    .partInner .uploadBtn {
-        position: unset;
-        margin: 10% auto 10% auto;
-        opacity: .8;
+    form > :first-of-type {
+        transform: none;
     }
-    /* .addMore {
-        transform: translate(0, 10px);
-    } */
-    /* .btnsInner .inner:not(.others) .backControl {
-        transform: translate(-50%, 50%);
-    } */
+    .optsTitle {
+        margin-bottom: 15px;
+    }
+    body > * {
+        padding: 0 5%;
+    }
 }
 
 @media screen and (max-width: 445px) {
@@ -1222,12 +1219,13 @@ body.text .partInner .uploadBtn {
 }
 
 @media screen and (max-width: 585px) {
-    .btnsInner .inner {
+    /* form > :last-of-type .inner {
         padding: 150px 5% 5% 5%;
         padding-top: 120px;
-    }
+    } */
     .drag h2 {
-        margin-top: 0;
+        margin-top: 30px;
+        display: none;
     }
     textarea {
         width: 90%;
@@ -1240,34 +1238,42 @@ body.text .partInner .uploadBtn {
     .textBtn:not(:hover) {
         opacity: .3;
     }
-}
-
-@media screen and (max-width: 550px) {
-    .btn {
-        grid-template-columns: 13% 87%;
+    form > :last-of-type {
+        min-width: inherit;
+        padding-bottom: 60px;
+    }
+    .partInner .desc span:first-of-type {
+        display: none;
+    }
+    .partInner .desc span:last-of-type {
+        display: block;
+    }
+    header .logo {
+        place-content: center;
+        display: grid;
+    }
+    .drag .partInner svg{
+        width: 215px!important;
+    }
+    main > * {
+        padding: 14% 0;
     }
 }
 
-@media screen and (max-width: 1230px) {
-    main {
-        grid-template-columns: .9fr 1fr;
-    }
-}
-
-@media screen and (max-width: 650px) {
+/* @media screen and (max-width: 650px) {
     .partInner .desc::after {
         display: none;
     }
     .partInner .desc span {
         display: block;
     }
-}
+} */
 
-@media screen and (max-width: 1200px) {
+/* @media screen and (max-width: 1200px) {
     .btnsInner .inner {
         transform: translate(0px);
     }
-}
+} */
 
 /* @media screen and (max-height: 815px) {
     .submit {

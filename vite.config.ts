@@ -10,4 +10,14 @@ export default defineConfig({
     react(),
     svgr()
   ],
+  server: {
+    proxy: {
+      '/api': {
+        target: 'http://localhost:3001',
+      },
+      '/files': {
+        target: 'http://localhost:3001',
+      },
+    },
+  },
 })
