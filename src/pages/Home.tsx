@@ -1,3 +1,4 @@
+import clsx from 'clsx'
 import UploadIcon from '../assets/icons/upload.svg?react'
 import FileIcon from '../assets/icons/file-icon.svg?react'
 import IpBlacklistIcon from '../assets/icons/ip-blacklist.svg?react'
@@ -11,6 +12,7 @@ import ArrowLeftIcon from '../assets/icons/arrow-left.svg?react'
 import AuthKeyIcon from '../assets/icons/auth-key.svg?react'
 import QuestionMarkIcon from '../assets/icons/question-mark.svg?react'
 import UploadCloudIcon from '../assets/icons/upload-cloud.svg?react'
+import Notification from '../components/Notification'
 import { useEffect, useMemo, useRef, useState } from 'react'
 
 export default function Home() {
@@ -23,8 +25,19 @@ export default function Home() {
     const [uploadedLink, setUploadedLink] = useState<string | null>(null)
     const [dragging, setDragging] = useState(false)
     const dragDepthRef = useRef(0)
+    const [notification, setNotification] = useState<{ text: string; success?: boolean } | null>(null)
+    const [selectedFile, setSelectedFile] = useState<File | null>(null)
 
     const defaultAuthKey = useMemo(() => crypto.getRandomValues(new Uint32Array(3)).join('.'), [])
+
+    const showNotification = (text: string, success?: boolean) => {
+        setNotification({ text, success })
+    }
+
+    const onFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0] ?? null
+        setSelectedFile(file)
+    }
 
     useEffect(() => {
         if (uploadedLink) document.body.classList.add('showLinks')
@@ -68,15 +81,10 @@ export default function Home() {
         dragDepthRef.current = 0
         setDragging(false)
 
-        const input = fileInputRef.current
-        if (!input) return
+        const file = e.dataTransfer.files?.[0] ?? null
+        setSelectedFile(file)
 
-        const file = e.dataTransfer?.files?.[0]
-        if (!file) return
-
-        const dt = new DataTransfer()
-        dt.items.add(file)
-        input.files = dt.files
+        if (fileInputRef.current) fileInputRef.current.files = e.dataTransfer.files
     }
 
     const upload = async () => {
@@ -102,11 +110,12 @@ export default function Home() {
 
             if (!res.ok || !json?.ok) {
                 const msg = json?.error?.message || 'Upload failed'
-                window.alert(msg)
+                showNotification(msg, false)
                 return
             }
 
             setUploadedLink(json.link)
+            showNotification('File uploaded successfully!', true)
         } finally {
             setUploading(false)
         }
@@ -114,9 +123,12 @@ export default function Home() {
 
     return (
         <>
+            {notification && (
+                <Notification {...notification} />
+            )}
             <main>
                 <form ref={formRef} action="/api/files" method="post" encType="multipart/form-data" onSubmit={(e) => { e.preventDefault(); void upload() }}>
-                    <input ref={fileInputRef} type="file" id="upload" name="file" autoComplete="off" />
+                    <input ref={fileInputRef} type="file" id="upload" name="file" autoComplete="off" onChange={onFileChange} />
                     <input type="hidden" name="datetime" value="" />
                     <input type="submit" className="submitInput" style={{ position: 'absolute', display: 'none' }} />
                     <div>
@@ -128,16 +140,28 @@ export default function Home() {
                                     <p>File</p>
                                     <FileIcon style={{ fill: '#273036' }} />
                                 </div>
-                                <h2>{dragging ? 'Ready to upload' : 'Drag File Here'}</h2>
+                                <h2>{dragging ? 'Drop File Here' : selectedFile ? 'Ready to upload' : 'Drag File Here'}</h2>
                                 <textarea spellCheck={false}></textarea>
                                 <p className="desc">
+
+                                    {selectedFile ? (
+                                        <span>
+                                            "<b>{selectedFile.name.slice(0, 35)}{selectedFile.name.length > 35 ? '...' : ''}</b>" is ready to upload.
+                                            <br />
+                                            Choose any options if you want, then click "upload"
+                                        </span>
+                                    ) : (
+                                        <span>
+                                            Drag and drop a file or click anywere here to browse your computer.
+                                            <br />
+                                            You can also paste images
+                                        </span>
+                                    )}
+
                                     <span>
-                                        Drag and drop a file or click anywere here to browse your computer.
-                                        <br />
-                                        You can also paste images
-                                    </span>
-                                    <span>
-                                        Tap here to select a file to upload
+                                        {selectedFile ?
+                                            `"${selectedFile.name.slice(0, 20)}${selectedFile.name.length > 20 ? '...' : ''}" is ready to upload` :
+                                            "Tap here to select a file to upload"}
                                     </span>
                                 </p>
                             </div>
@@ -146,7 +170,7 @@ export default function Home() {
 
                     <div className="part btns btnsInner">
                         <h2 className="optsTitle">Options</h2>
-                        <div className="inner">
+                        <div className={clsx('inner', { 'disabled-': !selectedFile })}>
                             <div className="btn limit">
                                 <div className="icon">
                                     <DownloadLimitIcon />
@@ -255,7 +279,7 @@ export default function Home() {
                                 </div>
                             </div>
                         </div>
-                        <div className="submit" onClick={() => void upload()} role="button" tabIndex={0} aria-disabled={uploading}>
+                        <div className={clsx('submit', { 'disabled': !selectedFile })} onClick={() => upload()} role="button" tabIndex={0} aria-disabled={uploading}>
                             <div className="in">
                                 <UploadCloudIcon className="upload" />
                                 <span>{uploading ? 'Uploading...' : 'Upload'}</span>

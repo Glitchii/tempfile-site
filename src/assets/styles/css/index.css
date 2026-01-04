@@ -96,6 +96,8 @@ header .logo {
     position: relative;
     user-select: none;
     cursor: default;
+    display: flex;
+    place-content: center;
 }
 
 header {
@@ -106,12 +108,15 @@ header {
     box-shadow: 0px 0px 50px -12px rgba(0, 0, 0, 0.36);
     box-shadow: 0px 0px 50px -12px rgb(0 0 0 / 21%);
     height: var(--header-height);
+    justify-content: start;
+    gap: 24px;
 }
 
 header nav {
     font-size: 15px;
     display: flex;
     place-items: center;
+    padding-top: 4px;
 }
 
 header nav ul {
@@ -545,6 +550,9 @@ main > * {
 	display: flex;
 	height: 100%;
 	place-items: center;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    place-content: center;
 }
 
 main > :not(form) {
@@ -568,6 +576,10 @@ form > :first-of-type {
 
 form > :last-of-type {
 	min-width: 556px;
+}
+
+form > :last-of-type {
+	max-width: 556px;
 }
 
 .optsTitle {
@@ -614,6 +626,11 @@ form > :last-of-type {
     /* margin-top: 100px; */
     /* animation: fadeIn .5s ease-in; */
     margin-top: 5%;
+}
+
+:not(input).disabled {
+    opacity: .6;
+    pointer-events: none;
 }
 
 .submit .in {
@@ -675,8 +692,8 @@ form > :last-of-type {
     animation: comeUp .5s cubic-bezier(.68, -0.55, .27, 1.55);
     position: absolute;
     transition: .5s ease;
-    display: none;
-    bottom: 50px;
+    /* display: none; */
+    bottom: 67px;
     margin: 0 10px;
     box-shadow: 0px 0px 20px 5px rgb(78 79 80 / 6%);
     pointer-events: all;
@@ -688,9 +705,9 @@ form > :last-of-type {
     }
 }
 
-.notif .content:not(:hover) .notifCloseBtn {
+/* .notif .content:not(:hover) .notifCloseBtn {
     display: none;
-}
+} */
 
 .notif .content .lnk {
     text-decoration: none;
@@ -1188,6 +1205,8 @@ body.text .partInner .uploadBtn {
         gap: 20px;
         gap: 5%;
         padding: 5% 0;
+        display: flex;
+        place-content: baseline;
     }
     .dragParent {
         transform: none;
@@ -1203,6 +1222,13 @@ body.text .partInner .uploadBtn {
     }
     body > * {
         padding: 0 5%;
+    }
+    header {
+        justify-content: space-between;
+    }
+
+    header nav {
+        padding-top: 0;
     }
 }
 
@@ -1248,10 +1274,10 @@ body.text .partInner .uploadBtn {
     .partInner .desc span:last-of-type {
         display: block;
     }
-    header .logo {
+    /* header .logo {
         place-content: center;
         display: grid;
-    }
+    } */
     .drag .partInner svg{
         width: 215px!important;
     }
