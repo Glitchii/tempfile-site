@@ -123,10 +123,8 @@ export default function Home() {
 
     return (
         <>
-            {notification && (
-                <Notification {...notification} />
-            )}
-            <main>
+            {notification && <Notification {...notification} />}
+            <main className={clsx({ 'file-selected': selectedFile })}>
                 <form ref={formRef} action="/api/files" method="post" encType="multipart/form-data" onSubmit={(e) => { e.preventDefault(); void upload() }}>
                     <input ref={fileInputRef} type="file" id="upload" name="file" autoComplete="off" onChange={onFileChange} />
                     <input type="hidden" name="datetime" value="" />
@@ -140,13 +138,13 @@ export default function Home() {
                                     <p>File</p>
                                     <FileIcon style={{ fill: '#273036' }} />
                                 </div>
-                                <h2>{dragging ? 'Drop File Here' : selectedFile ? 'Ready to upload' : 'Drag File Here'}</h2>
+                                <h2>{dragging ? 'Drop file here' : selectedFile ? 'Ready to upload' : 'Drag file here'}</h2>
                                 <textarea spellCheck={false}></textarea>
                                 <p className="desc">
 
                                     {selectedFile ? (
                                         <span>
-                                            "<b>{selectedFile.name.slice(0, 35)}{selectedFile.name.length > 35 ? '...' : ''}</b>" is ready to upload.
+                                            "<b>{selectedFile.name}</b>" is ready to upload.
                                             <br />
                                             Choose any options if you want, then click "upload"
                                         </span>
@@ -154,13 +152,13 @@ export default function Home() {
                                         <span>
                                             Drag and drop a file or click anywere here to browse your computer.
                                             <br />
-                                            You can also paste images
+                                            You can also paste images (coming soon)
                                         </span>
                                     )}
 
                                     <span>
                                         {selectedFile ?
-                                            `"${selectedFile.name.slice(0, 20)}${selectedFile.name.length > 20 ? '...' : ''}" is ready to upload` :
+                                            `"${selectedFile.name}" is ready to upload` :
                                             "Tap here to select a file to upload"}
                                     </span>
                                 </p>

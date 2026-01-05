@@ -175,7 +175,7 @@ h2 {
 }
 
 .colr {
-    color: #538ce8;
+    color: #396fc5;
 }
 
 .URL {
@@ -200,11 +200,11 @@ h2 {
 }
 
 .URL:hover::after {
-    border-color: #27303686;
+    border-color: #396fc586;
 }
 
 a:not(.URL):hover {
-    color: #538ce8;
+    color: #396fc5;
     transition: .25s ease;
 }
 
@@ -308,6 +308,8 @@ a:not(.URL):hover {
     display: block;
     font-weight: 700;
     text-transform: uppercase;
+    text-transform: capitalize;
+    text-transform: none;
     font-size: 20px;
     margin: 60px 0 10px 0;
     color: #424345;
@@ -488,6 +490,25 @@ form > :last-of-type .inner.others>.controls {
 	gap: 5px;
 }
 
+main.file-selected .btns > .inner::after {
+    display: block;
+    content: "";
+    position: absolute;
+    width: 8px;
+    height: 60%;
+    background: linear-gradient(to right, #0000, rgba(0, 0, 0), #0000);
+    filter: blur(10px);
+    transform: rotate(20deg) translate(0, -37px);
+    border-radius: 100%;
+    opacity: 0;
+    animation: glare .5s forwards ease-in-out;
+}
+
+@keyframes glare {
+    50% { opacity: .1; }
+    100% { transform: rotate(20deg) translate(500px, -200px); }
+}
+
 .btn {
     display: grid;
     grid-template-columns: 45px calc(100% - 45px);
@@ -539,6 +560,7 @@ main {
 	display: flex;
 	place-content: center;
 	place-items: center;
+    padding: 0 20px;
 }
 
 main > * {
@@ -553,6 +575,7 @@ main > * {
     display: grid;
     grid-template-columns: 1fr 1fr;
     place-content: center;
+    gap: 10px;
 }
 
 main > :not(form) {
@@ -574,8 +597,16 @@ form > :first-of-type {
 	transform: translateY(-10px);
 }
 
-form > :last-of-type {
-	min-width: 556px;
+@media screen and (min-width: 1315px) {
+    form > :last-of-type {
+        min-width: 556px;
+    }
+}
+
+@media screen and (max-width: 1250px) {
+    form > :last-of-type {
+        min-width: 556px;
+    }
 }
 
 form > :last-of-type {
@@ -644,6 +675,10 @@ form > :last-of-type {
     display: flex;
     user-select: none;
 }
+
+/* main:not(.file-selected) .submit .in {
+    transform: scale(.96) translateX(-50%);
+} */
 
 .submit:hover .in {
     box-shadow: 0px 0px 30px 0px #61a3ff40;
@@ -1188,11 +1223,11 @@ body.text .partInner .uploadBtn {
     }
 } */
 
-@media screen and (max-width: 1450px) {
+/* @media screen and (max-width: 1450px) {
     main {
         padding: 0;
     }
-}
+} */
 
 @media screen and (max-width: 1250px) {
     /* .optsTitle {
@@ -1244,7 +1279,7 @@ body.text .partInner .uploadBtn {
     }
 }
 
-@media screen and (max-width: 585px) {
+@media screen and (max-width: 745px) { /* 585px */
     /* form > :last-of-type .inner {
         padding: 150px 5% 5% 5%;
         padding-top: 120px;
@@ -1259,7 +1294,7 @@ body.text .partInner .uploadBtn {
         margin: 0 5% 0 5%;
     }
     .drag textarea+p {
-        margin-top: 15px;
+        margin-top: 30px;
     }
     .textBtn:not(:hover) {
         opacity: .3;
