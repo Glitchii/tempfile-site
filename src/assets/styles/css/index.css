@@ -1208,6 +1208,47 @@ body.text .partInner .uploadBtn {
     animation: closeBtnAn 1s ease;
 }
 
+.upload-icon-container .background {
+    position: absolute;
+    top: 0;
+    z-index: -1;
+    height: auto !important;
+}
+
+/* .upload-icon-container .attach {
+    position: absolute;
+    top: 0;
+    height: auto !important;
+    transform: scale(.5) translateY(-65px);
+    opacity: .9;
+} */
+
+/* main.file-selected .upload-icon-container .background {
+  transform: rotate(-20deg);
+  transform-origin: center;
+  transform-box: fill-box;
+  transform-style: preserve-3d;
+} */
+
+.upload-icon-container .background {
+  animation: uploadAn 1s ease-out forwards;
+}
+
+@keyframes uploadAn {
+    from {
+        opacity: 0;
+        transform: rotate(-10deg) scale(.8);
+        transform-origin: center;
+        transform-box: fill-box;
+        transform-style: preserve-3d;
+    }
+}
+
+/* main.file-selected .upload-icon-container .upload,
+main:not(.file-selected) .upload-icon-container .attach {
+  opacity: 0 !important;
+} */
+
 /* @media screen and (min-width: 1125px) {
     .btn.limit input {
         width: 91.5%;

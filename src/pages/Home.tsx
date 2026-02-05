@@ -1,5 +1,8 @@
 import clsx from 'clsx'
-import UploadIcon from '../assets/icons/upload.svg?react'
+import UploadIcon from '../assets/icons/upload-no-blob.svg?react'
+import UploadBlobBackground from '../assets/icons/upload-blob.svg?react'
+import UploadOriginalIcon from '../assets/icons/upload.svg?react'
+import AttachIcon from '../assets/icons/attach.svg?react'
 import FileIcon from '../assets/icons/file-icon.svg?react'
 import IpBlacklistIcon from '../assets/icons/ip-blacklist.svg?react'
 import IpWhitelistIcon from '../assets/icons/ip-whitelist.svg?react'
@@ -132,7 +135,11 @@ export default function Home() {
                     <div>
                         <label className="part drag" htmlFor="upload" onDragEnter={onDragEnter} onDragLeave={onDragLeave} onDragOver={onDragOver} onDrop={onDrop}>
                             <div className="partInner">
-                                <UploadIcon style={{ width: '250px', height: '100%' }} />
+                                <div className="upload-icon-container">
+                                    <UploadIcon style={{ width: '250px', height: '100%' }} />
+                                    <UploadBlobBackground style={{ width: '250px', height: '100%' }} />
+                                    {/* <AttachIcon style={{ width: '250px', height: '100%' }} /> */}
+                                </div>
                                 <img className="img otherImg" src="" alt="" style={{ width: '250px', height: '100%' }} />
                                 <div className="img fileIcon">
                                     <p>File</p>
