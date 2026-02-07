@@ -110,6 +110,8 @@ header {
     height: var(--header-height);
     justify-content: start;
     gap: 24px;
+    position: relative;
+    z-index: 5;
 }
 
 header nav {
@@ -1203,9 +1205,10 @@ body.text .partInner .uploadBtn {
 .closeBtn {
     cursor: pointer;
     position: absolute;
-    right: 30px;
-    top: 60px;
+    right: 35px;
+    top: 100px;
     animation: closeBtnAn 1s ease;
+    z-index: 10;
 }
 
 /* @media screen and (min-width: 1125px) {
