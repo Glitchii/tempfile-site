@@ -27,4 +27,5 @@ data/
 
 Procfile
 .*
-TODO 
+TODO
+.env
