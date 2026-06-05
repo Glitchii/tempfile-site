@@ -88,20 +88,59 @@ export default function Home() {
         if (fileInputRef.current) fileInputRef.current.files = e.dataTransfer.files
     }
 
-    const upload = async () => {
-        if (uploading) return
-        const file = fileInputRef.current?.files?.[0]
-        if (!file) return window.alert('Please choose a file')
+    timeSelectRef.current?.addEventListener('change', (e: Event) => {
+        const target = e.target as HTMLSelectElement
+        const value = target.value
+        if (!value) return
 
+        const diff = new Date(value).getTime() - Date.now()
+        if (diff < 0)
+            return showNotification('The time is in the past')
+        else if (diff > 31 * 24 * 60 * 60 * 1000)
+            return showNotification('The time is too far in the future')
+        else if (diff < 60 * 1000)
+            return showNotification('The time is too short')
+        else
+            return showNotification('The time is valid')
+    })
+
+    timeGuiRef.current?.addEventListener('change', (e: Event) => {
+        const target = e.target as HTMLInputElement
+        const value = target.value
+        if (!value) return
+
+        const date = new Date(value)
+        if (date.getTime() < Date.now())
+            return showNotification('Please select a future time')
+
+        const diff = date.getTime() - Date.now()
+        const diffHours = Math.floor(diff / (1000 * 60 * 60))
+        if (diffHours > 31)
+            return showNotification('The time is too far in the future')
+
+        if (diffHours < 0)
+            return showNotification('The time is in the past')
+    })
+
+    const upload = async () => {
         const form = formRef.current
-        if (!form) return
+
+        if (uploading || !form)
+            return
+
+        if (!fileInputRef.current?.files?.[0])
+            return showNotification('Please choose a file')
 
         const fd = new FormData(form)
-
         const timeGui = timeGuiRef.current?.value
         const timeSelect = timeSelectRef.current?.value
-        const datetime = timeGui && timeGui.trim().length ? timeGui : timeSelect
-        if (!datetime) return window.alert('Please select an expiry time')
+        const datetime = timeGui
+
+        console.log(timeSelect, timeGui)
+
+        if (!datetime)
+            return showNotification('Please select an expiry time')
+
         fd.set('datetime', datetime)
 
         setUploading(true)
@@ -141,7 +180,7 @@ export default function Home() {
                                     <p>File</p>
                                     <FileIcon style={{ fill: '#273036' }} />
                                 </div>
-                                <h2>{dragging ? 'Drop file here' : selectedFile ? 'Ready to upload' : 'Drag file here'}</h2>
+                                <h2>{dragging ? 'Drop here to add file' : selectedFile ? 'Ready to upload' : 'Click here to add file'}</h2>
                                 <textarea spellCheck={false}></textarea>
                                 <p className="desc">
 
@@ -149,7 +188,7 @@ export default function Home() {
                                         <span>
                                             "<b>{selectedFile.name}</b>" is ready to upload.
                                             <br />
-                                            Choose any options if you want, then click "upload"
+                                            Pick some options if you need then click "upload"
                                         </span>
                                     ) : (
                                         <span>
