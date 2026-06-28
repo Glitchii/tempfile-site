@@ -188,7 +188,7 @@ export default function Home() {
                                         <span>
                                             "<b>{selectedFile.name}</b>" is ready to upload.
                                             <br />
-                                            Pick some options if you need then click "upload"
+                                            Choose some options if you need then click "upload"
                                         </span>
                                     ) : (
                                         <span>
