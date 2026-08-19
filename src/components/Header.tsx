@@ -1,4 +1,5 @@
 import { Link, NavLink, useLocation } from 'react-router-dom';
+import { useEffect, useRef, useState } from 'react';
 
 const links = [
     { to: "/", label: "Home" },
@@ -11,6 +12,17 @@ const links = [
 
 export default function Header() {
   const location = useLocation();
+  const [menuOpen, setMenuOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    const close = (event: MouseEvent) => {
+      if (!menuRef.current?.contains(event.target as Node)) setMenuOpen(false);
+    };
+
+    document.addEventListener('click', close);
+    return () => document.removeEventListener('click', close);
+  }, []);
 
   return (
     <header>
@@ -28,22 +40,22 @@ export default function Header() {
         <ul>
           {links.map(link => (
             !(link.to == '/' && location.pathname == '/') && <li key={link.to}>
-              <NavLink to={link.to} className={({ isActive }) => isActive ? "#underline" : ""} target={link.target}>{link.label}</NavLink>
+              <NavLink to={link.to} className={({ isActive }) => isActive ? "underline" : ""} target={link.target} rel={link.target ? 'noreferrer' : undefined}>{link.label}</NavLink>
             </li>
           ))}
         </ul>
 
-        <div className="menu">
-          <div className="lines">
+        <div className="menu" ref={menuRef}>
+          <div className="lines" onClick={() => setMenuOpen(!menuOpen)} role="button" tabIndex={0}>
             <div></div>
             <div></div>
             <div></div>
           </div>
-          <div className="menuBox">
+          <div className={`menuBox${menuOpen ? ' active' : ''}`}>
             <ul>
               {links.map(link => (
-                <li key={link.to}>
-                  <NavLink to={link.to} className={({ isActive }) => isActive ? "underline" : ""} target={link.target}>{link.label}</NavLink>
+                <li key={link.to} onClick={() => setMenuOpen(false)}>
+                  <NavLink to={link.to} className={({ isActive }) => isActive ? "underline" : ""} target={link.target} rel={link.target ? 'noreferrer' : undefined}>{link.label}</NavLink>
                 </li>
               ))}
             </ul>

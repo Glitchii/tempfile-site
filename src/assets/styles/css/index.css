@@ -1344,3 +1344,187 @@ body.text .partInner .uploadBtn {
         margin-bottom: 150px;
     }
 } */
+
+.route-page {
+    min-height: calc(100vh - var(--header-height));
+    padding: 50px min(8vw, 90px);
+}
+
+.route-page h1,
+.route-page h2 {
+    font-family: var(--font2);
+}
+
+.route-page h1 {
+    font-size: 30px;
+    margin-bottom: 18px;
+}
+
+.route-page h2 {
+    font-size: 21px;
+    margin: 28px 0 10px;
+}
+
+.route-input {
+    width: 100%;
+    max-width: 520px;
+    padding: 11px 13px;
+    border-radius: 5px;
+    border: 1px solid #b7bdbeba;
+    background: linear-gradient(45deg, transparent, #f2f2f27a, transparent);
+}
+
+.route-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 38px;
+    padding: 8px 18px;
+    border-radius: 3px;
+    background: linear-gradient(30deg, #74adff, #7f94ff);
+    color: #fff;
+    font-family: var(--font2);
+    cursor: pointer;
+    box-shadow: 0px 0px 20px 0px #539afe30;
+}
+
+.route-button:disabled {
+    opacity: .55;
+    cursor: default;
+}
+
+.route-button.secondary {
+    background: #273036;
+}
+
+.route-button.danger {
+    background: linear-gradient(30deg, #e67f78, #f0a06f);
+}
+
+.route-actions {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-top: 18px;
+}
+
+.route-note {
+    margin: 18px 0;
+    opacity: .75;
+}
+
+.delete-search {
+    max-width: 620px;
+    margin: 8vh auto 0;
+    display: grid;
+    gap: 14px;
+}
+
+.delete-file {
+    display: grid;
+    grid-template-columns: minmax(180px, 320px) minmax(280px, 640px);
+    justify-content: center;
+    align-items: center;
+    gap: 50px;
+}
+
+.delete-preview {
+    min-height: 260px;
+    display: grid;
+    place-items: center;
+}
+
+.delete-details dl {
+    display: grid;
+    gap: 9px;
+    margin: 15px 0 20px;
+}
+
+.delete-details dl > div {
+    display: grid;
+    grid-template-columns: 130px minmax(0, 1fr);
+    gap: 18px;
+}
+
+.delete-details dt {
+    font-weight: 700;
+    opacity: .75;
+}
+
+.delete-details dd {
+    word-break: break-word;
+}
+
+.api-page article {
+    max-width: 985px;
+    margin: 0 auto;
+    border: 1px solid #e1e4e8;
+    border-radius: 6px;
+    padding: 22px 38px 30px;
+}
+
+.api-page p {
+    line-height: 1.6;
+}
+
+.api-page pre {
+    background-color: #f6f8fa;
+    border-radius: 3px;
+    overflow: auto;
+    padding: 16px;
+    margin: 10px 0;
+}
+
+.api-page code {
+    background-color: rgba(27, 31, 35, 0.05);
+    border-radius: 3px;
+    font-family: SFMono-Regular, Consolas, Liberation Mono, Menlo, Courier, monospace;
+    font-size: 85%;
+    padding: .2em .4em;
+}
+
+.api-page pre code {
+    background: transparent;
+    padding: 0;
+}
+
+.api-page table {
+    width: 100%;
+    border-collapse: collapse;
+    overflow: auto;
+}
+
+.api-page th,
+.api-page td {
+    padding: 8px 12px;
+    border: 1px solid #dfe2e5;
+    text-align: left;
+}
+
+.api-page tr:nth-child(2n) {
+    background: #f6f8fa;
+}
+
+@media screen and (max-width: 760px) {
+    .route-page {
+        padding: 36px 5%;
+    }
+
+    .delete-file {
+        grid-template-columns: 1fr;
+        gap: 20px;
+    }
+
+    .delete-preview {
+        min-height: 190px;
+    }
+
+    .delete-details dl > div {
+        grid-template-columns: 1fr;
+        gap: 2px;
+    }
+
+    .api-page article {
+        padding: 18px 16px 24px;
+    }
+}
