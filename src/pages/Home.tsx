@@ -78,6 +78,7 @@ export default function Home() {
     const fileInputRef = useRef<HTMLInputElement | null>(null)
     const formRef = useRef<HTMLFormElement | null>(null)
     const textareaRef = useRef<HTMLTextAreaElement | null>(null)
+    const uploadedLinkInputRef = useRef<HTMLInputElement | null>(null)
     const dragDepthRef = useRef(0)
 
     const defaultExpiry = '5m'
@@ -89,7 +90,6 @@ export default function Home() {
     const [dragging, setDragging] = useState(false)
     const [notification, setNotification] = useState<{ id: number; text: string; success?: boolean } | null>(null)
     const [selectedFile, setSelectedFile] = useState<File | null>(null)
-    const [previewUrl, setPreviewUrl] = useState<string | null>(null)
     const [textMode, setTextMode] = useState(false)
     const [text, setText] = useState('')
     const [showMore, setShowMore] = useState(false)
@@ -99,6 +99,10 @@ export default function Home() {
 
     const defaultAuthKey = useMemo(() => crypto.getRandomValues(new Uint32Array(3)).join('.'), [])
     const hasUpload = textMode ? text.trim().length > 0 : Boolean(selectedFile)
+    const previewUrl = useMemo(
+        () => selectedFile?.type.startsWith('image/') ? URL.createObjectURL(selectedFile) : null,
+        [selectedFile],
+    )
     const activeExpiry = useCustomExpiry ? customExpiry : expiry
     const fileLabel = selectedFile ? splitName(selectedFile.name) : 'File'
 
@@ -116,16 +120,9 @@ export default function Home() {
         return () => document.body.classList.remove('text')
     }, [textMode])
 
-    useEffect(() => {
-        if (!selectedFile?.type.startsWith('image/')) {
-            setPreviewUrl(null)
-            return
-        }
-
-        const url = URL.createObjectURL(selectedFile)
-        setPreviewUrl(url)
-        return () => URL.revokeObjectURL(url)
-    }, [selectedFile])
+    useEffect(() => () => {
+        if (previewUrl) URL.revokeObjectURL(previewUrl)
+    }, [previewUrl])
 
     useEffect(() => {
         if (useCustomExpiry) return
@@ -135,19 +132,6 @@ export default function Home() {
         const interval = window.setInterval(tick, 60_000)
         return () => window.clearInterval(interval)
     }, [expiry, useCustomExpiry])
-
-    useEffect(() => {
-        const onPaste = (event: ClipboardEvent) => {
-            const file = Array.from(event.clipboardData?.files || [])[0]
-            if (!file) return
-            event.preventDefault()
-            selectFile(file)
-            showNotification(`Pasted "${file.name || 'clipboard file'}"`)
-        }
-
-        document.addEventListener('paste', onPaste)
-        return () => document.removeEventListener('paste', onPaste)
-    })
 
     const selectFile = (file: File | null) => {
         if (!file) {
@@ -163,6 +147,19 @@ export default function Home() {
         setSelectedFile(file)
         setInputFile(fileInputRef.current, file)
     }
+
+    useEffect(() => {
+        const onPaste = (event: ClipboardEvent) => {
+            const file = Array.from(event.clipboardData?.files || [])[0]
+            if (!file) return
+            event.preventDefault()
+            selectFile(file)
+            showNotification(`Pasted "${file.name || 'clipboard file'}"`)
+        }
+
+        document.addEventListener('paste', onPaste)
+        return () => document.removeEventListener('paste', onPaste)
+    })
 
     const onFileChange = (event: ChangeEvent<HTMLInputElement>) => {
         selectFile(event.target.files?.[0] ?? null)
@@ -240,7 +237,9 @@ export default function Home() {
             await navigator.clipboard.writeText(uploadedLink)
             showNotification('Link copied', true)
         } catch {
-            showNotification('Could not copy automatically. Select the link and copy it manually.')
+            uploadedLinkInputRef.current?.focus()
+            uploadedLinkInputRef.current?.select()
+            showNotification('Could not copy automatically. The link is selected so you can copy it manually.')
         }
     }
 
@@ -281,6 +280,8 @@ export default function Home() {
             setUploadedLink(json.link)
             showNotification('File uploaded successfully!', true)
             resetUpload()
+        } catch {
+            showNotification('Could not reach the server. Please try again.')
         } finally {
             setUploading(false)
         }
@@ -289,7 +290,7 @@ export default function Home() {
     const onSubmitKey = (event: KeyboardEvent<HTMLDivElement>) => {
         if (event.key === 'Enter' || event.key === ' ') {
             event.preventDefault()
-            void upload()
+            upload()
         }
     }
 
@@ -331,7 +332,7 @@ export default function Home() {
         <>
             {notification && <Notification key={notification.id} text={notification.text} success={notification.success} />}
             <main className={clsx({ 'file-selected': hasUpload })}>
-                <form ref={formRef} action="/api/files" method="post" encType="multipart/form-data" onSubmit={(event) => { event.preventDefault(); void upload() }}>
+                <form ref={formRef} action="/api/files" method="post" encType="multipart/form-data" onSubmit={(event) => { event.preventDefault(); upload() }}>
                     <input ref={fileInputRef} type="file" id="upload" name="file" autoComplete="off" onChange={onFileChange} />
                     <input type="submit" className="submitInput" style={{ position: 'absolute', display: 'none' }} />
                     <div className="dragParent">
@@ -363,7 +364,7 @@ export default function Home() {
                                         </span>
                                     ) : (
                                         <span>
-                                            Drag and drop a file or click anywere here to browse your computer.
+                                            Drag and drop a file or click anywhere here to browse your computer.
                                             <br />
                                             You can also paste images or files from your clipboard
                                         </span>
@@ -386,7 +387,7 @@ export default function Home() {
                                 <div className="icon">
                                     <DownloadLimitIcon />
                                 </div>
-                                <input className="input" name="limit" type="number" min="1" placeholder="Download limit (empty = unliminted)" />
+                                <input className="input" name="limit" type="number" min="1" placeholder="Download limit (empty = unlimited)" />
                             </div>
                             <div className="sep"></div>
                             <div className="btn pass">
@@ -461,7 +462,7 @@ export default function Home() {
                                 </div>
                             </div>
                         </div>
-                        <div className={clsx('submit', { disabled: !hasUpload || uploading })} onClick={() => void upload()} onKeyDown={onSubmitKey} role="button" tabIndex={0} aria-disabled={!hasUpload || uploading}>
+                        <div className={clsx('submit', { disabled: !hasUpload || uploading })} onClick={() => upload()} onKeyDown={onSubmitKey} role="button" tabIndex={0} aria-disabled={!hasUpload || uploading}>
                             <div className="in">
                                 <UploadCloudIcon className="upload" />
                                 <span>{uploading ? 'Uploading...' : 'Upload'}</span>
@@ -469,6 +470,7 @@ export default function Home() {
                         </div>
                     </div>
                 </form>
+            </main>
 
                 {uploadedLink && (
                     <>
@@ -482,13 +484,13 @@ export default function Home() {
                                     <p>Go to this link to download your file</p>
                                     <div className="btn name">
                                         <div className="icon"></div>
-                                        <input className="input" type="text" value={uploadedLink} readOnly onFocus={(event) => event.currentTarget.select()} />
+                                        <input ref={uploadedLinkInputRef} className="input" type="text" value={uploadedLink} readOnly onFocus={(event) => event.currentTarget.select()} />
                                     </div>
                                     <div className="linkBtns">
                                         <Link className="linkBtn del" to={uploadedLink.replace('/files/', '/delete/')} title="Delete file">
                                             <DeleteIcon />
                                         </Link>
-                                        <div className="linkBtn copy" onClick={() => void copyLink()} role="button" tabIndex={0} title="Copy link">
+                                        <div className="linkBtn copy" onClick={() => copyLink()} role="button" tabIndex={0} title="Copy link">
                                             <CopyIcon />
                                         </div>
                                         <a className="linkBtn goToLink" href={uploadedLink} target="_blank" rel="noreferrer" title="Open file">
@@ -501,7 +503,6 @@ export default function Home() {
                         <div className="ov" onClick={() => setUploadedLink(null)} role="button" tabIndex={0}></div>
                     </>
                 )}
-            </main>
             <div
                 className="textBtn"
                 title="Upload text instead of file"

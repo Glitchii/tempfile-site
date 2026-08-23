@@ -54,8 +54,12 @@
 body {
 	background: #fff;
     --header-height: 60px;
-    width: 100vw;
+    width: 100%;
     height: 100vh;
+}
+
+body.showLinks {
+    overflow: hidden;
 }
 
 body>* {
@@ -1022,8 +1026,9 @@ form > :last-of-type {
     position: absolute;
     left: 50%;
     top: 50%;
+    width: min(400px, calc(100% - 40px));
     transform: translate(-50%, -50%);
-    min-width: 400px;
+    min-width: 0;
 }
 
 body:not(.showLinks) .links, body:not(.showLinks) .ov {
@@ -1054,6 +1059,8 @@ body.showLinks .ov {
 
 .ov {
     background: #00000026;
+    top: 0;
+    left: 0;
     width: 100%;
     height: 100%;
     position: fixed;
@@ -1273,6 +1280,12 @@ body.text .partInner .uploadBtn {
 @media screen and (max-width: 445px) {
     .menu {
         display: block;
+        width: 35px;
+        height: 30px;
+    }
+    .menu .lines {
+        top: 2px;
+        transform: scale(-1);
     }
     .closeBtn {
         right: 25px;
@@ -1287,6 +1300,10 @@ body.text .partInner .uploadBtn {
         padding: 150px 5% 5% 5%;
         padding-top: 120px;
     } */
+    .partInner .uploadBtn {
+        top: 0;
+        margin-top: 28px;
+    }
     .drag h2 {
         margin-top: 30px;
         display: none;
@@ -1316,7 +1333,7 @@ body.text .partInner .uploadBtn {
         place-content: center;
         display: grid;
     } */
-    .drag .partInner svg{
+    .drag .partInner .img > svg {
         width: 215px!important;
     }
     main > * {
@@ -1346,8 +1363,18 @@ body.text .partInner .uploadBtn {
 } */
 
 .route-page {
+    box-sizing: border-box;
     min-height: calc(100vh - var(--header-height));
     padding: 50px min(8vw, 90px);
+}
+
+.route-eyebrow {
+    margin-bottom: 8px;
+    color: #527ec0;
+    font-family: var(--font2);
+    font-size: 13px;
+    letter-spacing: 0;
+    text-transform: uppercase;
 }
 
 .route-page h1,

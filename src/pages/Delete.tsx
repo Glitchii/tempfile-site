@@ -42,8 +42,9 @@ export default function Delete() {
     const navigate = useNavigate()
     const [search, setSearch] = useState('')
     const [authkey, setAuthkey] = useState('')
-    const [file, setFile] = useState<FileInfo | null>(null)
-    const [loading, setLoading] = useState(Boolean(name))
+    const [loaded, setLoaded] = useState<{ name: string; file: FileInfo | null } | null>(null)
+    const file = loaded && loaded.name === name ? loaded.file : null
+    const loading = Boolean(name) && loaded?.name !== name
     const [deleting, setDeleting] = useState(false)
     const [notification, setNotification] = useState<{ id: number; text: string; success?: boolean } | null>(null)
 
@@ -56,27 +57,24 @@ export default function Delete() {
     const notify = (text: string, success?: boolean) => setNotification({ id: Date.now(), text, success })
 
     useEffect(() => {
-        if (!name) {
-            setFile(null)
-            setLoading(false)
-            return
-        }
+        if (!name) return
 
         let cancelled = false
-        setLoading(true)
         fetch(`/api/files/${encodeURIComponent(name)}/info`)
             .then((res) => res.json().then((json) => ({ res, json })).catch(() => ({ res, json: null })))
             .then(({ res, json }) => {
                 if (cancelled) return
                 if (!res.ok || !json?.ok) {
                     notify(json?.error?.message || 'File not found')
-                    setFile(null)
+                    setLoaded({ name, file: null })
                     return
                 }
-                setFile(json.file)
+                setLoaded({ name, file: json.file })
             })
-            .finally(() => {
-                if (!cancelled) setLoading(false)
+            .catch(() => {
+                if (cancelled) return
+                notify('Could not reach the server')
+                setLoaded({ name, file: null })
             })
 
         return () => {
@@ -101,7 +99,9 @@ export default function Delete() {
             const json = await res.json().catch(() => null)
             if (!res.ok || !json?.ok) return notify(json?.error?.message || 'Could not delete file')
             notify('File has been deleted', true)
-            setFile(null)
+            setLoaded({ name, file: null })
+        } catch {
+            notify('Could not reach the server')
         } finally {
             setDeleting(false)
         }

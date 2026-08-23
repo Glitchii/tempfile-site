@@ -4,34 +4,35 @@ import crypto from 'node:crypto'
 import fs from 'node:fs/promises'
 import { isIP } from 'node:net'
 import path from 'node:path'
-import { fileURLToPath } from 'node:url'
 import dotenv from 'dotenv'
 import express from 'express'
+import { rateLimit } from 'express-rate-limit'
 import multer from 'multer'
 
-dotenv.config()
+dotenv.config({ quiet: true })
 
 const PORT = Number(process.env.PORT || 3001)
 const app = express()
-app.set('trust proxy', true)
 app.disable('x-powered-by')
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url))
+const trustProxy = process.env.TRUST_PROXY
+trustProxy && app.set('trust proxy', /^\d+$/.test(trustProxy) ? Number(trustProxy) : trustProxy)
+
+const distDir = path.resolve(process.cwd(), 'dist')
 const dataDir = path.resolve(process.cwd(), 'data')
 const filesDir = path.join(dataDir, 'files')
 const metaDir = path.join(dataDir, 'meta')
-const distDir = path.resolve(process.cwd(), 'dist')
 const maxFileSize = 2 * 1024 * 1024 * 1024
+const authCookie = 'tempfile_auth'
+const authDurationMs = 15 * 60_000
+const authSecret = process.env.AUTH_SECRET || crypto.randomBytes(32).toString('hex')
 
 const bucket = process.env.AWS_BUCKET
 const s3 = bucket
   ? new S3Client({
       region: process.env.AWS_REGION || 'us-east-1',
-      forcePathStyle: process.env.AWS_FORCE_PATH_STYLE !== 'false',
+      forcePathStyle: process.env.AWS_FORCE_PATH_STYLE === 'true',
       ...(process.env.AWS_ENDPOINT_URL ? { endpoint: process.env.AWS_ENDPOINT_URL } : {}),
-      ...(process.env.AWS_ACCESS_KEY_ID && process.env.AWS_SECRET_ACCESS_KEY
-        ? { credentials: { accessKeyId: process.env.AWS_ACCESS_KEY_ID, secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY } }
-        : {}),
     })
   : null
 
@@ -49,6 +50,79 @@ const ok = (res, obj) => res.json({ ok: true, ...(obj ?? {}) })
 const err = (res, status = 500, type = 'InternalServerError', message = 'There was an internal server error', usage) =>
   res.status(status).json({ ok: false, error: { type, message, ...(usage ? { usage } : {}) } })
 
+const positiveInt = (value, fallback) => {
+  const number = Number(value)
+  return Number.isSafeInteger(number) && number > 0 ? number : fallback
+}
+
+const limitRequests = (windowMs, limit, message, options = {}) =>
+  rateLimit({
+    windowMs,
+    limit,
+    standardHeaders: 'draft-8',
+    legacyHeaders: false,
+    handler: (_req, res) => err(res, 429, 'TooManyRequests', message),
+    ...options,
+  })
+
+const uploadLimiter = limitRequests(
+  positiveInt(process.env.UPLOAD_RATE_WINDOW_MS, 60_000),
+  positiveInt(process.env.UPLOAD_RATE_LIMIT, 30),
+  'Too many uploads. Please wait a moment and try again.',
+)
+
+const authLimiter = limitRequests(
+  positiveInt(process.env.AUTH_RATE_WINDOW_MS, 15 * 60_000),
+  positiveInt(process.env.AUTH_RATE_LIMIT, 10),
+  'Too many password attempts. Please wait and try again.',
+  { skipSuccessfulRequests: true },
+)
+
+const normalizeFilename = (value) => {
+  const filename = String(value || '').trim().toLowerCase()
+  return filename && filename !== '.' && filename !== '..' && Buffer.byteLength(filename) <= 255 && !/[/\\\0]/.test(filename)
+    ? filename
+    : null
+}
+
+const getCookie = (req, name) => {
+  const prefix = `${name}=`
+  const pair = String(req.headers.cookie || '').split(';').map((item) => item.trim()).find((item) => item.startsWith(prefix))
+  if (!pair) return null
+  try {
+    return decodeURIComponent(pair.slice(prefix.length))
+  } catch {
+    return null
+  }
+}
+
+const signAuthPayload = (payload) => crypto.createHmac('sha256', authSecret).update(payload).digest('base64url')
+
+const hasBrowserAuth = (req, filename) => {
+  try {
+    const [payload, signature] = (getCookie(req, authCookie) || '').split('.')
+    if (!payload || !signature) return false
+
+    const actual = Buffer.from(signature)
+    const expected = Buffer.from(signAuthPayload(payload))
+    if (actual.length !== expected.length || !crypto.timingSafeEqual(actual, expected)) return false
+
+    const auth = JSON.parse(Buffer.from(payload, 'base64url').toString('utf8'))
+    return auth.filename === filename && Number(auth.expiresAt) > Date.now()
+  } catch {
+    return false
+  }
+}
+
+const setBrowserAuth = (req, res, filename) => {
+  const expiresAt = Date.now() + authDurationMs
+  const payload = Buffer.from(JSON.stringify({ filename, expiresAt })).toString('base64url')
+  const secure = req.secure || process.env.NODE_ENV === 'production' ? '; Secure' : ''
+  res.setHeader('Set-Cookie', `${authCookie}=${payload}.${signAuthPayload(payload)}; Max-Age=${authDurationMs / 1000}; Path=/files/${encodeURIComponent(filename)}; HttpOnly; SameSite=Lax${secure}`)
+}
+
+const browserError = (res, status, reason) => res.redirect(302, `/error/${status}?reason=${encodeURIComponent(reason)}`)
+
 const metaKey = (filename) => `meta/${filename}.json`
 const fileKey = (filename) => `files/${filename}`
 const legacyKey = (filename) => `${filename}.json`
@@ -64,13 +138,16 @@ const existsLocal = async (p) => {
   }
 }
 
+const isMissingS3Object = (error) => error?.name === 'NotFound' || error?.name === 'NoSuchKey'
+
 const existsS3 = async (Key) => {
   if (!s3 || !bucket) return false
   try {
     await s3.send(new HeadObjectCommand({ Bucket: bucket, Key }))
     return true
-  } catch {
-    return false
+  } catch (error) {
+    if (isMissingS3Object(error)) return false
+    throw error
   }
 }
 
@@ -85,12 +162,14 @@ const bodyToBuffer = async (body) => {
 
 const getS3Json = async (Key) => {
   if (!s3 || !bucket) return null
+  let data
   try {
-    const data = await s3.send(new GetObjectCommand({ Bucket: bucket, Key }))
-    return JSON.parse((await bodyToBuffer(data.Body)).toString('utf8'))
-  } catch {
-    return null
+    data = await s3.send(new GetObjectCommand({ Bucket: bucket, Key }))
+  } catch (error) {
+    if (isMissingS3Object(error)) return null
+    throw error
   }
+  return JSON.parse((await bodyToBuffer(data.Body)).toString('utf8'))
 }
 
 const legacyBody = (meta) => {
@@ -156,7 +235,7 @@ const writeMeta = async (filename, meta, legacy = false) => {
 
 const removeUpload = async (filename) => {
   if (s3 && bucket) {
-    await Promise.allSettled([
+    await Promise.all([
       s3.send(new DeleteObjectCommand({ Bucket: bucket, Key: fileKey(filename) })),
       s3.send(new DeleteObjectCommand({ Bucket: bucket, Key: metaKey(filename) })),
       s3.send(new DeleteObjectCommand({ Bucket: bucket, Key: legacyKey(filename) })),
@@ -212,6 +291,11 @@ const parseDatetime = (value) => {
   return date
 }
 
+const extensionFor = (name, fallback = '') => {
+  const ext = path.extname(String(name || '')).toLowerCase().replace(/[^a-z0-9.]/g, '').slice(0, 20)
+  return ext && ext !== '.' ? ext : fallback
+}
+
 const sanitizeBaseName = (name, ext = '') => {
   if (!name) return null
   const clean = String(name)
@@ -219,7 +303,8 @@ const sanitizeBaseName = (name, ext = '') => {
     .toLowerCase()
     .replace(/\s+/g, '-')
     .replace(/[^a-z0-9-_.]/g, '')
-  if (!clean) return null
+    .slice(0, 180)
+  if (!clean || clean === '.' || clean === '..') return null
 
   const safeExt = ext.toLowerCase()
   return safeExt && clean.endsWith(safeExt) ? clean.slice(0, -safeExt.length) : clean
@@ -256,17 +341,15 @@ const validateIps = (blacklist = [], whitelist = []) => {
   return null
 }
 
-const getClientIp = (req) => {
-  const cf = req.headers['cf-connecting-ip']
-  const real = req.headers['x-real-ip']
-  const forwarded = req.headers['x-forwarded-for']
-  if (typeof cf === 'string' && cf) return cf
-  if (typeof real === 'string' && real) return real
-  if (typeof forwarded === 'string' && forwarded) return forwarded.split(',')[0].trim()
-  return req.ip
+const normalizeIp = (value) => {
+  const ip = String(value || '')
+  const mapped = ip.match(/^::ffff:(\d+\.\d+\.\d+\.\d+)$/i)?.[1]
+  return mapped && isIP(mapped) === 4 ? mapped : ip
 }
 
-const publicOrigin = (req) => process.env.PUBLIC_ORIGIN || `${req.protocol}://${req.get('host')}`
+const getClientIp = (req) => normalizeIp(req.ip || req.socket.remoteAddress)
+
+const publicOrigin = (req) => String(process.env.PUBLIC_ORIGIN || `${req.protocol}://${req.get('host')}`).replace(/\/+$/, '')
 
 const publicMeta = (meta) => ({
   filename: meta.filename,
@@ -280,7 +363,7 @@ const publicMeta = (meta) => ({
   ipRestricted: Boolean(meta.ipblacklist?.length || meta.ipwhitelist?.length),
 })
 
-app.post('/api/files', (req, res) => {
+app.post('/api/files', uploadLimiter, (req, res) => {
   upload.single('file')(req, res, async (uploadError) => {
     try {
       const uploadInfo = process.env.UPLOAD_INFO || process.env.uploadInfo
@@ -306,13 +389,15 @@ app.post('/api/files', (req, res) => {
 
       const limitRaw = req.body.limit
       const limit = limitRaw ? Number(limitRaw) : undefined
-      if (limitRaw && (!Number.isFinite(limit) || limit <= 0)) return err(res, 400, 'InvalidLimit', 'Limit must be a number more than 0')
+      if (limitRaw && (!Number.isSafeInteger(limit) || limit <= 0)) return err(res, 400, 'InvalidLimit', 'Limit must be a positive whole number')
 
       const body = req.file?.buffer || Buffer.from(text)
       const originalname = req.file?.originalname || 'text.txt'
-      const ext = req.file ? path.extname(originalname).toLowerCase() : path.extname(req.body.name || '') || '.txt'
+      const ext = req.file ? extensionFor(originalname) : extensionFor(req.body.name, '.txt')
       const filename = await chooseName(req.body.name, ext)
-      const passHash = req.body.pass ? await bcrypt.hash(String(req.body.pass), 10) : undefined
+      const password = typeof req.body.pass === 'string' ? req.body.pass : ''
+      if (Buffer.byteLength(password) > 72) return err(res, 400, 'PasswordTooLong', 'Password must be at most 72 bytes')
+      const passHash = password ? await bcrypt.hash(password, 10) : undefined
       const authkey = (req.body.authkey && String(req.body.authkey).trim()) || crypto.randomBytes(9).toString('base64url')
 
       const meta = {
@@ -343,8 +428,9 @@ app.post('/api/files', (req, res) => {
 })
 
 const canAccessByIp = (clientIp, meta) => {
-  if (Array.isArray(meta.ipblacklist) && meta.ipblacklist.includes(clientIp)) return false
-  if (Array.isArray(meta.ipwhitelist) && !meta.ipwhitelist.includes(clientIp)) return false
+  const ip = normalizeIp(clientIp)
+  if (Array.isArray(meta.ipblacklist) && meta.ipblacklist.some((item) => normalizeIp(item) === ip)) return false
+  if (Array.isArray(meta.ipwhitelist) && !meta.ipwhitelist.some((item) => normalizeIp(item) === ip)) return false
   return true
 }
 
@@ -357,32 +443,37 @@ const decrementLimit = async (filename, meta, legacy) => {
 
 const sendUpload = async (req, res, filename, isApi) => {
   try {
+    if (!filename) return isApi ? err(res, 400, 'InvalidFilename', 'File name is invalid') : browserError(res, 404, 'file-not-found')
+
     const found = await readUpload(filename)
-    if (!found) return isApi ? err(res, 404, 'NotFound', 'File not found') : res.status(404).send('File not found')
+    if (!found) return isApi ? err(res, 404, 'NotFound', 'File not found') : browserError(res, 404, 'file-not-found')
 
     const { meta, body, legacy } = found
     const exp = new Date(meta.datetime)
     if (Number.isNaN(exp.getTime()) || Date.now() > exp.getTime()) {
       await removeUpload(filename)
-      return isApi ? err(res, 404, 'NotFound', 'File not found') : res.status(404).send('File not found')
+      return isApi ? err(res, 404, 'NotFound', 'File not found') : browserError(res, 404, 'file-not-found')
     }
 
     if (!canAccessByIp(getClientIp(req), meta)) {
-      return isApi ? err(res, 403, 'Forbidden', 'You are not allowed to access this file.') : res.status(403).send('You are not allowed to access this file.')
+      return isApi ? err(res, 403, 'Forbidden', 'You are not allowed to access this file.') : browserError(res, 403, 'ip-restricted')
     }
 
     if (meta.pass) {
-      const supplied = req.headers.pass
-      if (!supplied || typeof supplied !== 'string') {
-        return isApi
-          ? err(res, 403, 'NoPass', "File requires password. A header with a key 'pass' with the password as value is required")
-          : res.status(403).send("This file requires a password. Use the API with a 'pass' header.")
-      }
-      if (!(await bcrypt.compare(supplied, meta.pass))) {
-        return isApi ? err(res, 403, 'WrongPass', 'Incorrect password received') : res.status(403).send('Incorrect password')
+      if (!isApi && !hasBrowserAuth(req, filename)) return res.redirect(302, `/auth/${encodeURIComponent(filename)}`)
+
+      if (isApi) {
+        const supplied = req.headers.pass
+        if (!supplied || typeof supplied !== 'string') {
+          return err(res, 403, 'NoPass', "File requires password. A header with a key 'pass' with the password as value is required")
+        }
+        if (!(await bcrypt.compare(supplied, meta.pass))) return err(res, 403, 'WrongPass', 'Incorrect password received')
       }
     }
 
+    res.setHeader('Cache-Control', 'private, no-store')
+    res.setHeader('Content-Security-Policy', "sandbox; default-src 'none'")
+    res.setHeader('X-Content-Type-Options', 'nosniff')
     res.setHeader('Access-Control-Allow-Origin', '*')
     res.setHeader('Content-Type', meta.mimetype || 'application/octet-stream')
     res.setHeader('Content-Length', body.length)
@@ -390,15 +481,19 @@ const sendUpload = async (req, res, filename, isApi) => {
     void decrementLimit(filename, meta, legacy).catch((error) => console.error('decrement limit', error))
   } catch (error) {
     console.error('GET file', error)
-    return isApi ? err(res) : res.status(500).send('Internal server error')
+    return isApi ? err(res) : browserError(res, 500, 'server-error')
   }
 }
 
-app.get('/api/files/:name', (req, res) => sendUpload(req, res, req.params.name.toLowerCase(), true))
+app.get('/api/files/:name', (req, res) => sendUpload(req, res, normalizeFilename(req.params.name), true))
+
+// TODO: REmove later
+app.get('/api/health', (_req, res) => ok(res, { storage: s3 ? 's3' : 'local' }))
 
 app.get('/api/files/:name/info', async (req, res) => {
   try {
-    const filename = req.params.name.toLowerCase()
+    const filename = normalizeFilename(req.params.name)
+    if (!filename) return err(res, 400, 'InvalidFilename', 'File name is invalid')
     const meta = await readMeta(filename)
     if (!meta) return err(res, 404, 'NotFound', 'File not found')
 
@@ -414,14 +509,45 @@ app.get('/api/files/:name/info', async (req, res) => {
     return err(res)
   }
 })
-
-app.delete('/api/files/:name', async (req, res) => {
+app.post('/api/files/:name/auth', authLimiter, async (req, res) => {
   try {
-    const filename = req.params.name.toLowerCase()
+    const filename = normalizeFilename(req.params.name)
+    if (!filename) return err(res, 400, 'InvalidFilename', 'File name is invalid')
+
     const meta = await readMeta(filename)
     if (!meta) return err(res, 404, 'NotFound', 'File not found')
 
-    if (getClientIp(req) !== meta.userIP) {
+    const exp = new Date(meta.datetime).getTime()
+    if (!Number.isFinite(exp) || Date.now() > exp) {
+      await removeUpload(filename)
+      return err(res, 404, 'NotFound', 'File not found')
+    }
+    if (!canAccessByIp(getClientIp(req), meta)) return err(res, 403, 'Forbidden', 'You are not allowed to access this file.')
+    if (!meta.pass) return err(res, 409, 'PasswordNotRequired', 'This file is not password protected')
+
+    const password = typeof req.body?.password === 'string' ? req.body.password : ''
+    if (!password) return err(res, 400, 'MissingPassword', 'Enter the file password')
+    if (Buffer.byteLength(password) > 72 || !(await bcrypt.compare(password, meta.pass))) {
+      return err(res, 401, 'WrongPass', 'Incorrect password')
+    }
+
+    setBrowserAuth(req, res, filename)
+    res.setHeader('Cache-Control', 'no-store')
+    ok(res, { link: `/files/${encodeURIComponent(filename)}` })
+  } catch (error) {
+    console.error('POST /api/files/:name/auth', error)
+    return err(res)
+  }
+})
+
+app.delete('/api/files/:name', async (req, res) => {
+  try {
+    const filename = normalizeFilename(req.params.name)
+    if (!filename) return err(res, 400, 'InvalidFilename', 'File name is invalid')
+    const meta = await readMeta(filename)
+    if (!meta) return err(res, 404, 'NotFound', 'File not found')
+
+    if (getClientIp(req) !== normalizeIp(meta.userIP)) {
       const key = req.headers.authkey
       if (!key || typeof key !== 'string') return err(res, 400, 'MissingAuthKey', "An 'authkey' header with the auth key is required")
       if (key !== meta.authkey) return err(res, 400, 'BadAuthKey', 'Incorrect auth key received')
@@ -435,7 +561,7 @@ app.delete('/api/files/:name', async (req, res) => {
   }
 })
 
-app.get('/files/:name', (req, res) => sendUpload(req, res, req.params.name.toLowerCase(), false))
+app.get('/files/:name', (req, res) => sendUpload(req, res, normalizeFilename(req.params.name), false))
 app.get('/contact', (_req, res) => res.redirect(302, 'https://github.com/Glitchii/'))
 
 const cleanupExpired = async () => {
@@ -451,16 +577,18 @@ const cleanupExpired = async () => {
   }
 }
 
-try {
-  await fs.access(path.join(distDir, 'index.html'))
-  app.use(express.static(distDir))
-  app.get(/.*/, (_req, res) => res.sendFile(path.join(distDir, 'index.html')))
-} catch {
-  app.get('/', (_req, res) => res.status(404).send('Run the Vite dev server for the React app, or build the frontend first.'))
-}
+// await fs.access(path.join(distDir, 'index.html'))
+app.use(express.static(distDir))
+app.get(/.*/, (_req, res) => res.sendFile(path.join(distDir, 'index.html')))
 
 cleanupExpired()
-setInterval(cleanupExpired, 60_000)
+setInterval(cleanupExpired, 60_000).unref()
+
+if (process.env.NODE_ENV === 'production') {
+  process.env.AUTH_SECRET || console.warn('AUTH_SECRET is not set for browser auth cookies to work')
+  bucket || console.warn('AWS_BUCKET is not set for AWS uploads,  so using local')
+  process.env.PUBLIC_ORIGIN || console.warn('PUBLIC_ORIGIN is not set sogenerated links depend on proxy headers')
+}
 
 app.listen(PORT, () => {
   console.log(`API listening at http://0.0.0.0:${PORT} (${s3 ? `S3 bucket ${bucket}` : `local storage at ${path.relative(process.cwd(), dataDir)}`})`)
