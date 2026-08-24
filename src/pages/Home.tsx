@@ -338,11 +338,11 @@ export default function Home() {
                     <div className="dragParent">
                         <label
                             className={clsx('part drag', { hasFile: selectedFile, notImg: selectedFile && !previewUrl })}
-                            htmlFor="upload"
                             onDragEnter={onDragEnter}
                             onDragLeave={onDragLeave}
                             onDragOver={(event) => event.preventDefault()}
                             onDrop={onDrop}
+                            {...(textMode ? {} : { htmlFor: 'upload' })}
                         >
                             <div className="partInner">
                                 <div className="img mainImg upload-icon-container">
@@ -353,9 +353,9 @@ export default function Home() {
                                     <p>{fileLabel}</p>
                                     <FileIcon style={{ fill: '#273036' }} />
                                 </div>
-                                <h2>{dragging ? 'Drop here to add file' : selectedFile ? 'Ready to upload' : textMode ? '' : 'Click here to add file'}</h2>
-                                <textarea ref={textareaRef} name="text" spellCheck={false} value={text} onChange={(event) => setText(event.target.value)}></textarea>
-                                <p className="desc">
+                                <h2>{dragging ? 'Drop here to add file' : selectedFile ? 'Ready to upload' : textMode ? 'Write text to upload' : 'Click here to add file'}</h2>
+                                <textarea ref={textareaRef} name="text" spellCheck={false} value={text} onChange={(event) => setText(event.target.value)} placeholder='Type or paste text here to upload as a file' />
+                                  <p className="desc" style={textMode ? { opacity: '0', height: 0, transition: '.2s ease-out' } : {}}>
                                     {selectedFile ? (
                                         <span>
                                             "<b>{selectedFile.name}</b>" is ready to upload.
@@ -380,86 +380,92 @@ export default function Home() {
                     <div className="part btns btnsInner">
                         <h2 className="optsTitle">Options</h2>
                         <div className={clsx('inner', { others: showMore })}>
-                            <div className="btn limit">
-                                <div className="icon">
-                                    <DownloadLimitIcon />
-                                </div>
-                                <input className="input" name="limit" type="number" min="1" placeholder="Download limit (empty = unlimited)" />
-                            </div>
-                            <div className="sep"></div>
-                            <div className="btn pass">
-                                <div className="icon">
-                                    <PasswordIcon />
-                                </div>
-                                <input className="input" name="pass" type="password" placeholder="Password protect" />
-                            </div>
-                            <div className="sep"></div>
-                            <div className="btn name">
-                                <div className="icon">
-                                    <NameIcon />
-                                </div>
-                                <input className="input" name="name" type="text" placeholder="Custom file name" />
-                            </div>
-                            <div className="sep"></div>
-                            {renderIpInputs('blacklist')}
-                            <div className="sep"></div>
-                            {renderIpInputs('whitelist')}
-                            <div className="sep"></div>
-                            <div className="btn datetime">
-                                <div className="icon">
-                                    <DatetimeIcon />
-                                </div>
-                                <p className="input">Auto delete in</p>
-                            </div>
-                            <div className="btn datetime-picker">
-                                <select autoComplete="off" className="select btnUnder btnPad time" value={expiry} onChange={(event) => onExpiryChange(event.target.value)}>
-                                    {timeOptions.map(([value, label]) => (
-                                        <option value={value} key={value}>{label}</option>
-                                    ))}
-                                    <option value="" disabled>For custom time or date, update the date box below</option>
-                                </select>
-                                <div className="btnFollowUp time btnPad">
-                                    <input
-                                        type="datetime-local"
-                                        className="timeGui"
-                                        min={localDateTime()}
-                                        max={localDateTime(new Date(new Date().setMonth(new Date().getMonth() + 1)))}
-                                        value={customExpiry}
-                                        onChange={(event) => onCustomExpiryChange(event.target.value)}
-                                    />
-                                </div>
-                            </div>
-                            <div className="controls before" title="See more options">
-                                <div className="backControl" onClick={() => setShowMore(true)} role="button" tabIndex={0}>
-                                    <div className="controlText">More</div>
-                                    <ArrowLeftIcon style={{ width: '15px', transform: 'rotate(180deg)' }} />
-                                </div>
-                            </div>
-                            <div className={clsx('btn authKey other', { qMarkClicked: showAuthHelp })}>
-                                <div className="icon">
-                                    <AuthKeyIcon />
-                                </div>
-                                <div className="qMarkAndTxt">
-                                    <p className="input">Authentication Key </p>
-                                    <div className="qMark" onClick={() => setShowAuthHelp(!showAuthHelp)} role="button" tabIndex={0}>
-                                        <QuestionMarkIcon>
-                                            <title>This is a key required for actions like file deletions. Without it you cannot delete a file through HTTP requests.</title>
-                                        </QuestionMarkIcon>
+                            {showMore ?
+                                <div className={clsx('btn authKey other', { qMarkClicked: showAuthHelp })}>
+                                    <div className="icon">
+                                        <AuthKeyIcon />
                                     </div>
-                                </div>
-                                <p className="qMarkDesc">By default, you can delete a file if it was uploaded from the same IP address you're uploading from. This key allows you to delete the file from a different IP address. This is especially useful with <a href="/api" className="URL">API requests</a>.</p>
-                                <div className="inputOptions">
-                                    <input className="input btnPad" name="authkey" type="text" placeholder="Auth Key" defaultValue={defaultAuthKey} autoComplete="off" />
-                                    <div className="controls" title="Back to main options">
-                                        <div className="backControl" onClick={() => setShowMore(false)} role="button" tabIndex={0}>
-                                            <ArrowLeftIcon style={{ width: '15px' }} />
-                                            <div className="controlText">Back</div>
+                                    <div className="qMarkAndTxt">
+                                        <p className="input">Authentication Key </p>
+                                        <div className="qMark" onClick={() => setShowAuthHelp(!showAuthHelp)} role="button" tabIndex={0}>
+                                            <QuestionMarkIcon>
+                                                <title>This is a key required for actions like file deletions. Without it you cannot delete a file through HTTP requests.</title>
+                                            </QuestionMarkIcon>
                                         </div>
                                     </div>
+                                    <p className="qMarkDesc">By default, you can delete a file if it was uploaded from the same IP address you're uploading from. This key allows you to delete the file from a different IP address. This is especially useful with <a href="/api" className="URL">API requests</a>.</p>
+                                    <div className="inputOptions">
+                                        <input className="input btnPad" name="authkey" type="text" placeholder="Auth Key" defaultValue={defaultAuthKey} autoComplete="off" />
+                                        {/* <div className="controls" title="Back to main options">
+                                            <div className="backControl" onClick={() => setShowMore(false)} role="button" tabIndex={0}>
+                                                <ArrowLeftIcon style={{ width: '15px' }} />
+                                                <div className="controlText">Back</div>
+                                            </div>
+                                        </div> */}
+                                    </div>
+                                </div> :
+                                <>
+                                    <div className="btn limit">
+                                        <div className="icon">
+                                            <DownloadLimitIcon />
+                                        </div>
+                                        <input className="input" name="limit" type="number" min="1" placeholder="Download limit (empty = unlimited)" />
+                                    </div>
+                                    <div className="sep"></div>
+                                    <div className="btn pass">
+                                        <div className="icon">
+                                            <PasswordIcon />
+                                        </div>
+                                        <input className="input" name="pass" type="password" placeholder="Password protect" />
+                                    </div>
+                                    <div className="sep"></div>
+                                    <div className="btn name">
+                                        <div className="icon">
+                                            <NameIcon />
+                                        </div>
+                                        <input className="input" name="name" type="text" placeholder="Custom file name" />
+                                    </div>
+                                    <div className="sep"></div>
+                                    {renderIpInputs('blacklist')}
+                                    <div className="sep"></div>
+                                    {renderIpInputs('whitelist')}
+                                    <div className="sep"></div>
+                                    <div className="btn datetime">
+                                        <div className="icon">
+                                            <DatetimeIcon />
+                                        </div>
+                                        <p className="input">Auto delete in</p>
+                                    </div>
+                                    <div className="btn datetime-picker">
+                                        <select autoComplete="off" className="select btnUnder btnPad time" value={expiry} onChange={(event) => onExpiryChange(event.target.value)}>
+                                            {timeOptions.map(([value, label]) => (
+                                                <option value={value} key={value}>{label}</option>
+                                            ))}
+                                            <option value="" disabled>For custom time or date, update the date box below</option>
+                                        </select>
+                                        <div className="btnFollowUp time btnPad">
+                                            <input
+                                                type="datetime-local"
+                                                className="timeGui"
+                                                min={localDateTime()}
+                                                max={localDateTime(new Date(new Date().setMonth(new Date().getMonth() + 1)))}
+                                                value={customExpiry}
+                                                onChange={(event) => onCustomExpiryChange(event.target.value)}
+                                            />
+                                        </div>
+                                    </div>
+                                </>}
+                                <div className="controls before" title="See more options">
+                                    <div className="backControl" onClick={() => setShowMore(!showMore)} role="button" tabIndex={0}>
+                                        {showMore && <ArrowLeftIcon style={{ width: '15px', transform: 'translateY(-1px)' }} />}
+                                        {showMore && <div className="controlText">Back</div>}
+                                        {!showMore && <div className="controlText">More</div>}
+                                        {!showMore && <ArrowLeftIcon style={{ width: '15px', transform: 'rotate(180deg)' }} />}
+                                    </div>
                                 </div>
-                            </div>
                         </div>
-                        <div className={clsx('submit', { disabled: !hasUpload || uploading })} onClick={() => upload()} onKeyDown={onSubmitKey} role="button" tabIndex={0} aria-disabled={!hasUpload || uploading}>
+
+                        <div className={clsx('submit', /* { disabled: !hasUpload || uploading } */)} onClick={() => upload()} onKeyDown={onSubmitKey} role="button" tabIndex={0} aria-disabled={!hasUpload || uploading}>
                             <div className="in">
                                 <UploadCloudIcon className="upload" />
                                 <span>{uploading ? 'Uploading...' : 'Upload'}</span>

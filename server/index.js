@@ -403,6 +403,7 @@ app.post('/api/files', uploadLimiter, (req, res) => {
       if (Buffer.byteLength(password) > 72) return err(res, 400, 'PasswordTooLong', 'Password must be at most 72 bytes')
       const passHash = password ? await bcrypt.hash(password, 10) : undefined
       const authkey = (req.body.authkey && String(req.body.authkey).trim()) || crypto.randomBytes(9).toString('base64url')
+      const link = `${publicOrigin(req)}/files/${filename}`
 
       const meta = {
         filename,
@@ -423,7 +424,12 @@ app.post('/api/files', uploadLimiter, (req, res) => {
       }
 
       await writeUpload(filename, meta, body)
-      ok(res, { link: `${publicOrigin(req)}/files/${filename}`, authkey })
+      
+      ok(res, {
+        link:
+        authkey,
+        deletion: `To delete, make DELETE request to ${ link } with authkey header. ${publicOrigin(req) + '/api#delete' }`
+      })
     } catch (error) {
       console.error('POST /api/files', error)
       return err(res)

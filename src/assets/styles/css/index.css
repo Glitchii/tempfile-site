@@ -180,9 +180,9 @@ h2 {
 	font-weight: bold;
 }
 
-.colr {
+/* .colr {
     color: #396fc5;
-}
+} */
 
 .URL {
     text-decoration: none;
@@ -201,16 +201,16 @@ h2 {
     display: block;
 }
 
-.URL::after {
+/* .URL::after {
     border-color: #27303638;
 }
 
 .URL:hover::after {
     border-color: #396fc586;
-}
+} */
 
 a:not(.URL):hover {
-    color: #396fc5;
+    /* color: #396fc5; */
     transition: .25s ease;
 }
 
@@ -369,13 +369,13 @@ a:not(.URL):hover {
     /* animation: fadeIn .5s ease-in; */
 }
 
-form > :last-of-type .inner:not(.others) .btn.other,
+/* form > :last-of-type .inner:not(.others) .btn.other,
 form > :last-of-type .inner:not(.others) .btn.other+.sep,
 form > :last-of-type .inner.others .btn:not(.other),
 form > :last-of-type .inner.others .btn:not(.other)+.sep,
 form > :last-of-type .inner.others>.controls {
     display: none;
-}
+} */
 
 @keyframes backControl {
     from {
@@ -388,7 +388,7 @@ form > :last-of-type .inner.others>.controls {
     margin-top: 10px;
 }
 
-.btnsInner .inner.others .backControl {
+/* .btnsInner .inner.others .backControl {
     animation: backControl .7s ease;
     transform: translateX(-37px);
     margin-top: 20px;
@@ -396,7 +396,7 @@ form > :last-of-type .inner.others>.controls {
 
 .btnsInner .inner.others .backControl>svg {
     transform: translateY(-1px);
-}
+} */
 
 /* .btnsInner .inner:not(.others) .backControl {
     left: 50%;
@@ -417,19 +417,21 @@ form > :last-of-type .inner.others>.controls {
     cursor: pointer;
     outline: none;
     place-content: center;
+    gap: 6px;
+    transition: all .5s ease;
 }
 
 .backControl .controlText {
-    margin-left: 6px;
+    /* margin-left: 6px; */
     font-weight: bold;
 }
 
-.btnsInner .inner:not(.others) .backControl .controlText {
+/* .btnsInner .inner:not(.others) .backControl .controlText {
     margin: 0 6px 0 0;
-}
+} */
 
 .inputOptions {
-    width: 80%;
+    /* width: 80%; */
     grid-column: 1/3;
     border-radius: 5px;
     margin-left: 55px;
@@ -1162,14 +1164,14 @@ body.text :is(.drag .partInner .img, .uploadBtn), body:not(.text) textarea {
     display: none;
 }
 
-body.text .drag .partInner .desc::after {
+/* body.text .drag .partInner .desc::after {
     content: "Write text to upload in the box above";
     transition: 1s ease;
-}
+} */
 
-body.text .drag .partInner h2::after {
+/* body.text .drag .partInner h2::after {
     content: "Write text to upload";
-}
+} */
 
 body.text .drag .partInner {
     padding-top: 0;
@@ -1451,8 +1453,7 @@ body.text .partInner .uploadBtn {
 .delete-file {
     display: grid;
     grid-template-columns: minmax(180px, 320px) minmax(280px, 640px);
-    justify-content: center;
-    align-items: center;
+    place-content: center;
     gap: 50px;
 }
 

@@ -7,11 +7,11 @@ export default function Api() {
                 <h1>TempFile API</h1>
                 <p>Upload a file or text with a required expiry. Expiry can be relative, like <code>5m</code>, <code>2h</code>, <code>1d</code>, or an ISO/date-time string up to 31 days ahead.</p>
 
-                <h2>Upload</h2>
+                <h2 id="upload">Upload</h2>
                 <pre><code>{`curl -F datetime=5m -F file=@./image.png ${origin}/api/files`}</code></pre>
                 <pre><code>{`curl -F datetime=1h -F name=note -F text='hello world' ${origin}/api/files`}</code></pre>
 
-                <h2>Options</h2>
+                <h2 id="upload-options">Options</h2>
                 <table>
                     <tbody>
                         <tr><th>Field</th><th>Meaning</th></tr>
@@ -24,11 +24,11 @@ export default function Api() {
                     </tbody>
                 </table>
 
-                <h2>Download</h2>
+                <h2 id="download">Download</h2>
                 <pre><code>{`curl -O ${origin}/api/files/example.png`}</code></pre>
                 <pre><code>{`curl -O ${origin}/api/files/example.png -H "pass: file password"`}</code></pre>
 
-                <h2>Delete</h2>
+                <h2 id="delete">Delete</h2>
                 <pre><code>{`curl -X DELETE ${origin}/api/files/example.png`}</code></pre>
                 <pre><code>{`curl -X DELETE ${origin}/api/files/example.png -H "authkey: your key"`}</code></pre>
             </article>
