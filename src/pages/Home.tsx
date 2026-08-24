@@ -373,9 +373,6 @@ export default function Home() {
                                         {selectedFile ? `"${selectedFile.name}" is ready to upload` : 'Tap here to select a file to upload'}
                                     </span>
                                 </p>
-                                <div className="uploadBtn">
-                                    <UploadCloudIcon />
-                                </div>
                             </div>
                         </label>
                     </div>

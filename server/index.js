@@ -13,7 +13,11 @@ dotenv.config({ quiet: true })
 
 const PORT = Number(process.env.PORT || 3001)
 const app = express()
-app.disable('x-powered-by')
+
+app.use((_req, res, next) => {
+  res.setHeader('X-Powered-By', 'caffeine and poor decisions')
+  next()
+})
 
 const trustProxy = process.env.TRUST_PROXY
 trustProxy && app.set('trust proxy', /^\d+$/.test(trustProxy) ? Number(trustProxy) : trustProxy)
@@ -347,7 +351,7 @@ const normalizeIp = (value) => {
   return mapped && isIP(mapped) === 4 ? mapped : ip
 }
 
-const getClientIp = (req) => normalizeIp(req.ip || req.socket.remoteAddress)
+const getClientIp = (req) => normalizeIp(/* req.headers['cf-connecting-ip'] || */ req.ip)
 
 const publicOrigin = (req) => String(process.env.PUBLIC_ORIGIN || `${req.protocol}://${req.get('host')}`).replace(/\/+$/, '')
 
@@ -487,9 +491,6 @@ const sendUpload = async (req, res, filename, isApi) => {
 
 app.get('/api/files/:name', (req, res) => sendUpload(req, res, normalizeFilename(req.params.name), true))
 
-// TODO: REmove later
-app.get('/api/health', (_req, res) => ok(res, { storage: s3 ? 's3' : 'local' }))
-
 app.get('/api/files/:name/info', async (req, res) => {
   try {
     const filename = normalizeFilename(req.params.name)
@@ -509,6 +510,7 @@ app.get('/api/files/:name/info', async (req, res) => {
     return err(res)
   }
 })
+
 app.post('/api/files/:name/auth', authLimiter, async (req, res) => {
   try {
     const filename = normalizeFilename(req.params.name)
@@ -562,7 +564,17 @@ app.delete('/api/files/:name', async (req, res) => {
 })
 
 app.get('/files/:name', (req, res) => sendUpload(req, res, normalizeFilename(req.params.name), false))
+
 app.get('/contact', (_req, res) => res.redirect(302, 'https://github.com/Glitchii/'))
+
+// MARK: remove later
+app.get('/api/health', (_req, res) => ok(res, { storage: s3 ? 's3' : 'local' }))
+app.get('/debug-ip', (req, res) => res.json({
+  xff: req.headers['x-forwarded-for'],
+  cfip: req.headers['cf-connecting-ip'],
+  socket: req.socket.remoteAddress,
+  reqIp: req.ip,
+}))
 
 const cleanupExpired = async () => {
   try {
