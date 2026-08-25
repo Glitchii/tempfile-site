@@ -33,7 +33,7 @@
     outline: 0;
     font-family: var(--font1);
     color: var(--brand-color);
-    transition: .5s ease;
+    /* transition: .5s ease; */
     text-underline-offset: 7px;
     text-decoration-color: #777a7c62;
     -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
@@ -128,6 +128,11 @@ header nav {
 header nav ul {
     display: flex;
     gap: 15px;
+}
+
+header nav .menu ul {
+    flex-direction: column;
+    gap: 10px;
 }
 
 header, .cont {
@@ -473,6 +478,7 @@ form > :last-of-type .inner.others>.controls {
     opacity: .5;
     grid-column-start: 2;
     transform: translateY(-20px);
+    margin-left: 10px !important;
 }
 
 .qMark>svg path {
@@ -722,13 +728,13 @@ form > :last-of-type {
     }
 }
 
-.notif .content p {
-    user-select: none;
-}
+/* .notif .content p {
+    color: var(--brand-color, #273036);
+} */
 
 .notif .content {
     border-radius: 4px;
-    text-align: center;
+    place-content: center;
     display: flex;
     padding: 5px 15px;
     box-shadow: 0px 0px 20px 5px rgba(0, 0, 0, 0.055);
@@ -741,6 +747,7 @@ form > :last-of-type {
     margin: 0 10px;
     box-shadow: 0px 0px 20px 5px rgb(78 79 80 / 6%);
     pointer-events: all;
+    gap: 7px;
 }
 
 @media screen and (max-width: 360px) {
@@ -792,14 +799,14 @@ form > :last-of-type {
     }
 }
 
-.notifCloseBtn {
+/* .notifCloseBtn {
     margin: auto 10px;
     padding: 0 5px;
     margin-right: 0;
     border-radius: 5px;
     cursor: pointer;
     animation: notifCloseBtnAn .5s ease;
-}
+} */
 
 .notifCloseBtn svg {
     width: 15px;
@@ -811,21 +818,33 @@ form > :last-of-type {
     pointer-events: none;
 }
 
-.notif .content svg.leftIcon {
-    width: 20px;
-    height: 20px;
-    display: flex;
-    text-align: center;
+.notif .content svg {
+    width: 17px;
+    height: 17px;
+    /* display: flex;
+    text-align: center; */
     position: relative;
     top: 3px;
 }
 
+.notif .content svg:last-of-type {
+    width: 18px;
+    height: 18px;
+    margin-left: 5px;
+    cursor: pointer;
+}
+
+.notif .content svg * {
+    color: white;
+}
+
 .notif .success {
-    background: linear-gradient(to right, #61d3c3, #74e1a5);
+    background: linear-gradient(195deg, #173428, #1d413c);
 }
 
 .notif .normal {
-    background: linear-gradient(to left, #9c7ca6, #7d7699);
+    background: linear-gradient(155deg, #2d2330, #363443);
+    background: #42383c;
 }
 
 .notif .normal img {
@@ -833,9 +852,9 @@ form > :last-of-type {
 }
 
 .notif .content p {
-    margin-left: 6px;
+    /* margin-left: 6px;
     margin-top: 2px;
-    font-family: var(--font1);
+    font-family: var(--font1); */
     color: #fff;
 }
 
@@ -934,14 +953,14 @@ form > :last-of-type {
     color: white;
 }
 
-.bottomBtns a {
+.bottomBtns {
     padding-left: 5px;
-    position: relative;
+    /* position: relative; */
 }
 
 .bottomBtns a svg {
-    height: 25px;
-    width: 25px;
+    height: 20px;
+    width: 20px;
     position: relative;
     margin-top: 20px;
 }
@@ -1402,6 +1421,10 @@ body.text .partInner .uploadBtn {
     border-radius: 5px;
     border: 1px solid #b7bdbeba;
     background: linear-gradient(45deg, transparent, #f2f2f27a, transparent);
+}
+
+.delete-search-page .route-input {
+    max-width: revert;
 }
 
 .route-button {

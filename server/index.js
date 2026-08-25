@@ -426,7 +426,7 @@ app.post('/api/files', uploadLimiter, (req, res) => {
       await writeUpload(filename, meta, body)
       
       ok(res, {
-        link:
+        link,
         authkey,
         deletion: `To delete, make DELETE request to ${ link } with authkey header. ${publicOrigin(req) + '/api#delete' }`
       })
@@ -595,9 +595,10 @@ const cleanupExpired = async () => {
   }
 }
 
-// await fs.access(path.join(distDir, 'index.html'))
 app.use(express.static(distDir))
-app.get(/.*/, (_req, res) => res.sendFile(path.join(distDir, 'index.html')))
+app.get(/.*/, (_req, res) => {
+  return res.sendFile(path.join(distDir, 'index.html'))
+})
 
 cleanupExpired()
 setInterval(cleanupExpired, 60_000).unref()

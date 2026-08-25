@@ -93,7 +93,7 @@ export default function Home() {
     const [textMode, setTextMode] = useState(false)
     const [text, setText] = useState('')
     const [showMore, setShowMore] = useState(false)
-    const [showAuthHelp, setShowAuthHelp] = useState(false)
+    const [showAuthHelp, setShowAuthHelp] = useState(true)
     const [ipBlacklist, setIpBlacklist] = useState([''])
     const [ipWhitelist, setIpWhitelist] = useState([''])
 
@@ -393,7 +393,7 @@ export default function Home() {
                                             </QuestionMarkIcon>
                                         </div>
                                     </div>
-                                    <p className="qMarkDesc">By default, you can delete a file if it was uploaded from the same IP address you're uploading from. This key allows you to delete the file from a different IP address. This is especially useful with <a href="/api" className="URL">API requests</a>.</p>
+                                    <p className="qMarkDesc">You can delete a file if it was uploaded from your IP address. This key allows you to delete the file from a different IP address. This is also useful with <a href="/api" className="URL">API requests</a>. Change to something simpler if you like</p>
                                     <div className="inputOptions">
                                         <input className="input btnPad" name="authkey" type="text" placeholder="Auth Key" defaultValue={defaultAuthKey} autoComplete="off" />
                                         {/* <div className="controls" title="Back to main options">
@@ -436,25 +436,25 @@ export default function Home() {
                                         </div>
                                         <p className="input">Auto delete in</p>
                                     </div>
-                                    <div className="btn datetime-picker">
-                                        <select autoComplete="off" className="select btnUnder btnPad time" value={expiry} onChange={(event) => onExpiryChange(event.target.value)}>
-                                            {timeOptions.map(([value, label]) => (
-                                                <option value={value} key={value}>{label}</option>
-                                            ))}
-                                            <option value="" disabled>For custom time or date, update the date box below</option>
-                                        </select>
-                                        <div className="btnFollowUp time btnPad">
-                                            <input
-                                                type="datetime-local"
-                                                className="timeGui"
-                                                min={localDateTime()}
-                                                max={localDateTime(new Date(new Date().setMonth(new Date().getMonth() + 1)))}
-                                                value={customExpiry}
-                                                onChange={(event) => onCustomExpiryChange(event.target.value)}
-                                            />
-                                        </div>
-                                    </div>
                                 </>}
+                                <div className="btn datetime-picker" style={showMore ? { visibility: 'hidden', height: 0 } : {}}>
+                                    <select autoComplete="off" className="select btnUnder btnPad time" value={expiry} onChange={(event) => onExpiryChange(event.target.value)}>
+                                        {timeOptions.map(([value, label]) => (
+                                            <option value={value} key={value}>{label}</option>
+                                        ))}
+                                        <option value="" disabled>For custom time or date, update the date box below</option>
+                                    </select>
+                                    <div className="btnFollowUp time btnPad">
+                                        <input
+                                            type="datetime-local"
+                                            className="timeGui"
+                                            min={localDateTime()}
+                                            max={localDateTime(new Date(new Date().setMonth(new Date().getMonth() + 1)))}
+                                            value={customExpiry}
+                                            onChange={(event) => onCustomExpiryChange(event.target.value)}
+                                        />
+                                    </div>
+                                </div>
                                 <div className="controls before" title="See more options">
                                     <div className="backControl" onClick={() => setShowMore(!showMore)} role="button" tabIndex={0}>
                                         {showMore && <ArrowLeftIcon style={{ width: '15px', transform: 'translateY(-1px)' }} />}
