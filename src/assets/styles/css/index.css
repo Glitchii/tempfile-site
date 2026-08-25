@@ -1,3 +1,6 @@
+@import "tailwindcss";
+
+/* include.css */
 @font-face {
   font-family: "Ubuntu";
   font-style: normal;
