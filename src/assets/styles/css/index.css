@@ -201,9 +201,11 @@ h2 {
     position: absolute;
     left: 0;
     bottom: 0;
-    border: 1px solid;
+    /* border: 1px solid;
     transition: .5s ease;
-    display: block;
+    display: block; */
+    background: #00000030;
+    height: 2px;
 }
 
 /* .URL::after {
