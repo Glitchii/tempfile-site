@@ -40,6 +40,18 @@ const timeOptions = [
 
 const maxFileSize = 2 * 1024 * 1024 * 1024
 
+const createAuthKey = () => {
+    const letters = ['bcdfghjkmnprstvw', 'aeiouy'] as const
+    const random = crypto.getRandomValues(new Uint8Array(18))
+
+    return Array.from({ length: 3 }, (_, word) =>
+        Array.from({ length: 6 }, (_, character) => {
+            const choices = letters[character % 2]
+            return choices[random[word * 6 + character] % choices.length]
+        }).join(''),
+    ).join('.')
+}
+
 const dateFromValue = (value: string) => {
     const trimmed = value.trim()
     if (!trimmed) return null
@@ -96,8 +108,8 @@ export default function Home() {
     const [showAuthHelp, setShowAuthHelp] = useState(false)
     const [ipBlacklist, setIpBlacklist] = useState([''])
     const [ipWhitelist, setIpWhitelist] = useState([''])
+    const [authKey, setAuthKey] = useState(createAuthKey)
 
-    const defaultAuthKey = useMemo(() => crypto.getRandomValues(new Uint32Array(3)).join('.'), [])
     const hasUpload = textMode ? text.trim().length > 0 : Boolean(selectedFile)
     const previewUrl = useMemo(
         () => selectedFile?.type.startsWith('image/') ? URL.createObjectURL(selectedFile) : null,
@@ -197,7 +209,8 @@ export default function Home() {
     const setIp = (type: 'blacklist' | 'whitelist', index: number, value: string) => {
         const values = [...(type === 'blacklist' ? ipBlacklist : ipWhitelist)]
         values[index] = value
-        ;(type === 'blacklist' ? setIpBlacklist : setIpWhitelist)(values)
+        const setValues = type === 'blacklist' ? setIpBlacklist : setIpWhitelist
+        setValues(values)
     }
 
     const onExpiryChange = (value: string) => {
@@ -250,8 +263,12 @@ export default function Home() {
         const dateError = expiryError()
         if (dateError) return showNotification(dateError)
 
+        const normalizedAuthKey = authKey.trim()
+        if (!normalizedAuthKey) return showNotification('Please enter an authentication key')
+
         const fd = new FormData(formRef.current)
         fd.set('datetime', activeExpiry)
+        fd.set('authkey', normalizedAuthKey)
         fd.delete('ipblacklist')
         fd.delete('ipwhitelist')
 
@@ -334,7 +351,7 @@ export default function Home() {
             <main className={clsx({ 'file-selected': hasUpload })}>
                 <form ref={formRef} action="/api/files" method="post" encType="multipart/form-data" onSubmit={(event) => { event.preventDefault(); upload() }}>
                     <input ref={fileInputRef} type="file" id="upload" name="file" autoComplete="off" onChange={onFileChange} />
-                    <input type="submit" className="submitInput" style={{ position: 'absolute', display: 'none' }} />
+                    <input type="submit" className="submitInput" />
                     <div className="dragParent">
                         <label
                             className={clsx('part drag', { hasFile: selectedFile, notImg: selectedFile && !previewUrl })}
@@ -346,16 +363,16 @@ export default function Home() {
                         >
                             <div className="partInner">
                                 <div className="img mainImg upload-icon-container">
-                                    <UploadIcon style={{ width: '250px', height: '100%' }} />
+                                    <UploadIcon />
                                 </div>
-                                <img className="img otherImg" src={previewUrl || ''} alt={selectedFile?.name || ''} style={{ width: '250px', height: '100%' }} />
+                                <img className="img otherImg" src={previewUrl || ''} alt={selectedFile?.name || ''} />
                                 <div className="img fileIcon">
                                     <p>{fileLabel}</p>
-                                    <FileIcon style={{ fill: '#273036' }} />
+                                    <FileIcon />
                                 </div>
                                 <h2>{dragging ? 'Drop here to add file' : selectedFile ? 'Ready to upload' : textMode ? 'Write text to upload' : 'Click here to add file'}</h2>
                                 <textarea ref={textareaRef} name="text" spellCheck={false} value={text} onChange={(event) => setText(event.target.value)} placeholder='Type or paste text here to upload as a file' />
-                                  <p className="desc" style={textMode ? { opacity: '0', height: 0, transition: '.2s ease-out' } : {}}>
+                                <p className="desc">
                                     {selectedFile ? (
                                         <span>
                                             "<b>{selectedFile.name}</b>" is ready to upload.
@@ -393,15 +410,9 @@ export default function Home() {
                                             </QuestionMarkIcon>
                                         </div>
                                     </div>
-                                    <p className="qMarkDesc">You can delete a file if it was uploaded from your IP address. This key allows you to delete the file even from a different one. This is also useful with <a href="/api" className="URL">API requests</a>. Change to something simpler if you like</p>
+                                    <p className="qMarkDesc">You can delete a file if it was uploaded from your IP address. This key allows you to delete the file even from a different one. This is also useful with <Link to="/api" className="URL">API requests</Link>. Change to something simpler if you like</p>
                                     <div className="inputOptions">
-                                        <input className="input btnPad" name="authkey" type="text" placeholder="Auth Key" defaultValue={defaultAuthKey} autoComplete="off" />
-                                        {/* <div className="controls" title="Back to main options">
-                                            <div className="backControl" onClick={() => setShowMore(false)} role="button" tabIndex={0}>
-                                                <ArrowLeftIcon style={{ width: '15px' }} />
-                                                <div className="controlText">Back</div>
-                                            </div>
-                                        </div> */}
+                                        <input className="input btnPad" name="authkey" type="text" placeholder="Auth Key" value={authKey} onChange={(event) => setAuthKey(event.target.value)} maxLength={80} autoComplete="off" />
                                     </div>
                                 </div> :
                                 <>
@@ -437,7 +448,8 @@ export default function Home() {
                                         <p className="input">Auto delete in</p>
                                     </div>
                                 </>}
-                                <div className="btn datetime-picker" style={showMore ? { visibility: 'hidden', height: 0 } : {}}>
+                            {!showMore && (
+                                <div className="btn datetime-picker">
                                     <select autoComplete="off" className="select btnUnder btnPad time" value={expiry} onChange={(event) => onExpiryChange(event.target.value)}>
                                         {timeOptions.map(([value, label]) => (
                                             <option value={value} key={value}>{label}</option>
@@ -455,17 +467,18 @@ export default function Home() {
                                         />
                                     </div>
                                 </div>
-                                <div className="controls before" title="See more options">
-                                    <div className="backControl" onClick={() => setShowMore(!showMore)} role="button" tabIndex={0}>
-                                        {showMore && <ArrowLeftIcon style={{ width: '15px', transform: 'translateY(-1px)' }} />}
-                                        {showMore && <div className="controlText">Back</div>}
-                                        {!showMore && <div className="controlText">More</div>}
-                                        {!showMore && <ArrowLeftIcon style={{ width: '15px', transform: 'rotate(180deg)' }} />}
-                                    </div>
+                            )}
+                            <div className="controls before" title="See more options">
+                                <div className="backControl" onClick={() => setShowMore(!showMore)} role="button" tabIndex={0}>
+                                    {showMore && <ArrowLeftIcon style={{ width: '15px', transform: 'translateY(-1px)' }} />}
+                                    {showMore && <div className="controlText">Back</div>}
+                                    {!showMore && <div className="controlText">More</div>}
+                                    {!showMore && <ArrowLeftIcon style={{ width: '15px', transform: 'rotate(180deg)' }} />}
                                 </div>
+                            </div>
                         </div>
 
-                        <div className={clsx('submit', /* { disabled: !hasUpload || uploading } */)} onClick={() => upload()} onKeyDown={onSubmitKey} role="button" tabIndex={0} aria-disabled={!hasUpload || uploading}>
+                        <div className="submit" onClick={() => upload()} onKeyDown={onSubmitKey} role="button" tabIndex={0} aria-disabled={!hasUpload || uploading}>
                             <div className="in">
                                 <UploadCloudIcon className="upload" />
                                 <span>{uploading ? 'Uploading...' : 'Upload'}</span>

@@ -1,23 +1,15 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
-import svgr from 'vite-plugin-svgr';
+import svgr from 'vite-plugin-svgr'
 
-// https://vite.dev/config/
 export default defineConfig({
-  plugins: [
-    tailwindcss(),
-    react(),
-    svgr()
-  ],
+  plugins: [tailwindcss(), react(), svgr()],
   server: {
     proxy: {
-      '/api': {
-        target: 'http://localhost:3001',
-      },
-      '/files': {
-        target: 'http://localhost:3001',
-      },
+      '/api/files': { target: 'http://localhost:3001' },
+      '/debug': { target: 'http://localhost:3001' },
+      '/files': { target: 'http://localhost:3001' },
     },
   },
 })

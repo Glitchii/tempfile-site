@@ -14,11 +14,6 @@ dotenv.config({ quiet: true })
 const PORT = Number(process.env.PORT || 3001)
 const app = express()
 
-app.use((_req, res, next) => {
-  res.setHeader('X-Powered-By', 'caffeine and poor decisions')
-  next()
-})
-
 const trustProxy = process.env.TRUST_PROXY
 trustProxy && app.set('trust proxy', /^\d+$/.test(trustProxy) ? Number(trustProxy) : trustProxy)
 
@@ -32,18 +27,17 @@ const authDurationMs = 15 * 60_000
 const authSecret = process.env.AUTH_SECRET || crypto.randomBytes(32).toString('hex')
 
 const bucket = process.env.AWS_BUCKET
-const s3 = bucket
-  ? new S3Client({
-      region: process.env.AWS_REGION || 'us-east-1',
-      forcePathStyle: process.env.AWS_FORCE_PATH_STYLE === 'true',
-      ...(process.env.AWS_ENDPOINT_URL ? { endpoint: process.env.AWS_ENDPOINT_URL } : {}),
-    })
-  : null
+const s3 = bucket && new S3Client({
+  region: process.env.AWS_REGION || 'us-east-1',
+  forcePathStyle: process.env.AWS_FORCE_PATH_STYLE === 'true',
+  ...(process.env.AWS_ENDPOINT_URL ? { endpoint: process.env.AWS_ENDPOINT_URL } : {}),
+})
 
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: maxFileSize } })
 
 app.use(express.json())
 app.use(express.urlencoded({ extended: false }))
+app.use((_req, res, next) => next(res.setHeader('X-Powered-By', 'coffee and addiction') && null))
 
 const ensureDirs = async () => {
   await fs.mkdir(filesDir, { recursive: true })
@@ -351,7 +345,7 @@ const normalizeIp = (value) => {
   return mapped && isIP(mapped) === 4 ? mapped : ip
 }
 
-const getClientIp = (req) => normalizeIp(/* req.headers['cf-connecting-ip'] || */ req.ip)
+const getClientIp = (req) => normalizeIp(req.ip)
 
 const publicOrigin = (req) => String(process.env.PUBLIC_ORIGIN || `${req.protocol}://${req.get('host')}`).replace(/\/+$/, '')
 
@@ -370,7 +364,7 @@ const publicMeta = (meta) => ({
 app.post('/api/files', uploadLimiter, (req, res) => {
   upload.single('file')(req, res, async (uploadError) => {
     try {
-      const uploadInfo = process.env.UPLOAD_INFO || process.env.uploadInfo
+      const uploadInfo = process.env.UPLOAD_INFO
       if (uploadInfo) return err(res, 400, 'UploadDisabled', uploadInfo)
       if (uploadError?.code === 'LIMIT_FILE_SIZE') return err(res, 400, 'FileTooLarge', 'File is too large.')
       if (uploadError) return err(res, 400, 'UploadError', 'There was an error while processing the file')
@@ -402,7 +396,9 @@ app.post('/api/files', uploadLimiter, (req, res) => {
       const password = typeof req.body.pass === 'string' ? req.body.pass : ''
       if (Buffer.byteLength(password) > 72) return err(res, 400, 'PasswordTooLong', 'Password must be at most 72 bytes')
       const passHash = password ? await bcrypt.hash(password, 10) : undefined
-      const authkey = (req.body.authkey && String(req.body.authkey).trim()) || crypto.randomBytes(9).toString('base64url')
+      const suppliedAuthKey = typeof req.body.authkey === 'string' ? req.body.authkey.trim() : ''
+      if (Buffer.byteLength(suppliedAuthKey) > 128) return err(res, 400, 'AuthKeyTooLong', 'Authentication key must be at most 128 bytes')
+      const authkey = suppliedAuthKey || crypto.randomBytes(9).toString('base64url')
       const link = `${publicOrigin(req)}/files/${filename}`
 
       const meta = {
@@ -414,9 +410,6 @@ app.post('/api/files', uploadLimiter, (req, res) => {
         datetime: chosenDate.toISOString(),
         userIP: getClientIp(req),
         authkey,
-        hex: crypto.createHash('md5').update(body).digest('hex'),
-        userAgent: req.headers['user-agent'],
-        ...(text && !req.file ? { text: true } : {}),
         ...(passHash ? { pass: passHash } : {}),
         ...(typeof limit === 'number' ? { limit: Math.trunc(limit) } : {}),
         ...(ipblacklist.length ? { ipblacklist } : {}),
@@ -424,11 +417,11 @@ app.post('/api/files', uploadLimiter, (req, res) => {
       }
 
       await writeUpload(filename, meta, body)
-      
+
       ok(res, {
         link,
         authkey,
-        deletion: `To delete, make DELETE request to ${ link } with authkey header. ${publicOrigin(req) + '/api#delete' }`
+        deletion: `To delete, make a DELETE request to ${link} with an authkey header. ${publicOrigin(req)}/api#delete`,
       })
     } catch (error) {
       console.error('POST /api/files', error)
@@ -574,8 +567,7 @@ app.get('/files/:name', (req, res) => sendUpload(req, res, normalizeFilename(req
 app.get('/contact', (_req, res) => res.redirect(302, 'https://github.com/Glitchii/'))
 
 // MARK: remove later
-app.get('/api/health', (_req, res) => ok(res, { storage: s3 ? 's3' : 'local' }))
-app.get('/debug-ip', (req, res) => res.json({
+app.get('/debug', (req, res) => res.json({
   xff: req.headers['x-forwarded-for'],
   cfip: req.headers['cf-connecting-ip'],
   socket: req.socket.remoteAddress,
@@ -604,9 +596,9 @@ cleanupExpired()
 setInterval(cleanupExpired, 60_000).unref()
 
 if (process.env.NODE_ENV === 'production') {
-  process.env.AUTH_SECRET || console.warn('AUTH_SECRET is not set for browser auth cookies to work')
-  bucket || console.warn('AWS_BUCKET is not set for AWS uploads,  so using local')
-  process.env.PUBLIC_ORIGIN || console.warn('PUBLIC_ORIGIN is not set sogenerated links depend on proxy headers')
+  process.env.AUTH_SECRET || console.warn('AUTH_SECRET is not set; browser auth cookies will reset after each restart')
+  bucket || console.warn('AWS_BUCKET is not set; uploads are using local storage')
+  process.env.PUBLIC_ORIGIN || console.warn('PUBLIC_ORIGIN is not set; generated links depend on proxy headers')
 }
 
 app.listen(PORT, () => {

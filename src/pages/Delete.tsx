@@ -112,7 +112,7 @@ export default function Delete() {
             <section className="route-page delete-page delete-search-page">
                 {notification && <Notification key={notification.id} text={notification.text} success={notification.success} />}
                 <div className="delete-search">
-                    <h1>Delete a file</h1>
+                    <h2>Delete a file</h2>
                     <input className="route-input" value={search} onChange={(event) => setSearch(event.target.value)} onKeyDown={(event) => event.key === 'Enter' && submitSearch()} placeholder="Enter name or URL" autoComplete="off" />
                     <button className="route-button" onClick={submitSearch}>Search</button>
                 </div>
