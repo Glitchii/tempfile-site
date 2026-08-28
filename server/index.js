@@ -119,7 +119,9 @@ const setBrowserAuth = (req, res, filename) => {
   res.setHeader('Set-Cookie', `${authCookie}=${payload}.${signAuthPayload(payload)}; Max-Age=${authDurationMs / 1000}; Path=/files/${encodeURIComponent(filename)}; HttpOnly; SameSite=Lax${secure}`)
 }
 
-const browserError = (res, status) => res.redirect(302, `/error/${status}`)
+const browserError = (res, status) => {
+  res.redirect(302, `/error/${status}`)
+}
 
 const metaKey = (filename) => `meta/${filename}.json`
 const fileKey = (filename) => `files/${filename}`
@@ -136,7 +138,9 @@ const existsLocal = async (p) => {
   }
 }
 
-const isMissingS3Object = (error) => error?.name === 'NotFound' || error?.name === 'NoSuchKey'
+const isMissingS3Object = (error) => {
+  return error?.name === 'NotFound' || error?.name === 'NoSuchKey'
+}
 
 const existsS3 = async (Key) => {
   if (!s3 || !bucket) return false
@@ -200,7 +204,9 @@ const readUpload = async (filename) => {
 }
 
 const readMeta = async (filename) => {
-  if (s3 && bucket) return (await getS3Json(metaKey(filename))) || (await getS3Json(legacyKey(filename)))
+  if (s3 && bucket)
+    return (await getS3Json(metaKey(filename))) || (await getS3Json(legacyKey(filename)))
+
   const mp = metaPathFor(filename)
   return (await existsLocal(mp)) ? JSON.parse(await fs.readFile(mp, 'utf8')) : null
 }
@@ -463,9 +469,8 @@ const sendUpload = async (req, res, filename) => {
 
     if (meta.pass && !hasBrowserAuth(req, filename)) {
       const supplied = req.headers.pass
-      if (typeof supplied !== 'string' || !(await bcrypt.compare(supplied, meta.pass))) {
+      if (typeof supplied !== 'string' || !(await bcrypt.compare(supplied, meta.pass)))
         return res.redirect(302, `/auth/${encodeURIComponent(filename)}`)
-      }
     }
 
     res.setHeader('Cache-Control', 'private, no-store')
@@ -484,13 +489,15 @@ const sendUpload = async (req, res, filename) => {
 
 app.get('/api/files/:name/info', async (req, res) => {
   try {
-    const filename = normalizeFilename(req.params.name)
-    if (!filename) return err(res, 400, 'InvalidFilename', 'File name is invalid')
-    const meta = await readMeta(filename)
-    if (!meta) return err(res, 404, 'NotFound', 'File not found')
+    let filename, meta, exp;
 
-    const exp = new Date(meta.datetime).getTime()
-    if (!Number.isFinite(exp) || Date.now() > exp) {
+    if (!(filename = normalizeFilename(req.params.name)))
+      return err(res, 400, 'InvalidFilename', 'File name is invalid')
+
+    if (!(meta = await readMeta(filename)))
+      return err(res, 404, 'NotFound', 'File not found')
+
+    if (!Number.isFinite(exp = new Date(meta.datetime).getTime()) || Date.now() > exp) {
       await removeUpload(filename)
       return err(res, 404, 'NotFound', 'File not found')
     }
@@ -504,25 +511,30 @@ app.get('/api/files/:name/info', async (req, res) => {
 
 app.post('/api/files/:name/auth', authLimiter, async (req, res) => {
   try {
-    const filename = normalizeFilename(req.params.name)
-    if (!filename) return err(res, 400, 'InvalidFilename', 'File name is invalid')
+    let filename, meta, exp, password;
 
-    const meta = await readMeta(filename)
-    if (!meta) return err(res, 404, 'NotFound', 'File not found')
+    if (!(filename = normalizeFilename(req.params.name)))
+      return err(res, 400, 'InvalidFilename', 'File name is invalid')
 
-    const exp = new Date(meta.datetime).getTime()
-    if (!Number.isFinite(exp) || Date.now() > exp) {
+    if (!(meta = await readMeta(filename)))
+      return err(res, 404, 'NotFound', 'File not found')
+
+    if (!Number.isFinite(exp = new Date(meta.datetime).getTime()) || Date.now() > exp) {
       await removeUpload(filename)
       return err(res, 404, 'NotFound', 'File not found')
     }
-    if (!canAccessByIp(getClientIp(req), meta)) return err(res, 403, 'Forbidden', 'You are not allowed to access this file.')
-    if (!meta.pass) return err(res, 409, 'PasswordNotRequired', 'This file is not password protected')
 
-    const password = typeof req.body?.password === 'string' ? req.body.password : ''
-    if (!password) return err(res, 400, 'MissingPassword', 'Enter the file password')
-    if (Buffer.byteLength(password) > 72 || !(await bcrypt.compare(password, meta.pass))) {
+    if (!canAccessByIp(getClientIp(req), meta))
+      return err(res, 403, 'Forbidden', 'You are not allowed to access this file.')
+
+    if (!meta.pass)
+      return err(res, 409, 'PasswordNotRequired', 'This file is not password protected')
+
+    if (!(password = typeof req.body?.password === 'string' ? req.body.password : ''))
+      return err(res, 400, 'MissingPassword', 'Enter the file password')
+
+    if (Buffer.byteLength(password) > 72 || !(await bcrypt.compare(password, meta.pass)))
       return err(res, 401, 'WrongPass', 'Incorrect password')
-    }
 
     setBrowserAuth(req, res, filename)
     res.setHeader('Cache-Control', 'no-store')
@@ -535,15 +547,20 @@ app.post('/api/files/:name/auth', authLimiter, async (req, res) => {
 
 app.delete('/api/files/:name', async (req, res) => {
   try {
-    const filename = normalizeFilename(req.params.name)
-    if (!filename) return err(res, 400, 'InvalidFilename', 'File name is invalid')
-    const meta = await readMeta(filename)
-    if (!meta) return err(res, 404, 'NotFound', 'File not found')
+    let filename, meta, key = req.headers.authkey;
+
+    if (!(filename = normalizeFilename(req.params.name)))
+      return err(res, 400, 'InvalidFilename', 'File name is invalid')
+
+    if (!(meta = await readMeta(filename)))
+      return err(res, 404, 'NotFound', 'File not found')
 
     if (getClientIp(req) !== normalizeIp(meta.userIP)) {
-      const key = req.headers.authkey
-      if (!key || typeof key !== 'string') return err(res, 400, 'MissingAuthKey', "An 'authkey' header with the auth key is required")
-      if (key !== meta.authkey) return err(res, 400, 'BadAuthKey', 'Incorrect auth key received')
+      if (!key || typeof key !== 'string')
+        return err(res, 400, 'MissingAuthKey', "An 'authkey' header with the auth key is required")
+
+      if (key !== meta.authkey)
+        return err(res, 400, 'BadAuthKey', 'Incorrect auth key received')
     }
 
     await removeUpload(filename)

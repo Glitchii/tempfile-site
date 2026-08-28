@@ -1533,7 +1533,6 @@ body.text .drag {
     display: grid;
     width: 190px;
     height: 190px;
-    border-bottom: 3px solid #74adff;
     place-items: center;
 
     svg {
@@ -1581,8 +1580,8 @@ body.text .drag {
     transition: border-color .2s ease, box-shadow .2s ease;
 
     &:focus-within {
-      border-color: #74adff;
-      box-shadow: 0 0 0 3px rgb(116 173 255 / 15%);
+      border-color: #774a95;
+      box-shadow: 0 0 0 3px rgb(239, 219, 251);
     }
 
     svg {
@@ -1618,6 +1617,10 @@ body.text .drag {
       height: 15px;
       fill: currentColor;
       transform: rotate(180deg);
+
+      * {
+        color: #fff
+      }
     }
   }
 
