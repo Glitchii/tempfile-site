@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react'
 import type { FormEvent } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
-import ArrowLeftIcon from '../assets/icons/arrow-left.svg?react'
-import PasswordIcon from '../assets/icons/password.svg?react'
+import ArrowLeftIcon from '../assets/vectors/arrow-left.svg?react'
+import PasswordIcon from '../assets/vectors/password.svg?react'
 
 export default function Auth() {
     const { name = '' } = useParams()
@@ -22,7 +22,7 @@ export default function Auth() {
             .then(({ res, json }) => {
                 if (!active) return
                 if (!res.ok || !json?.ok) {
-                    navigate('/error/404?reason=file-not-found', { replace: true })
+                    navigate('/error/404', { replace: true })
                     return
                 }
                 if (!json.file?.hasPassword) window.location.replace(`/files/${encodedName}`)
@@ -54,8 +54,8 @@ export default function Auth() {
             const json = await res.json().catch(() => null)
 
             if (!res.ok || !json?.ok) {
-                if (res.status === 404) return navigate('/error/404?reason=file-not-found', { replace: true })
-                if (res.status === 403) return navigate('/error/403?reason=ip-restricted', { replace: true })
+                if (res.status === 404) return navigate('/error/404', { replace: true })
+                if (res.status === 403) return navigate('/error/403', { replace: true })
                 setMessage(json?.error?.message || 'Could not unlock this file')
                 return
             }

@@ -25,8 +25,8 @@ export default function Api() {
                 </table>
 
                 <h2 id="download">Download</h2>
-                <pre><code>{`curl -O ${origin}/api/files/example.png`}</code></pre>
-                <pre><code>{`curl -O ${origin}/api/files/example.png -H "pass: file password"`}</code></pre>
+                <pre><code>{`curl -O ${origin}/files/example.png`}</code></pre>
+                <pre><code>{`curl -O ${origin}/files/example.png -H "pass: file password"`}</code></pre>
 
                 <h2 id="delete">Delete</h2>
                 <pre><code>{`curl -X DELETE ${origin}/api/files/example.png`}</code></pre>

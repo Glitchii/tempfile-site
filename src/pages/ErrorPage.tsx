@@ -1,46 +1,46 @@
 import { useEffect } from 'react'
-import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
-import ArrowLeftIcon from '../assets/icons/arrow-left.svg?react'
-import FileIcon from '../assets/icons/file-icon.svg?react'
+import type { ComponentType, SVGProps } from 'react'
+import { Link, useParams } from 'react-router-dom'
+import ForbiddenIllustration from '../assets/vectors/forbidden.svg?react'
+import NotFoundIllustration from '../assets/vectors/not-found.svg?react'
+import ServerErrorIllustration from '../assets/vectors/server-error.svg?react'
 
 type ErrorPageProps = {
     status?: number
 }
 
-const errors: Record<number, { title: string; message: string }> = {
+type Illustration = ComponentType<SVGProps<SVGSVGElement>>
+
+const errors: Record<number, { title: string; message: string; image: Illustration }> = {
     403: {
-        title: 'You do not have access',
+        title: 'You have no access.',
         message: 'The uploader restricted who can open this file.',
+        image: ForbiddenIllustration,
     },
     404: {
-        title: 'That file is not here',
-        message: 'It may have expired, reached its download limit, been deleted, or never existed.',
+        title: 'Nothing here.',
+        message: 'This part of the website does not exist. If you expected a file, it probably expired or was deleted by the uploader.',
+        image: NotFoundIllustration,
     },
     429: {
         title: 'Please slow down',
         message: 'Too many requests were made in a short time. Wait a moment and try again.',
+        image: ServerErrorIllustration,
     },
     500: {
-        title: 'Something went wrong',
+        title: "That's an error",
         message: 'The server could not finish that request. Please try again shortly.',
+        image: ServerErrorIllustration,
     },
-}
-
-const reasons: Record<string, string> = {
-    'file-not-found': 'It may have expired, reached its download limit, been deleted, or never existed.',
-    'ip-restricted': 'Your IP address is not allowed by this file\'s access settings.',
-    'server-error': 'The server could not load this file. Please try again shortly.',
 }
 
 export default function ErrorPage({ status }: ErrorPageProps) {
     const { status: routeStatus } = useParams()
-    const [search] = useSearchParams()
-    const navigate = useNavigate()
     const requestedCode = status || Number(routeStatus) || 404
     const code = errors[requestedCode] ? requestedCode : 500
-    const error = errors[code] || errors[500]
-    const message = reasons[search.get('reason') || ''] || error.message
-    
+    const error = errors[code]
+    const Illustration = error.image
+
     useEffect(() => {
         document.title = `${code} - TempFile`
         return () => {
@@ -49,23 +49,15 @@ export default function ErrorPage({ status }: ErrorPageProps) {
     }, [code])
 
     return (
-        <section className="route-page error-page">
-            <div className="error-visual" aria-hidden="true">
-                <span>{code}</span>
-                <FileIcon />
-            </div>
-
-            <div className="error-content">
-                <p className="route-eyebrow">Error {code}</p>
-                <h1>{error.title}</h1>
-                <p>{message}</p>
-                <div className="route-actions">
+        <section className={`route-page error-page error-${code}`}>
+            <Illustration className="error-illustration" aria-hidden="true" />
+            <div className="error-main">
+                <div className="error-content">
+                    <h1>{error.title}</h1>
+                    <p>{error.message}</p>
                     <Link className="route-button" to="/">Home</Link>
-                    <button className="route-button secondary error-back" type="button" onClick={() => navigate(-1)}>
-                        <ArrowLeftIcon aria-hidden="true" />
-                        Go back
-                    </button>
                 </div>
+                <strong className="error-code">{code}</strong>
             </div>
         </section>
     )

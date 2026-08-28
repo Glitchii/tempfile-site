@@ -4,9 +4,9 @@
 
 ## Using the API and responses
 
-You can also upload via the API. All example will be using curl but you can replicate with any HTTP client. The API is available at `/api/files` and `/api/files/:name`.  
+You can also upload via the API. All examples below use curl, but you can replicate them with any HTTP client. The API is available under `/api/files`.
 
-Every API response is JSON unless a file is downloaded. Successful responses contain `"ok": true`, otherwise `"ok": false` and an `error` object.
+Every API response is JSON. Successful responses contain `"ok": true`, otherwise `"ok": false` and an `error` object.
 
 A successful upload resembles:
 
@@ -57,14 +57,14 @@ curl \
 
 ## Download
 
-Browser download URLs use `/files/:name`. API clients can use `/api/files/:name`.
+All browser and API-client downloads use `/files/:name`. Password-protected downloads accept a `pass` header or redirect to the browser authentication page.
 
 ```bash
-curl -O http://localhost:3001/api/files/example.png
-curl -O http://localhost:3001/api/files/example.png -H "pass: file password"
+curl -O http://localhost:3001/files/example.png
+curl -O http://localhost:3001/files/example.png -H "pass: file password"
 ```
 
-Opening a password-protected `/files/:name` URL in a browser redirects to the authentication page. A password is correct, a signed, HTTP-only cookie would be set for that file for ~15 minutes.
+Opening a password-protected `/files/:name` URL without a valid `pass` header redirects to the authentication page. A correct password sets a signed, HTTP-only cookie for that file for about 15 minutes.
 
 Public metadata can be read without downloading the file:
 
@@ -82,4 +82,4 @@ curl -X DELETE http://localhost:3001/api/files/example.png \
   -H "authkey: memorable.deletion.key"
 ```
 
-Auth key is just used for deleting if IP doens't match, it's not the optional download password
+The authentication key is only used for deletion when the uploader's IP does not match. It is separate from the optional download password.

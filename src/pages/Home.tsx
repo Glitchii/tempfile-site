@@ -2,19 +2,24 @@ import clsx from 'clsx'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import type { ChangeEvent, DragEvent, KeyboardEvent } from 'react'
 import { Link } from 'react-router-dom'
-import ArrowLeftIcon from '../assets/icons/arrow-left.svg?react'
-import AuthKeyIcon from '../assets/icons/auth-key.svg?react'
-import DatetimeIcon from '../assets/icons/datetime.svg?react'
-import DownloadLimitIcon from '../assets/icons/download-limit.svg?react'
-import FileIcon from '../assets/icons/file-icon.svg?react'
-import IpBlacklistIcon from '../assets/icons/ip-blacklist.svg?react'
-import IpWhitelistIcon from '../assets/icons/ip-whitelist.svg?react'
-import NameIcon from '../assets/icons/name.svg?react'
-import PasswordIcon from '../assets/icons/password.svg?react'
-import PlusIcon from '../assets/icons/plus.svg?react'
-import QuestionMarkIcon from '../assets/icons/question-mark.svg?react'
-import UploadIcon from '../assets/icons/upload.svg?react'
-import UploadCloudIcon from '../assets/icons/upload-cloud.svg?react'
+import ArrowLeftIcon from '../assets/vectors/arrow-left.svg?react'
+import CloseIcon from '../assets/vectors/close.svg?react'
+import CopyIcon from '../assets/vectors/copy.svg?react'
+import OpenIcon from '../assets/vectors/open.svg?react'
+import TextIcon from '../assets/vectors/text.svg?react'
+import TrashIcon from '../assets/vectors/trash.svg?react'
+import AuthKeyIcon from '../assets/vectors/auth-key.svg?react'
+import DatetimeIcon from '../assets/vectors/datetime.svg?react'
+import DownloadLimitIcon from '../assets/vectors/download-limit.svg?react'
+import FileIcon from '../assets/vectors/file-icon.svg?react'
+import IpBlacklistIcon from '../assets/vectors/ip-blacklist.svg?react'
+import IpWhitelistIcon from '../assets/vectors/ip-whitelist.svg?react'
+import NameIcon from '../assets/vectors/name.svg?react'
+import PasswordIcon from '../assets/vectors/password.svg?react'
+import PlusIcon from '../assets/vectors/plus.svg?react'
+import QuestionMarkIcon from '../assets/vectors/question-mark.svg?react'
+import UploadIcon from '../assets/vectors/upload.svg?react'
+import UploadCloudIcon from '../assets/vectors/upload-cloud.svg?react'
 import Notification from '../components/Notification'
 
 const timeOptions = [
@@ -111,6 +116,7 @@ export default function Home() {
     const [authKey, setAuthKey] = useState(createAuthKey)
 
     const hasUpload = textMode ? text.trim().length > 0 : Boolean(selectedFile)
+    const showUploadPanel = uploading || Boolean(uploadedLink)
     const previewUrl = useMemo(
         () => selectedFile?.type.startsWith('image/') ? URL.createObjectURL(selectedFile) : null,
         [selectedFile],
@@ -123,9 +129,9 @@ export default function Home() {
     }
 
     useEffect(() => {
-        document.body.classList.toggle('showLinks', Boolean(uploadedLink))
+        document.body.classList.toggle('showLinks', showUploadPanel)
         return () => document.body.classList.remove('showLinks')
-    }, [uploadedLink])
+    }, [showUploadPanel])
 
     useEffect(() => {
         document.body.classList.toggle('text', textMode)
@@ -284,6 +290,7 @@ export default function Home() {
             fd.delete('text')
         }
 
+        setUploadedLink(null)
         setUploading(true)
         try {
             const res = await fetch('/api/files', { method: 'POST', body: fd })
@@ -488,14 +495,22 @@ export default function Home() {
                 </form>
             </main>
 
-                {uploadedLink && (
-                    <>
-                        <div className="links">
+            {showUploadPanel && (
+                <>
+                    <div className="links">
+                        {!uploading && (
                             <div className="closeBtn" onClick={() => setUploadedLink(null)} role="button" tabIndex={0}>
                                 <CloseIcon />
                             </div>
-                            <div className="inner">
-                                <h2>File Uploaded</h2>
+                        )}
+                        <div className="inner">
+                            <h2>{uploading ? 'Uploading...' : 'File Uploaded'}</h2>
+                            {uploading ? (
+                                <div className="upload-status">
+                                    <div className="upload-spinner" aria-label="Uploading"></div>
+                                    <p>Please keep this page open while your file uploads</p>
+                                </div>
+                            ) : uploadedLink && (
                                 <div className="urls">
                                     <p>Go to this link to download your file</p>
                                     <div className="btn name">
@@ -504,7 +519,7 @@ export default function Home() {
                                     </div>
                                     <div className="linkBtns">
                                         <Link className="linkBtn del" to={uploadedLink.replace('/files/', '/delete/')} title="Delete file">
-                                            <DeleteIcon />
+                                            <TrashIcon />
                                         </Link>
                                         <div className="linkBtn copy" onClick={() => copyLink()} role="button" tabIndex={0} title="Copy link">
                                             <CopyIcon />
@@ -514,11 +529,17 @@ export default function Home() {
                                         </a>
                                     </div>
                                 </div>
-                            </div>
+                            )}
                         </div>
-                        <div className="ov" onClick={() => setUploadedLink(null)} role="button" tabIndex={0}></div>
-                    </>
-                )}
+                    </div>
+                    <div
+                        className={clsx('ov', { locked: uploading })}
+                        onClick={uploading ? undefined : () => setUploadedLink(null)}
+                        role={uploading ? undefined : 'button'}
+                        tabIndex={uploading ? undefined : 0}
+                    ></div>
+                </>
+            )}
             <div
                 className="textBtn"
                 title="Upload text instead of file"
@@ -533,46 +554,8 @@ export default function Home() {
                 role="button"
                 tabIndex={0}
             >
-                <svg xmlns="http://www.w3.org/2000/svg" x="0" y="0" viewBox="0 0 64 64">
-                    <g>
-                        <path d="m39.1 12.333c2.762 0 5-2.239 5-5s-2.238-5-5-5h-33.707c-2.761 0-5 2.239-5 5s2.239 5 5 5h11.854v44.326c0 2.762 2.239 5 5 5s5-2.238 5-5v-44.326z" fill="#ffffff"></path>
-                        <path d="m58.607 25.849h-22.083c-2.762 0-5 2.239-5 5 0 2.762 2.238 5 5 5h6.042v20.818c0 2.762 2.238 5 5 5s5-2.238 5-5v-20.818h6.041c2.762 0 5-2.238 5-5 0-2.761-2.238-5-5-5z" fill="#ffffff"></path>
-                    </g>
-                </svg>
+                <TextIcon />
             </div>
         </>
-    )
-}
-
-function CloseIcon() {
-    return (
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 492 492">
-            <path d="M300.188 246 484.14 62.04c10.48-10.488 10.48-27.56 0-38.052L468.02 7.872c-10.496-10.504-27.56-10.496-38.06-.016L246.008 191.82 62.048 7.872c-10.488-10.504-27.56-10.496-38.048 0L7.872 23.988c-10.496 10.496-10.496 27.568 0 38.052L191.828 246 7.872 429.952c-10.496 10.512-10.496 27.568 0 38.06l16.124 16.116c10.488 10.496 27.568 10.496 38.048 0l183.96-183.952 183.952 183.952c10.496 10.496 27.568 10.496 38.06 0l16.12-16.116c10.488-10.488 10.488-27.548 0-38.056z" />
-        </svg>
-    )
-}
-
-function DeleteIcon() {
-    return (
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
-            <path d="M448 96h-96l-32-48H192l-32 48H64v48h384zM96 176l32 288h256l32-288zm128 224h-40l-16-176h40zm104 0h-40V224h40z" />
-        </svg>
-    )
-}
-
-function CopyIcon() {
-    return (
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
-            <path d="M160 96h224v288H160zM112 32h224v40H136v264H96V48c0-8.8 7.2-16 16-16zm304 128h-40v-40H136v328h280z" />
-        </svg>
-    )
-}
-
-function OpenIcon() {
-    return (
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 26 26">
-            <path d="M18 17.759v3.366C18 22.159 17.159 23 16.125 23H4.875C3.841 23 3 22.159 3 21.125V9.875C3 8.841 3.841 8 4.875 8h3.429l3.001-3h-6.43C2.182 5 0 7.182 0 9.875v11.25C0 23.818 2.182 26 4.875 26h11.25C18.818 26 21 23.818 21 21.125v-6.367z" />
-            <path d="M22.581 0H12.322c-1.886.002-1.755.51-.76 1.504l3.22 3.22-5.52 5.519c-1.145 1.144-1.144 2.998 0 4.141l2.41 2.411c1.144 1.141 2.996 1.142 4.14-.001l5.52-5.52 3.16 3.16c1.101 1.1 1.507 1.129 1.507-.757L26 3.419C25.999-.018 26.024-.001 22.581 0z" />
-        </svg>
     )
 }

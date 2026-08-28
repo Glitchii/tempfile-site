@@ -119,7 +119,7 @@ const setBrowserAuth = (req, res, filename) => {
   res.setHeader('Set-Cookie', `${authCookie}=${payload}.${signAuthPayload(payload)}; Max-Age=${authDurationMs / 1000}; Path=/files/${encodeURIComponent(filename)}; HttpOnly; SameSite=Lax${secure}`)
 }
 
-const browserError = (res, status, reason) => res.redirect(302, `/error/${status}?reason=${encodeURIComponent(reason)}`)
+const browserError = (res, status) => res.redirect(302, `/error/${status}`)
 
 const metaKey = (filename) => `meta/${filename}.json`
 const fileKey = (filename) => `files/${filename}`
@@ -349,7 +349,7 @@ const getClientIp = (req) => normalizeIp(req.ip)
 
 const publicOrigin = (req) => String(process.env.PUBLIC_ORIGIN || `${req.protocol}://${req.get('host')}`).replace(/\/+$/, '')
 
-const publicMeta = (meta) => ({
+const publicMeta = (meta, clientIp) => ({
   filename: meta.filename,
   originalname: meta.originalname,
   mimetype: meta.mimetype,
@@ -359,6 +359,7 @@ const publicMeta = (meta) => ({
   limit: meta.limit,
   hasPassword: Boolean(meta.pass),
   ipRestricted: Boolean(meta.ipblacklist?.length || meta.ipwhitelist?.length),
+  requesterRequiresDeleteKey: normalizeIp(meta.userIP) !== normalizeIp(clientIp),
 })
 
 app.post('/api/files', uploadLimiter, (req, res) => {
@@ -421,7 +422,7 @@ app.post('/api/files', uploadLimiter, (req, res) => {
       ok(res, {
         link,
         authkey,
-        deletion: `To delete, make a DELETE request to ${link} with an authkey header. ${publicOrigin(req)}/api#delete`,
+        deletion: `To delete, make a DELETE request to ${publicOrigin(req)}/api/files/${filename} with an authkey header. ${publicOrigin(req)}/api#delete`,
       })
     } catch (error) {
       console.error('POST /api/files', error)
@@ -444,33 +445,26 @@ const decrementLimit = async (filename, meta, legacy) => {
   else await writeMeta(filename, meta, legacy)
 }
 
-const sendUpload = async (req, res, filename, isApi) => {
+const sendUpload = async (req, res, filename) => {
   try {
-    if (!filename) return isApi ? err(res, 400, 'InvalidFilename', 'File name is invalid') : browserError(res, 404, 'file-not-found')
+    if (!filename) return browserError(res, 404)
 
     const found = await readUpload(filename)
-    if (!found) return isApi ? err(res, 404, 'NotFound', 'File not found') : browserError(res, 404, 'file-not-found')
+    if (!found) return browserError(res, 404)
 
     const { meta, body, legacy } = found
     const exp = new Date(meta.datetime)
     if (Number.isNaN(exp.getTime()) || Date.now() > exp.getTime()) {
       await removeUpload(filename)
-      return isApi ? err(res, 404, 'NotFound', 'File not found') : browserError(res, 404, 'file-not-found')
+      return browserError(res, 404)
     }
 
-    if (!canAccessByIp(getClientIp(req), meta)) {
-      return isApi ? err(res, 403, 'Forbidden', 'You are not allowed to access this file.') : browserError(res, 403, 'ip-restricted')
-    }
+    if (!canAccessByIp(getClientIp(req), meta)) return browserError(res, 403)
 
-    if (meta.pass) {
-      if (!isApi && !hasBrowserAuth(req, filename)) return res.redirect(302, `/auth/${encodeURIComponent(filename)}`)
-
-      if (isApi) {
-        const supplied = req.headers.pass
-        if (!supplied || typeof supplied !== 'string') {
-          return err(res, 403, 'NoPass', "File requires password. A header with a key 'pass' with the password as value is required")
-        }
-        if (!(await bcrypt.compare(supplied, meta.pass))) return err(res, 403, 'WrongPass', 'Incorrect password received')
+    if (meta.pass && !hasBrowserAuth(req, filename)) {
+      const supplied = req.headers.pass
+      if (typeof supplied !== 'string' || !(await bcrypt.compare(supplied, meta.pass))) {
+        return res.redirect(302, `/auth/${encodeURIComponent(filename)}`)
       }
     }
 
@@ -484,11 +478,9 @@ const sendUpload = async (req, res, filename, isApi) => {
     void decrementLimit(filename, meta, legacy).catch((error) => console.error('decrement limit', error))
   } catch (error) {
     console.error('GET file', error)
-    return isApi ? err(res) : browserError(res, 500, 'server-error')
+    return browserError(res, 500)
   }
 }
-
-app.get('/api/files/:name', (req, res) => sendUpload(req, res, normalizeFilename(req.params.name), true))
 
 app.get('/api/files/:name/info', async (req, res) => {
   try {
@@ -503,7 +495,7 @@ app.get('/api/files/:name/info', async (req, res) => {
       return err(res, 404, 'NotFound', 'File not found')
     }
 
-    ok(res, { file: publicMeta(meta) })
+    ok(res, { file: publicMeta(meta, getClientIp(req)) })
   } catch (error) {
     console.error('GET /api/files/:name/info', error)
     return err(res)
@@ -562,11 +554,14 @@ app.delete('/api/files/:name', async (req, res) => {
   }
 })
 
-app.get('/files/:name', (req, res) => sendUpload(req, res, normalizeFilename(req.params.name), false))
+app.get('/api/health', (_req, res) => ok(res))
+
+app.all(/^\/api\/.+/, (_req, res) => err(res, 404, 'NotFound', 'API route not found'))
+
+app.get('/files/:name', (req, res) => sendUpload(req, res, normalizeFilename(req.params.name)))
 
 app.get('/contact', (_req, res) => res.redirect(302, 'https://github.com/Glitchii/'))
 
-// MARK: remove later
 app.get('/debug', (req, res) => res.json({
   xff: req.headers['x-forwarded-for'],
   cfip: req.headers['cf-connecting-ip'],
