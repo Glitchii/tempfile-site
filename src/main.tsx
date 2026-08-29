@@ -19,12 +19,8 @@ createRoot(document.body).render(
         <Route path="/" element={<Home />} />
         <Route path="/delete" element={<Delete />} />
         <Route path="/delete/:name" element={<Delete />} />
-        <Route path="/del" element={<Delete />} />
-        <Route path="/del/:name" element={<Delete />} />
         <Route path="/auth/:name" element={<Auth />} />
         <Route path="/error/:status" element={<ErrorPage />} />
-        <Route path="/forbidden" element={<ErrorPage status={403} />} />
-        <Route path="/forbidden/:code" element={<ErrorPage status={403} />} />
         <Route path="/api" element={<Api />} />
         <Route path="/contact" element={<ContactRedirect />} />
         <Route path="*" element={<ErrorPage status={404} />} />

@@ -125,7 +125,6 @@ const browserError = (res, status) => {
 
 const metaKey = (filename) => `meta/${filename}.json`
 const fileKey = (filename) => `files/${filename}`
-const legacyKey = (filename) => `${filename}.json`
 const metaPathFor = (filename) => path.join(metaDir, `${filename}.json`)
 const filePathFor = (filename) => path.join(filesDir, filename)
 
@@ -162,36 +161,29 @@ const bodyToBuffer = async (body) => {
   return Buffer.concat(chunks)
 }
 
-const getS3Json = async (Key) => {
+const getS3Object = async (Key) => {
   if (!s3 || !bucket) return null
-  let data
   try {
-    data = await s3.send(new GetObjectCommand({ Bucket: bucket, Key }))
+    const data = await s3.send(new GetObjectCommand({ Bucket: bucket, Key }))
+    return bodyToBuffer(data.Body)
   } catch (error) {
     if (isMissingS3Object(error)) return null
     throw error
   }
-  return JSON.parse((await bodyToBuffer(data.Body)).toString('utf8'))
 }
 
-const legacyBody = (meta) => {
-  if (meta?.body) return Buffer.from(meta.body, meta.encoding === 'base64' ? 'base64' : 'utf8')
-  if (typeof meta?.text === 'string') return Buffer.from(meta.text)
-  if (meta?.buffer?.type === 'Buffer' && Array.isArray(meta.buffer.data)) return Buffer.from(meta.buffer.data)
-  if (Array.isArray(meta?.buffer)) return Buffer.from(meta.buffer)
-  return Buffer.alloc(0)
+const getS3Json = async (Key) => {
+  const body = await getS3Object(Key)
+  return body ? JSON.parse(body.toString('utf8')) : null
 }
 
 const readUpload = async (filename) => {
   if (s3 && bucket) {
     const meta = await getS3Json(metaKey(filename))
-    if (meta) {
-      const file = await s3.send(new GetObjectCommand({ Bucket: bucket, Key: fileKey(filename) }))
-      return { meta, body: await bodyToBuffer(file.Body), legacy: false }
-    }
+    if (!meta) return null
 
-    const legacy = await getS3Json(legacyKey(filename))
-    return legacy ? { meta: legacy, body: legacyBody(legacy), legacy: true } : null
+    const body = await getS3Object(fileKey(filename))
+    return body ? { meta, body } : null
   }
 
   const mp = metaPathFor(filename)
@@ -199,13 +191,11 @@ const readUpload = async (filename) => {
   return {
     meta: JSON.parse(await fs.readFile(mp, 'utf8')),
     body: await fs.readFile(filePathFor(filename)),
-    legacy: false,
   }
 }
 
 const readMeta = async (filename) => {
-  if (s3 && bucket)
-    return (await getS3Json(metaKey(filename))) || (await getS3Json(legacyKey(filename)))
+  if (s3 && bucket) return getS3Json(metaKey(filename))
 
   const mp = metaPathFor(filename)
   return (await existsLocal(mp)) ? JSON.parse(await fs.readFile(mp, 'utf8')) : null
@@ -227,9 +217,9 @@ const writeUpload = async (filename, meta, body) => {
   ])
 }
 
-const writeMeta = async (filename, meta, legacy = false) => {
+const writeMeta = async (filename, meta) => {
   if (s3 && bucket) {
-    await s3.send(new PutObjectCommand({ Bucket: bucket, Key: legacy ? legacyKey(filename) : metaKey(filename), Body: JSON.stringify(meta), ContentType: 'application/json' }))
+    await s3.send(new PutObjectCommand({ Bucket: bucket, Key: metaKey(filename), Body: JSON.stringify(meta), ContentType: 'application/json' }))
     return
   }
 
@@ -242,7 +232,6 @@ const removeUpload = async (filename) => {
     await Promise.all([
       s3.send(new DeleteObjectCommand({ Bucket: bucket, Key: fileKey(filename) })),
       s3.send(new DeleteObjectCommand({ Bucket: bucket, Key: metaKey(filename) })),
-      s3.send(new DeleteObjectCommand({ Bucket: bucket, Key: legacyKey(filename) })),
     ])
     return
   }
@@ -251,7 +240,7 @@ const removeUpload = async (filename) => {
 }
 
 const uploadExists = async (filename) => {
-  if (s3 && bucket) return (await existsS3(metaKey(filename))) || (await existsS3(legacyKey(filename)))
+  if (s3 && bucket) return existsS3(metaKey(filename))
   return existsLocal(metaPathFor(filename))
 }
 
@@ -260,11 +249,10 @@ const listMetaNames = async () => {
     const names = []
     let ContinuationToken
     do {
-      const data = await s3.send(new ListObjectsV2Command({ Bucket: bucket, ContinuationToken }))
+      const data = await s3.send(new ListObjectsV2Command({ Bucket: bucket, Prefix: 'meta/', ContinuationToken }))
       for (const item of data.Contents || []) {
         const key = item.Key || ''
-        if (key.startsWith('meta/') && key.endsWith('.json')) names.push(key.slice(5, -5))
-        else if (!key.includes('/') && key.endsWith('.json')) names.push(key.slice(0, -5))
+        if (key.endsWith('.json')) names.push(key.slice(5, -5))
       }
       ContinuationToken = data.NextContinuationToken
     } while (ContinuationToken)
@@ -439,26 +427,31 @@ app.post('/api/files', uploadLimiter, (req, res) => {
 
 const canAccessByIp = (clientIp, meta) => {
   const ip = normalizeIp(clientIp)
-  if (Array.isArray(meta.ipblacklist) && meta.ipblacklist.some((item) => normalizeIp(item) === ip)) return false
-  if (Array.isArray(meta.ipwhitelist) && !meta.ipwhitelist.some((item) => normalizeIp(item) === ip)) return false
+
+  if (Array.isArray(meta.ipblacklist) && meta.ipblacklist.some((item) => normalizeIp(item) === ip))
+    return false
+
+  if (Array.isArray(meta.ipwhitelist) && !meta.ipwhitelist.some((item) => normalizeIp(item) === ip))
+    return false
+
   return true
 }
 
-const decrementLimit = async (filename, meta, legacy) => {
-  if (!meta.limit || !Number.isFinite(meta.limit)) return
-  meta.limit -= 1
-  if (meta.limit <= 0) await removeUpload(filename)
-  else await writeMeta(filename, meta, legacy)
+const decrementLimit = async (filename, meta) => {
+  if (Number.isFinite(meta.limit))
+    (meta.limit -= 1) <= 0 ? removeUpload(filename) : writeMeta(filename, meta)
 }
 
 const sendUpload = async (req, res, filename) => {
   try {
-    if (!filename) return browserError(res, 404)
+    if (!filename)
+      return browserError(res, 404)
 
     const found = await readUpload(filename)
-    if (!found) return browserError(res, 404)
+    if (!found)
+      return browserError(res, 404)
 
-    const { meta, body, legacy } = found
+    const { meta, body } = found
     const exp = new Date(meta.datetime)
     if (Number.isNaN(exp.getTime()) || Date.now() > exp.getTime()) {
       await removeUpload(filename)
@@ -480,7 +473,7 @@ const sendUpload = async (req, res, filename) => {
     res.setHeader('Content-Type', meta.mimetype || 'application/octet-stream')
     res.setHeader('Content-Length', body.length)
     res.send(body)
-    void decrementLimit(filename, meta, legacy).catch((error) => console.error('decrement limit', error))
+    void decrementLimit(filename, meta).catch((error) => console.error('decrement limit', error))
   } catch (error) {
     console.error('GET file', error)
     return browserError(res, 500)
