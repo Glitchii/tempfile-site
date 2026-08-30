@@ -44,17 +44,19 @@ const timeOptions = [
 ] as const
 
 const maxFileSize = 2 * 1024 * 1024 * 1024
+const emptyOptions = { limit: '', pass: '', name: '' }
 
+// Middle char in each group is a vowel to make it easier to remember.
+// Excluded some consonants that are quite rare in words eg. q, x, z, j, l is just unlucky
 const createAuthKey = () => {
-    const letters = ['bcdfghjkmnprstvw', 'aeiouy'] as const
-    const random = crypto.getRandomValues(new Uint8Array(18))
-
-    return Array.from({ length: 3 }, (_, word) =>
-        Array.from({ length: 6 }, (_, character) => {
-            const choices = letters[character % 2]
-            return choices[random[word * 6 + character] % choices.length]
-        }).join(''),
-    ).join('.')
+    let letters = ['bcdfghkmnprstvwy', 'aeiou'], string = ''
+    for (let i = 0; i < 3; i++)
+        for (let j = 0; j < 3; j++) {
+            let arr = letters[j == 1 ? 1 : 0]
+            string += arr[Math.floor(Math.random() * arr.length)]
+            string = j == 2 && i != 2 ? string + '.' : string
+        }
+    return string
 }
 
 const dateFromValue = (value: string) => {
@@ -110,12 +112,14 @@ export default function Home() {
     const [textMode, setTextMode] = useState(false)
     const [text, setText] = useState('')
     const [showMore, setShowMore] = useState(false)
-    const [showAuthHelp, setShowAuthHelp] = useState(false)
+    const [showAuthHelp, setShowAuthHelp] = useState(true)
     const [ipBlacklist, setIpBlacklist] = useState([''])
     const [ipWhitelist, setIpWhitelist] = useState([''])
     const [authKey, setAuthKey] = useState(createAuthKey)
+    const [options, setOptions] = useState(emptyOptions)
 
     const hasUpload = textMode ? text.trim().length > 0 : Boolean(selectedFile)
+    const setOption = (name: keyof typeof emptyOptions, value: string) => setOptions((current) => ({ ...current, [name]: value }))
     const showUploadPanel = uploading || Boolean(uploadedLink)
     const previewUrl = useMemo(
         () => selectedFile?.type.startsWith('image/') ? URL.createObjectURL(selectedFile) : null,
@@ -247,6 +251,7 @@ export default function Home() {
         setTextMode(false)
         setIpBlacklist([''])
         setIpWhitelist([''])
+        setOptions(emptyOptions)
         formRef.current?.reset()
     }
 
@@ -264,17 +269,22 @@ export default function Home() {
 
     const upload = async () => {
         if (uploading || !formRef.current) return
-        if (!hasUpload) return showNotification(textMode ? 'Please enter some text' : 'Please choose a file')
-
+        if (!hasUpload) return showNotification(textMode ? 'Enter some text first' : 'Choose a file first')
+        
         const dateError = expiryError()
         if (dateError) return showNotification(dateError)
-
+        
         const normalizedAuthKey = authKey.trim()
-        if (!normalizedAuthKey) return showNotification('Please enter an authentication key')
+        if (!normalizedAuthKey) return showNotification('Enter an authentication key')
 
         const fd = new FormData(formRef.current)
         fd.set('datetime', activeExpiry)
         fd.set('authkey', normalizedAuthKey)
+        for (const [name, value] of Object.entries(options)) {
+            if (value) fd.set(name, value)
+            else fd.delete(name)
+        }
+
         fd.delete('ipblacklist')
         fd.delete('ipwhitelist')
 
@@ -282,12 +292,10 @@ export default function Home() {
         const whitelisted = ipWhitelist.map((ip) => ip.trim()).filter(Boolean)
         if (blacklisted.length) fd.set('ipblacklist', blacklisted.join(','))
         if (whitelisted.length) fd.set('ipwhitelist', whitelisted.join(','))
-
-        if (textMode) {
+        if (!textMode) fd.delete('text')
+        else {
             fd.delete('file')
             fd.set('text', text)
-        } else {
-            fd.delete('text')
         }
 
         setUploadedLink(null)
@@ -296,13 +304,11 @@ export default function Home() {
             const res = await fetch('/api/files', { method: 'POST', body: fd })
             const json = await res.json().catch(() => null)
 
-            if (!res.ok || !json?.ok) {
-                showNotification(json?.error?.message || 'Upload failed')
-                return
-            }
+            if (!res.ok || !json?.ok)
+                return showNotification(json?.error?.message || 'Upload failed')
 
             setUploadedLink(json.link)
-            showNotification('File uploaded successfully!', true)
+            showNotification('File has been uploaded', true)
             resetUpload()
         } catch {
             showNotification('Could not reach the server. Please try again.')
@@ -417,7 +423,7 @@ export default function Home() {
                                             </QuestionMarkIcon>
                                         </div>
                                     </div>
-                                    <p className="qMarkDesc">You can delete a file if it was uploaded from your IP address. This key allows you to delete the file even from a different one. This is also useful with <Link to="/api" className="URL">API requests</Link>. Change to something simpler if you like</p>
+                                    <p className="qMarkDesc">You are allowed to <Link to="/delete" className="URL">delete a file</Link> if it was uploaded from the same IP address. This key is required for deletions from other IPs or from <Link to="/api" className="URL">API requests</Link>. Change to something simpler if you like</p>
                                     <div className="inputOptions">
                                         <input className="input btnPad" name="authkey" type="text" placeholder="Auth Key" value={authKey} onChange={(event) => setAuthKey(event.target.value)} maxLength={80} autoComplete="off" />
                                     </div>
@@ -427,21 +433,21 @@ export default function Home() {
                                         <div className="icon">
                                             <DownloadLimitIcon />
                                         </div>
-                                        <input className="input" name="limit" type="number" min="1" placeholder="Download limit (empty = unlimited)" />
+                                        <input className="input" name="limit" type="number" min="1" placeholder="Download limit (empty = unlimited)" value={options.limit} onChange={(event) => setOption('limit', event.target.value)} />
                                     </div>
                                     <div className="sep"></div>
                                     <div className="btn pass">
                                         <div className="icon">
                                             <PasswordIcon />
                                         </div>
-                                        <input className="input" name="pass" type="password" placeholder="Password protect" />
+                                        <input className="input" name="pass" type="password" placeholder="Password protect" value={options.pass} onChange={(event) => setOption('pass', event.target.value)} />
                                     </div>
                                     <div className="sep"></div>
                                     <div className="btn name">
                                         <div className="icon">
                                             <NameIcon />
                                         </div>
-                                        <input className="input" name="name" type="text" placeholder="Custom file name" />
+                                        <input className="input" name="name" type="text" placeholder="Custom file name" value={options.name} onChange={(event) => setOption('name', event.target.value)} />
                                     </div>
                                     <div className="sep"></div>
                                     {renderIpInputs('blacklist')}

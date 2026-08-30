@@ -321,12 +321,8 @@ h2 {
 
 .qMarkAndTxt {
   display: flex;
-}
-
-@keyframes qMarkDescAn {
-  from {
-    opacity: 0;
-    transform: translateY(-35px);
+  .input {
+    padding-bottom: 0!important;
   }
 }
 
@@ -335,11 +331,10 @@ h2 {
 }
 
 .qMarkDesc {
-  animation: qMarkDescAn .3s ease;
   opacity: .5;
   grid-column-start: 2;
-  transform: translateY(-20px);
   margin-left: 10px !important;
+  padding-top: 0!important;
 }
 
 .qMark>svg path {
@@ -414,7 +409,7 @@ main.file-selected .btns > .inner::after {
 }
 
 .btn .input, .btn p {
-  padding: 10px 10px 10px 5px;
+  padding: 10px 10px 14px 5px;
   font-size: 15px;
   width: 100%;
   margin-left: 5px;
@@ -1011,6 +1006,10 @@ body.text .drag {
   header nav {
     padding-top: 0;
   }
+
+  .btnsInner {
+    padding-bottom: 60px;
+  }
 }
 
 @media screen and (max-width: 445px) {
@@ -1056,7 +1055,6 @@ body.text .drag {
 
   .btnsInner {
     min-width: inherit;
-    padding-bottom: 60px;
   }
 
   .drag .partInner .desc span:first-of-type {

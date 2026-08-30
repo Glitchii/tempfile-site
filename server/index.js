@@ -364,8 +364,8 @@ app.post('/api/files', uploadLimiter, (req, res) => {
       if (uploadError?.code === 'LIMIT_FILE_SIZE') return err(res, 400, 'FileTooLarge', 'File is too large.')
       if (uploadError) return err(res, 400, 'UploadError', 'There was an error while processing the file')
 
-      const text = typeof req.body?.text === 'string' ? req.body.text : ''
-      if (!req.file && !text.trim()) return err(res, 400, 'MissingFile', 'No file or text received')
+      const text = req.body?.text?.toString()
+      if (!req.file && !text?.trim()) return err(res, 400, 'MissingFile', 'No file or text received')
       if (!req.body?.datetime) return err(res, 400, 'MissingDateTime', "Request must include a 'datetime' key", `${publicOrigin(req)}/api/files`)
 
       const chosenDate = parseDatetime(req.body.datetime)
