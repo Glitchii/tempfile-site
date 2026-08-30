@@ -149,7 +149,7 @@ export default function Delete() {
                     autoComplete="off"
                     autoFocus
                 />
-                <div className="delete-search-separator"></div>
+                <div className="sep"></div>
                 <button className="delete-action search-action" type="button" onClick={submitSearch}>
                     <SearchIcon />
                     Search

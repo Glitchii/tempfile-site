@@ -1175,50 +1175,36 @@ body.text .drag {
 }
 
 .delete-search-page {
+  min-height: calc(100vh - var(--header-height));
+  transform: translateY(-5%);
+  display: flex;
+  padding: 0 25%;
+  place-content: center;
   align-items: center;
   flex-direction: column;
   gap: 0;
-  min-height: calc(100vh - var(--header-height));
-  animation: deleteSearchIn 1.6s ease;
-
-  @media screen and (min-width: 701px) {
-    justify-content: flex-start;
-    padding-top: clamp(45px, 6vh, 65px);
-  }
 
   .delete-search-illustration {
     width: min(250px, 60vw);
     height: auto;
-    margin-bottom: 20px;
+    width: 180px;
+    margin-bottom: 5%;
   }
 
   input {
-    width: min(90%, 950px);
+    width: 100%;
     padding: 10px 10px 24px;
     background: transparent;
-    font-family: var(--font2);
-    font-size: 30px;
     text-align: center;
+    font-family: var(--font1);
+    font-size: 21px;
+    font-weight: bold;
+    padding-bottom: 10px;
 
     &::placeholder {
       opacity: .2;
     }
   }
-}
-
-@keyframes deleteSearchIn {
-  from {
-    opacity: 0;
-    transform: translateY(30px);
-  }
-}
-
-.delete-search-separator,
-.delete-separator {
-  width: min(80%, 950px);
-  height: 1px;
-  margin: 0 auto;
-  background: linear-gradient(to right, transparent, #273036, transparent);
 }
 
 .delete-action {
@@ -1521,6 +1507,10 @@ body.text .drag {
 
     article {
       padding: 18px 16px 24px;
+    }
+
+    @at-root .delete-search-page {
+      padding: 0 40px;
     }
   }
 }

@@ -60,7 +60,7 @@ const limitRequests = (windowMs, limit, message, options = {}) =>
 
 const uploadLimiter = limitRequests(
   +(process.env.UPLOAD_RATE_WINDOW_MS ?? 60_000),
-  +(process.env.UPLOAD_RATE_LIMIT ?? 5),
+  +(process.env.UPLOAD_RATE_LIMIT ?? 20),
   'Too many uploads. Wait a moment and try again.',
 )
 
@@ -189,11 +189,23 @@ const readUpload = async (filename) => {
 }
 
 const writeUpload = async (filename, meta, body) => {
-  if (s3)
-    return await Promise.all([
-      s3.send(new PutObjectCommand({ Bucket: bucket, Key: fileKey(filename), Body: body, ContentType: meta.mimetype })),
-      s3.send(new PutObjectCommand({ Bucket: bucket, Key: metaKey(filename), Body: JSON.stringify(meta), ContentType: 'application/json' })),
+  if (s3) {
+    const writes = await Promise.allSettled([  
+      s3.send(new PutObjectCommand({ Bucket: bucket, Key: fileKey(filename), Body: body, ContentType: meta.mimetype || 'application/octet-stream' })),  
+      s3.send(new PutObjectCommand({ Bucket: bucket, Key: metaKey(filename), Body: JSON.stringify(meta), ContentType: 'application/json' })),  
     ])
+
+    const failed = writes.find(({ status }) => status === 'rejected')  
+    if (failed) {  
+      await Promise.allSettled([  
+        ...(writes[0].status === 'fulfilled' ? [s3.send(new DeleteObjectCommand({ Bucket: bucket, Key: fileKey(filename) }))] : []),  
+        ...(writes[1].status === 'fulfilled' ? [s3.send(new DeleteObjectCommand({ Bucket: bucket, Key: metaKey(filename) }))] : []),  
+      ])
+      throw failed.reason  
+    }
+
+    return
+  }
 
   await ensureDirs()
   await Promise.all([
