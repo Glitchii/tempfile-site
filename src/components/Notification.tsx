@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { createPortal } from 'react-dom'
 import CloseIcon from '../assets/vectors/close.svg?react'
 import InfoIcon from '../assets/vectors/info.svg?react'
 import SuccessIcon from '../assets/vectors/success.svg?react'
@@ -21,7 +22,7 @@ export default function Notification({ text, success = false, duration = 5000 }:
 
     const StatusIcon = success ? SuccessIcon : InfoIcon
 
-    return (
+    return createPortal(
         <div className="notif">
             <div className={`${success ? 'success' : 'normal'} content`}>
                 <StatusIcon className="leftIcon" aria-hidden="true" />
@@ -30,6 +31,7 @@ export default function Notification({ text, success = false, duration = 5000 }:
                     <CloseIcon aria-hidden="true" />
                 </button>
             </div>
-        </div>
+        </div>,
+        document.body,
     )
 }

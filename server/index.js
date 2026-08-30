@@ -22,6 +22,7 @@ const dataDir = path.resolve(process.cwd(), 'data')
 const filesDir = path.join(dataDir, 'files')
 const metaDir = path.join(dataDir, 'meta')
 const maxFileSize = 2 * 1024 * 1024 * 1024
+const downloadOnlyTypes = new Set(['text/html', 'application/xhtml+xml', 'image/svg+xml', 'text/xml', 'application/xml'])
 const authCookie = 'tempfile_auth'
 const authDurationMs = 15 * 60_000
 const authSecret = process.env.AUTH_SECRET
@@ -45,18 +46,14 @@ const ensureDirs = async () => {
 
 const ok = (res, obj) => res.json({ ok: true, ...obj })
 const err = (res, status = 500, type = 'InternalServerError', message = 'There was an internal server error', usage) => {
-  return res.status(status).json({ ok: false, error: { type, message, ...(usage ? { usage } : {}) } })
+  res.status(status).json({ ok: false, error: { type, message, ...(usage ? { usage } : {}) } })
 }
 
-const limitRequests = (windowMs, limit, message, options = {}) =>
-  rateLimit({
-    windowMs,
-    limit,
-    standardHeaders: 'draft-8',
-    legacyHeaders: false,
-    handler: (_req, res) => err(res, 429, 'TooManyRequests', message),
-    ...options,
-  })
+const limitRequests = (windowMs, limit, message, options = {}) => rateLimit({
+  windowMs, limit, standardHeaders: 'draft-8', legacyHeaders: false,
+  handler: (_req, res) => console.log(err(res, 429, 'TooManyRequests', message) || message),
+  ...options,
+})
 
 const uploadLimiter = limitRequests(
   +(process.env.UPLOAD_RATE_WINDOW_MS ?? 60_000),
@@ -317,9 +314,13 @@ const validateIps = (blacklist = [], whitelist = []) => {
   return null
 }
 
-const normaliseIp = (value) => String(value || '').replace(/^::ffff:(?=\d+\.\d+\.\d+\.\d+$)/i, '')
+const normaliseIp = (value) => {
+  const ip = String(value || '').replace(/^::ffff:(?=\d+\.\d+\.\d+\.\d+$)/i, '')
+  return ip === '::1' || ip.startsWith('127.') ? 'loopback' : ip
+}
 
 const getClientIp = (req) => normaliseIp(req.ip)
+
 const requesterNeedsDeleteKey = (meta, clientIp) => normaliseIp(meta.userIP) !== normaliseIp(clientIp)
 
 const publicOrigin = (req) => String(process.env.PUBLIC_ORIGIN || `${req.protocol}://${req.get('host')}`).replace(/\/+$/, '')
@@ -451,13 +452,15 @@ const sendUpload = async (req, res, filename) => {
   }
 
   res.setHeader('Cache-Control', 'private, no-store')
-  res.setHeader('Content-Security-Policy', "sandbox; default-src 'none'")
+  res.setHeader('Content-Security-Policy', "sandbox; default-src 'none'; frame-ancestors 'none'")
   res.setHeader('X-Content-Type-Options', 'nosniff')
   res.setHeader('Access-Control-Allow-Origin', '*')
   res.setHeader('Content-Type', meta.mimetype)
   res.setHeader('Content-Length', body.length)
+  /xml|htm|svg/i.test(meta.mimetype) && res.attachment(meta.originalname || filename)
+
   res.send(body)
-  void decrementLimit(filename, meta).catch((error) => console.error('decrement limit', error))
+  decrementLimit(filename, meta).catch((error) => console.error('decrement limit', error))
 }
 
 app.get('/files/:name/info', loadFileMeta, (req, res) => {

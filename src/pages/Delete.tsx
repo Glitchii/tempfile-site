@@ -117,6 +117,8 @@ export default function Delete() {
 
     const deleteFile = async () => {
         if (!name || deleting || deleted) return
+        if (file?.requesterRequiresDeleteKey && !authkey.trim())
+            return notify('This file was uploaded from a different IP, enter auth key to delete')
 
         setDeleting(true)
         try {
@@ -167,7 +169,8 @@ export default function Delete() {
             ) : file ? (
                 <div className="delete-file">
                     <div className="delete-top">
-                        <h1>{deleted ? 'File has been deleted' : 'Delete this file?'}</h1>
+                        {/* {deleted ? <h1>File has been deleted</h1> : <h1>Delete this file?</h1>} */}
+                        {deleted && <h1>File has been deleted</h1>}
                         <div className="delete-preview">
                             {canPreview ? (
                                 <img src={`/files/${encodeURIComponent(file.filename)}`} alt={file.originalname} onError={() => setPreviewFailedName(file.filename)} />

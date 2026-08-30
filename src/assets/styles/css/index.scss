@@ -519,9 +519,9 @@ main > * {
 .notif {
   display: flex;
   justify-content: center;
-  width: 100%;
-  height: 100%;
   position: fixed;
+  inset: 0;
+  padding: 0;
   z-index: 700;
   pointer-events: none;
 }
@@ -1252,7 +1252,7 @@ body.text .drag {
   display: block;
   height: auto;
   min-height: calc(100vh - var(--header-height));
-  padding: 50px min(20%, 260px) 80px;
+  // padding: 50px min(20%, 260px) 80px;
 
   .delete-file {
     width: min(100%, 900px);
@@ -1536,6 +1536,7 @@ body.text .drag {
       color: #667078;
       text-align: center;
       word-break: break-word;
+      display: none;
     }
   }
 
