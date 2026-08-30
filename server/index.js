@@ -22,7 +22,7 @@ const dataDir = path.resolve(process.cwd(), 'data')
 const filesDir = path.join(dataDir, 'files')
 const metaDir = path.join(dataDir, 'meta')
 const maxFileSize = 2 * 1024 * 1024 * 1024
-const downloadOnlyTypes = new Set(['text/html', 'application/xhtml+xml', 'image/svg+xml', 'text/xml', 'application/xml'])
+const downloadOnlyTypes = /htm|svg|xml/i
 const authCookie = 'tempfile_auth'
 const authDurationMs = 15 * 60_000
 const authSecret = process.env.AUTH_SECRET
@@ -51,7 +51,13 @@ const err = (res, status = 500, type = 'InternalServerError', message = 'There w
 
 const limitRequests = (windowMs, limit, message, options = {}) => rateLimit({
   windowMs, limit, standardHeaders: 'draft-8', legacyHeaders: false,
-  handler: (_req, res) => console.log(err(res, 429, 'TooManyRequests', message) || message),
+  handler: (req, res) => {
+    err(res, 429, 'TooManyRequests', message)
+    console.warn(message, {
+      ip: getClientIp(req), method: req.method, path: req.originalUrl,
+      attempts: req.rateLimit.used + '/' + req.rateLimit.limit, resetAt: req.rateLimit.resetTime,
+    })
+  },
   ...options,
 })
 
@@ -457,7 +463,8 @@ const sendUpload = async (req, res, filename) => {
   res.setHeader('Access-Control-Allow-Origin', '*')
   res.setHeader('Content-Type', meta.mimetype)
   res.setHeader('Content-Length', body.length)
-  /xml|htm|svg/i.test(meta.mimetype) && res.attachment(meta.originalname || filename)
+  if (downloadOnlyTypes.test(meta.mimetype + meta.originalname))
+    res.attachment(meta.originalname || filename)
 
   res.send(body)
   decrementLimit(filename, meta).catch((error) => console.error('decrement limit', error))
@@ -526,6 +533,12 @@ const cleanupExpired = async () => {
 app.use((error, req, res, _next) => {
   console.error(`${req.method} ${req.path}`, error)
   return res.locals.redirectErrors ? browserError(res, 500) : err(res)
+})
+
+app.use((_req, res, next) => {
+  res.setHeader('Content-Security-Policy', "frame-ancestors 'none'")
+  res.setHeader('X-Frame-Options', 'DENY')
+  next()
 })
 
 app.use(express.static(distDir))
