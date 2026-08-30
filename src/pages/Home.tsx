@@ -298,7 +298,7 @@ export default function Home() {
         setUploadedLink(null)
         setUploading(true)
         try {
-            const res = await fetch('/api/files', { method: 'POST', body: fd })
+            const res = await fetch('/files', { method: 'POST', body: fd })
             const json = await res.json()
 
             if (!res.ok)
@@ -359,7 +359,7 @@ export default function Home() {
         <>
             {notification && <Notification key={notification.id} text={notification.text} success={notification.success} />}
             <main className={clsx({ 'file-selected': hasUpload })}>
-                <form ref={formRef} action="/api/files" method="post" encType="multipart/form-data" onSubmit={(event) => { event.preventDefault(); upload() }}>
+                <form ref={formRef} action="/files" method="post" encType="multipart/form-data" onSubmit={(event) => { event.preventDefault(); upload() }}>
                     <input ref={fileInputRef} type="file" id="upload" name="file" autoComplete="off" onChange={onFileChange} />
                     <input type="submit" className="submitInput" />
                     <div className="dragParent">

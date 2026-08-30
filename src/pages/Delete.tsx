@@ -82,7 +82,7 @@ export default function Delete() {
         if (!name) return
 
         let active = true
-        fetch(`/api/files/${encodeURIComponent(name)}/info`)
+        fetch(`/files/${encodeURIComponent(name)}/info`)
             .then(async (res) => ({ res, json: await res.json() }))
             .then(({ res, json }) => {
                 if (!active) return
@@ -120,7 +120,7 @@ export default function Delete() {
 
         setDeleting(true)
         try {
-            const res = await fetch(`/api/files/${encodeURIComponent(name)}`, {
+            const res = await fetch(`/files/${encodeURIComponent(name)}`, {
                 method: 'DELETE',
                 headers: file?.requesterRequiresDeleteKey && authkey.trim() ? { authkey: authkey.trim() } : undefined,
             })

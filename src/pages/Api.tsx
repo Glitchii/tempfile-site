@@ -8,8 +8,8 @@ export default function Api() {
                 <p>Upload a file or text with a required expiry. Expiry can be relative, like <code>5m</code>, <code>2h</code>, <code>1d</code>, or an ISO/date-time string up to 31 days ahead.</p>
 
                 <h2 id="upload">Upload</h2>
-                <pre><code>{`curl -F datetime=5m -F file=@./image.png ${origin}/api/files`}</code></pre>
-                <pre><code>{`curl -F datetime=1h -F name=note -F text='hello world' ${origin}/api/files`}</code></pre>
+                <pre><code>{`curl -F datetime=5m -F file=@./image.png ${origin}/files`}</code></pre>
+                <pre><code>{`curl -F datetime=1h -F name=note -F text='hello world' ${origin}/files`}</code></pre>
 
                 <h2 id="upload-options">Options</h2>
                 <table>
@@ -29,8 +29,8 @@ export default function Api() {
                 <pre><code>{`curl -O ${origin}/files/example.png -H "pass: file password"`}</code></pre>
 
                 <h2 id="delete">Delete</h2>
-                <pre><code>{`curl -X DELETE ${origin}/api/files/example.png`}</code></pre>
-                <pre><code>{`curl -X DELETE ${origin}/api/files/example.png -H "authkey: your key"`}</code></pre>
+                <pre><code>{`curl -X DELETE ${origin}/files/example.png`}</code></pre>
+                <pre><code>{`curl -X DELETE ${origin}/files/example.png -H "authkey: your key"`}</code></pre>
             </article>
         </section>
     )

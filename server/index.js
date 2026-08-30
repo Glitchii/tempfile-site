@@ -44,8 +44,9 @@ const ensureDirs = async () => {
 }
 
 const ok = (res, obj) => res.json({ ok: true, ...obj })
-const err = (res, status = 500, type = 'InternalServerError', message = 'There was an internal server error', usage) =>
-  res.status(status).json({ ok: false, error: { type, message, ...(usage ? { usage } : {}) } })
+const err = (res, status = 500, type = 'InternalServerError', message = 'There was an internal server error', usage) => {
+  return res.status(status).json({ ok: false, error: { type, message, ...(usage ? { usage } : {}) } })
+}
 
 const limitRequests = (windowMs, limit, message, options = {}) =>
   rateLimit({
@@ -335,7 +336,7 @@ const loadFileMeta = async (req, res, next) => {
   next()
 }
 
-app.post('/api/files', uploadLimiter, (req, res, next) => {
+app.post('/files', uploadLimiter, (req, res, next) => {
   upload.single('file')(req, res, async (uploadError) => {
     try {
       if (process.env.UPLOAD_MESSAGE) return err(res, 400, 'UploadDisabled', process.env.UPLOAD_MESSAGE)
@@ -344,7 +345,7 @@ app.post('/api/files', uploadLimiter, (req, res, next) => {
 
       const text = req.body?.text?.toString()
       if (!req.file && !text?.trim()) return err(res, 400, 'MissingFile', 'No file or text received')
-      if (!req.body?.datetime) return err(res, 400, 'MissingDateTime', "Request must include a 'datetime' key", `${publicOrigin(req)}/api/files`)
+      if (!req.body?.datetime) return err(res, 400, 'MissingDateTime', "Request must include a 'datetime' key", `${publicOrigin(req)}/files`)
 
       const chosenDate = parseDatetime(req.body.datetime)
       if (chosenDate === 0) return err(res, 400, 'TooLow', 'Time must be at least a minute ahead')
@@ -394,7 +395,7 @@ app.post('/api/files', uploadLimiter, (req, res, next) => {
       ok(res, {
         link,
         authkey,
-        deletion: `To delete, make a DELETE request to ${publicOrigin(req)}/api/files/${filename} with an authkey header. ${publicOrigin(req)}/api#delete`,
+        deletion: `To delete, make a DELETE request to ${publicOrigin(req)}/files/${filename} with an authkey header. ${publicOrigin(req)}/api#delete`,
       })
     } catch (error) {
       next(error)
@@ -447,11 +448,11 @@ const sendUpload = async (req, res, filename) => {
   void decrementLimit(filename, meta).catch((error) => console.error('decrement limit', error))
 }
 
-app.get('/api/files/:name/info', loadFileMeta, (req, res) => {
+app.get('/files/:name/info', loadFileMeta, (req, res) => {
   ok(res, { file: publicMeta(res.locals.file.meta, getClientIp(req)) })
 })
 
-app.post('/api/files/:name/auth', authLimiter, loadFileMeta, async (req, res) => {
+app.post('/files/:name/auth', authLimiter, loadFileMeta, async (req, res) => {
   const { filename, meta } = res.locals.file
   if (!canAccessByIp(getClientIp(req), meta))
     return err(res, 403, 'Forbidden', 'You are not allowed to access this file.')
@@ -471,7 +472,7 @@ app.post('/api/files/:name/auth', authLimiter, loadFileMeta, async (req, res) =>
   ok(res, { link: `/files/${encodeURIComponent(filename)}` })
 })
 
-app.delete('/api/files/:name', authLimiter, loadFileMeta, async (req, res) => {
+app.delete('/files/:name', authLimiter, loadFileMeta, async (req, res) => {
   const { filename, meta } = res.locals.file
   if (requesterNeedsDeleteKey(meta, getClientIp(req))) {
     const key = req.headers.authkey
@@ -486,11 +487,10 @@ app.delete('/api/files/:name', authLimiter, loadFileMeta, async (req, res) => {
   ok(res)
 })
 
-app.get('/api/health', (_req, res) => ok(res))
-
-app.all(/^\/api\/.+/, (_req, res) => err(res, 404, 'NotFound', 'API route not found'))
-
-app.get('/files/:name', (req, res) => sendUpload(req, res, normaliseFilename(req.params.name)))
+app.get('/files/:name', (req, res) => {
+  res.locals.redirectErrors = true
+  return sendUpload(req, res, normaliseFilename(req.params.name))
+})
 
 app.get('/debug', (req, res) => res.json({
   xff: req.headers['x-forwarded-for'],
@@ -510,7 +510,7 @@ const cleanupExpired = async () => {
 
 app.use((error, req, res, _next) => {
   console.error(`${req.method} ${req.path}`, error)
-  return req.path.startsWith('/api/') ? err(res) : browserError(res, 500)
+  return res.locals.redirectErrors ? browserError(res, 500) : err(res)
 })
 
 app.use(express.static(distDir))

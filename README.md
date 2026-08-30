@@ -4,9 +4,9 @@
 
 ### Using the API and responses
 
-You can also upload via the API. All examples below use curl, but you can replicate them with any HTTP client. The API is available under `/api/files`.
+You can also upload via the API. All examples below use curl, but you can replicate them with any HTTP client. The API is available under `/files`.
 
-Every API response is JSON. Successful responses contain `"ok": true`, otherwise `"ok": false` and an `error` object.
+Upload, metadata, authentication, and deletion responses are JSON. Successful responses contain `"ok": true`, otherwise `"ok": false` and an `error` object. Downloads return the uploaded file or text.
 
 A successful upload resembles:
 
@@ -21,11 +21,11 @@ A successful upload resembles:
 
 ### Upload
 
-Send a multipart `POST` request to `/api/files`. Include `datetime` and either `file` or `text`.
+Send a multipart `POST` request to `/files`. Include `datetime` and either `file` or `text`.
 
 ```bash
-curl -F datetime=5m -F file=@./image.png http://localhost:3001/api/files
-curl -F datetime=1h -F text="Temporary note" http://localhost:3001/api/files
+curl -F datetime=5m -F file=@./image.png http://localhost:3001/files
+curl -F datetime=1h -F text="Temporary note" http://localhost:3001/files
 ```
 
 The `datetime` value can be an ISO date or a number followed by `m`, `h`, `d`, `w`, or `mo`. It must be at least one minute and no more than 31 days in the future.
@@ -52,7 +52,7 @@ curl \
   -F pass="file password" \
   -F ipblacklist="192.0.2.10,2001:db8::10" \
   -F authkey="my.deletion.key" \
-  http://localhost:3001/api/files
+  http://localhost:3001/files
 ```
 
 ### Download
@@ -69,7 +69,7 @@ Opening a password-protected `/files/:name` URL without a valid `pass` header re
 Public metadata can be read without downloading the file:
 
 ```bash
-curl http://localhost:3001/api/files/example.png/info
+curl http://localhost:3001/files/example.png/info
 ```
 
 ### Delete
@@ -77,8 +77,8 @@ curl http://localhost:3001/api/files/example.png/info
 Delete from the uploader's IP without a key, or provide the upload's authentication key from another IP:
 
 ```bash
-curl -X DELETE http://localhost:3001/api/files/example.png
-curl -X DELETE http://localhost:3001/api/files/example.png \
+curl -X DELETE http://localhost:3001/files/example.png
+curl -X DELETE http://localhost:3001/files/example.png \
   -H "authkey: memorable.deletion.key"
 ```
 

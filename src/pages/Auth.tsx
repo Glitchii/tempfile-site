@@ -17,7 +17,7 @@ export default function Auth() {
         document.title = 'Password required - TempFile'
         let active = true
 
-        fetch(`/api/files/${encodedName}/info`)
+        fetch(`/files/${encodedName}/info`)
             .then(async (res) => ({ res, json: await res.json() }))
             .then(({ res, json }) => {
                 if (!active) return
@@ -46,7 +46,7 @@ export default function Auth() {
         setMessage('')
         setSubmitting(true)
         try {
-            const res = await fetch(`/api/files/${encodedName}/auth`, {
+            const res = await fetch(`/files/${encodedName}/auth`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ password }),

@@ -7,7 +7,6 @@ export default defineConfig({
   plugins: [tailwindcss(), react(), svgr()],
   server: {
     proxy: {
-      '/api/files': 'http://localhost:3001',
       '/debug': 'http://localhost:3001',
       '/files': 'http://localhost:3001',
     },
