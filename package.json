@@ -4,7 +4,7 @@
   "version": "1.0.0",
   "type": "module",
   "engines": {
-    "node": "^20.19.0 || >=22.12.0"
+    "node": ">=22.21.0"
   },
   "scripts": {
     "start": "node server/index.js",
@@ -17,9 +17,7 @@
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1121.0",
-    "@tailwindcss/vite": "^4.3.3",
     "bcryptjs": "^3.0.3",
-    "dotenv": "^17.4.2",
     "express": "^5.2.1",
     "express-rate-limit": "^8.7.0",
     "multer": "^2.3.0"
@@ -29,6 +27,7 @@
     "@types/node": "^26.4.0",
     "@types/react": "^19.2.18",
     "@types/react-dom": "^19.2.5",
+    "@tailwindcss/vite": "^4.3.3",
     "@vitejs/plugin-react": "^6.1.1",
     "clsx": "^2.1.1",
     "concurrently": "^10.0.5",

@@ -4,12 +4,11 @@ import crypto from 'node:crypto'
 import fs from 'node:fs/promises'
 import { isIP } from 'node:net'
 import path from 'node:path'
-import dotenv from 'dotenv'
 import express from 'express'
 import { rateLimit } from 'express-rate-limit'
 import multer from 'multer'
 
-dotenv.config({ quiet: true })
+process.loadEnvFile()
 
 const PORT = +(process.env.PORT ?? 3001)
 const app = express()
