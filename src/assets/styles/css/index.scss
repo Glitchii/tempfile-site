@@ -1462,8 +1462,12 @@ body.text .drag {
 }
 
 .api-page {
+  height: auto;
+  padding: 50px 5% 80px;
+
   article {
-    max-width: 985px;
+    width: min(100%, 985px);
+    min-width: 0;
     margin: 0 auto;
     padding: 22px 38px 30px;
     border: 1px solid #e1e4e8;
@@ -1513,6 +1517,8 @@ body.text .drag {
   }
 
   @media screen and (max-width: 760px) {
+    padding: 36px 20px 60px;
+
     article {
       padding: 18px 16px 24px;
     }
