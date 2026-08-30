@@ -1,17 +1,15 @@
 import { useEffect, useState } from 'react'
-import type { ReactNode } from 'react'
 import CloseIcon from '../assets/vectors/close.svg?react'
 import InfoIcon from '../assets/vectors/info.svg?react'
 import SuccessIcon from '../assets/vectors/success.svg?react'
 
 interface NotificationProps {
+    text: string
     success?: boolean
-    text?: string
-    children?: ReactNode
     duration?: number
 }
 
-export default function Notification({ success = false, text = '', children, duration = 5000 }: NotificationProps) {
+export default function Notification({ text, success = false, duration = 5000 }: NotificationProps) {
     const [visible, setVisible] = useState(true)
 
     useEffect(() => {
@@ -27,7 +25,7 @@ export default function Notification({ success = false, text = '', children, dur
         <div className="notif">
             <div className={`${success ? 'success' : 'normal'} content`}>
                 <StatusIcon className="leftIcon" aria-hidden="true" />
-                <p>{text || children || 'Notification'}</p>
+                <p>{text}</p>
                 <button className="notif-close" type="button" onClick={() => setVisible(false)} aria-label="Close notification">
                     <CloseIcon aria-hidden="true" />
                 </button>

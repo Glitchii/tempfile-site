@@ -5,10 +5,6 @@ import ForbiddenIllustration from '../assets/vectors/forbidden.svg?react'
 import NotFoundIllustration from '../assets/vectors/not-found.svg?react'
 import ServerErrorIllustration from '../assets/vectors/server-error.svg?react'
 
-type ErrorPageProps = {
-    status?: number
-}
-
 type Illustration = ComponentType<SVGProps<SVGSVGElement>>
 
 const errors: Record<number, { title: string; message: string; image: Illustration }> = {
@@ -34,7 +30,7 @@ const errors: Record<number, { title: string; message: string; image: Illustrati
     },
 }
 
-export default function ErrorPage({ status }: ErrorPageProps) {
+export default function ErrorPage({ status }: { status?: number }) {
     const { status: routeStatus } = useParams()
     const requestedCode = status || Number(routeStatus) || 404
     const code = errors[requestedCode] ? requestedCode : 500

@@ -8,7 +8,7 @@ const links = [
     { to: '/delete', label: 'Delete a file' },
     { to: '/api', label: 'API' },
     { to: 'https://github.com/Glitchii/tempfile.site', label: 'Source code', target: '_blank' },
-    { to: '/contact', label: 'Contact' },
+    { to: 'https://github.com/Glitchii/', label: 'Contact' },
 ]
 
 export default function Header() {

@@ -6,7 +6,6 @@ import './assets/styles/css/index.scss'
 import Header from './components/Header'
 import Api from './pages/Api'
 import Auth from './pages/Auth'
-import ContactRedirect from './pages/ContactRedirect'
 import Delete from './pages/Delete'
 import ErrorPage from './pages/ErrorPage'
 import Home from './pages/Home'
@@ -22,7 +21,6 @@ createRoot(document.body).render(
         <Route path="/auth/:name" element={<Auth />} />
         <Route path="/error/:status" element={<ErrorPage />} />
         <Route path="/api" element={<Api />} />
-        <Route path="/contact" element={<ContactRedirect />} />
         <Route path="*" element={<ErrorPage status={404} />} />
       </Routes>
     </BrowserRouter>

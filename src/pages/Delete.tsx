@@ -9,13 +9,13 @@ import Notification from '../components/Notification'
 
 type FileInfo = {
     filename: string
-    originalname?: string
-    mimetype?: string
-    size?: number
-    datetime?: string
+    originalname: string
+    mimetype: string
+    size: number
+    datetime: string
     limit?: number
-    hasPassword?: boolean
-    ipRestricted?: boolean
+    hasPassword: boolean
+    ipRestricted: boolean
     requesterRequiresDeleteKey: boolean
 }
 
@@ -36,10 +36,9 @@ const filenameFromInput = (value: string) => {
     }
 }
 
-const formatBytes = (size?: number) => {
-    if (!Number.isFinite(size)) return 'Unknown'
+const formatBytes = (size: number) => {
     const units = ['B', 'KB', 'MB', 'GB']
-    let value = Number(size)
+    let value = size
     let unit = 0
 
     while (value >= 1024 && unit < units.length - 1) {
@@ -84,14 +83,14 @@ export default function Delete() {
 
         let active = true
         fetch(`/api/files/${encodeURIComponent(name)}/info`)
-            .then(async (res) => ({ res, json: await res.json().catch(() => null) }))
+            .then(async (res) => ({ res, json: await res.json() }))
             .then(({ res, json }) => {
                 if (!active) return
                 if (res.status === 404) {
                     navigate('/error/404', { replace: true })
                     return
                 }
-                if (!res.ok || !json?.ok) {
+                if (!res.ok) {
                     notify(json?.error?.message || 'Could not load this file')
                     setLoaded({ name, file: null })
                     return
@@ -125,8 +124,8 @@ export default function Delete() {
                 method: 'DELETE',
                 headers: file?.requesterRequiresDeleteKey && authkey.trim() ? { authkey: authkey.trim() } : undefined,
             })
-            const json = await res.json().catch(() => null)
-            if (!res.ok || !json?.ok) return notify(json?.error?.message || 'Could not delete file')
+            const json = await res.json()
+            if (!res.ok) return notify(json?.error?.message || 'Could not delete file')
 
             setDeletedName(name)
             notify('File has been deleted', true)
@@ -171,7 +170,7 @@ export default function Delete() {
                         <h1>{deleted ? 'File has been deleted' : 'Delete this file?'}</h1>
                         <div className="delete-preview">
                             {canPreview ? (
-                                <img src={`/files/${encodeURIComponent(file.filename)}`} alt={file.originalname || file.filename} onError={() => setPreviewFailedName(file.filename)} />
+                                <img src={`/files/${encodeURIComponent(file.filename)}`} alt={file.originalname} onError={() => setPreviewFailedName(file.filename)} />
                             ) : (
                                 <div className="fileIcon delete-file-icon">
                                     <p>{extension(file.filename)}</p>
@@ -189,13 +188,13 @@ export default function Delete() {
                             <div>
                                 <dt>File name:</dt>
                                 <dd>
-                                    {file.originalname || file.filename}
-                                    {file.originalname && file.originalname !== file.filename && <i> ({file.filename})</i>}
+                                    {file.originalname}
+                                    {file.originalname !== file.filename && <i> ({file.filename})</i>}
                                 </dd>
                             </div>
                             <div><dt>File size:</dt><dd>{formatBytes(file.size)}</dd></div>
-                            <div><dt>File type:</dt><dd>{file.mimetype || 'Unknown'}</dd></div>
-                            <div><dt>Expires on:</dt><dd>{file.datetime ? new Date(file.datetime).toLocaleString() : 'Unknown'}</dd></div>
+                            <div><dt>File type:</dt><dd>{file.mimetype}</dd></div>
+                            <div><dt>Expires on:</dt><dd>{new Date(file.datetime).toLocaleString()}</dd></div>
                             {file.limit && <div><dt>Downloads left:</dt><dd>{file.limit}</dd></div>}
                         </dl>
                         {file.hasPassword && <p className="delete-note"><b>Note:</b> File is password protected.</p>}

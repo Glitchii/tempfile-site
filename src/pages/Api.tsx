@@ -1,5 +1,5 @@
 export default function Api() {
-    const origin = typeof window === 'undefined' ? 'https://tempfile.site' : window.location.origin
+    const origin = window.location.origin
 
     return (
         <section className="route-page api-page">

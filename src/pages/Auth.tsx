@@ -18,14 +18,14 @@ export default function Auth() {
         let active = true
 
         fetch(`/api/files/${encodedName}/info`)
-            .then(async (res) => ({ res, json: await res.json().catch(() => null) }))
+            .then(async (res) => ({ res, json: await res.json() }))
             .then(({ res, json }) => {
                 if (!active) return
-                if (!res.ok || !json?.ok) {
+                if (!res.ok) {
                     navigate('/error/404', { replace: true })
                     return
                 }
-                if (!json.file?.hasPassword) window.location.replace(`/files/${encodedName}`)
+                if (!json.file.hasPassword) window.location.replace(`/files/${encodedName}`)
             })
             .catch(() => active && setMessage('Could not reach the server. Please try again.'))
             .finally(() => active && setChecking(false))
@@ -51,9 +51,9 @@ export default function Auth() {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ password }),
             })
-            const json = await res.json().catch(() => null)
+            const json = await res.json()
 
-            if (!res.ok || !json?.ok) {
+            if (!res.ok) {
                 if (res.status === 404) return navigate('/error/404', { replace: true })
                 if (res.status === 403) return navigate('/error/403', { replace: true })
                 setMessage(json?.error?.message || 'Could not unlock this file')

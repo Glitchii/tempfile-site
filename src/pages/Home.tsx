@@ -44,19 +44,19 @@ const timeOptions = [
 ] as const
 
 const maxFileSize = 2 * 1024 * 1024 * 1024
+const defaultExpiry = '5m'
 const emptyOptions = { limit: '', pass: '', name: '' }
 
-// Middle char in each group is a vowel to make it easier to remember.
-// Excluded some consonants that are quite rare in words eg. q, x, z, j, l is just unlucky
+// Alternate consonants and vowels so the key remains easy to remember.
 const createAuthKey = () => {
-    let letters = ['bcdfghkmnprstvwy', 'aeiou'], string = ''
-    for (let i = 0; i < 3; i++)
-        for (let j = 0; j < 3; j++) {
-            let arr = letters[j == 1 ? 1 : 0]
-            string += arr[Math.floor(Math.random() * arr.length)]
-            string = j == 2 && i != 2 ? string + '.' : string
-        }
-    return string
+    const letters = ['bcdfghkmnprstvwy', 'aeiou']
+    const bytes = crypto.getRandomValues(new Uint8Array(9))
+
+    return [...bytes].map((byte, index) => {
+        const chars = letters[index % 3 === 1 ? 1 : 0]
+        const separator = index > 0 && index % 3 === 0 ? '.' : ''
+        return separator + chars[byte % chars.length]
+    }).join('')
 }
 
 const dateFromValue = (value: string) => {
@@ -100,9 +100,8 @@ export default function Home() {
     const uploadedLinkInputRef = useRef<HTMLInputElement | null>(null)
     const dragDepthRef = useRef(0)
 
-    const defaultExpiry = '5m'
     const [expiry, setExpiry] = useState(defaultExpiry)
-    const [customExpiry, setCustomExpiry] = useState(() => localDateTime(dateFromValue(defaultExpiry) || new Date()))
+    const [customExpiry, setCustomExpiry] = useState(() => localDateTime(dateFromValue(defaultExpiry)!))
     const [useCustomExpiry, setUseCustomExpiry] = useState(false)
     const [uploading, setUploading] = useState(false)
     const [uploadedLink, setUploadedLink] = useState<string | null>(null)
@@ -149,7 +148,7 @@ export default function Home() {
     useEffect(() => {
         if (useCustomExpiry) return
 
-        const tick = () => setCustomExpiry(localDateTime(dateFromValue(expiry) || new Date()))
+        const tick = () => setCustomExpiry(localDateTime(dateFromValue(expiry)!))
         tick()
         const interval = window.setInterval(tick, 60_000)
         return () => window.clearInterval(interval)
@@ -224,10 +223,9 @@ export default function Home() {
     }
 
     const onExpiryChange = (value: string) => {
-        const date = dateFromValue(value)
         setExpiry(value)
         setUseCustomExpiry(false)
-        setCustomExpiry(localDateTime(date || new Date()))
+        setCustomExpiry(localDateTime(dateFromValue(value)!))
     }
 
     const onCustomExpiryChange = (value: string) => {
@@ -252,7 +250,6 @@ export default function Home() {
         setIpBlacklist([''])
         setIpWhitelist([''])
         setOptions(emptyOptions)
-        formRef.current?.reset()
     }
 
     const copyLink = async () => {
@@ -302,9 +299,9 @@ export default function Home() {
         setUploading(true)
         try {
             const res = await fetch('/api/files', { method: 'POST', body: fd })
-            const json = await res.json().catch(() => null)
+            const json = await res.json()
 
-            if (!res.ok || !json?.ok)
+            if (!res.ok)
                 return showNotification(json?.error?.message || 'Upload failed')
 
             setUploadedLink(json.link)

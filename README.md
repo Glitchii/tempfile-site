@@ -2,7 +2,7 @@
 
 [TempFile](http://localhost:3001) (temporarily using localhost for demo while I renew domain) is a website for temporary file and text uploads. Uploads can expire after a chosen time and can optionally use passwords, download limits, custom names, IP rules, and deletion keys.
 
-## Using the API and responses
+### Using the API and responses
 
 You can also upload via the API. All examples below use curl, but you can replicate them with any HTTP client. The API is available under `/api/files`.
 
@@ -19,7 +19,7 @@ A successful upload resembles:
 }
 ```
 
-## Upload
+### Upload
 
 Send a multipart `POST` request to `/api/files`. Include `datetime` and either `file` or `text`.
 
@@ -55,7 +55,7 @@ curl \
   http://localhost:3001/api/files
 ```
 
-## Download
+### Download
 
 All browser and API-client downloads use `/files/:name`. Password-protected downloads accept a `pass` header or redirect to the browser authentication page.
 
@@ -72,7 +72,7 @@ Public metadata can be read without downloading the file:
 curl http://localhost:3001/api/files/example.png/info
 ```
 
-## Delete
+### Delete
 
 Delete from the uploader's IP without a key, or provide the upload's authentication key from another IP:
 
