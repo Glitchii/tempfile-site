@@ -507,10 +507,12 @@ export default function Home() {
                             </div>
                         )}
                         <div className="inner">
-                            <h2>{uploading ? 'Uploading...' : 'File Uploaded'}</h2>
+                            <div className={clsx('title', { uploading })}>
+                                {uploading && <div className="upload-spinner" aria-label="Uploading"></div>}
+                                <h2>{uploading ? 'Uploading...' : 'File Uploaded'}</h2>
+                            </div>
                             {uploading ? (
                                 <div className="upload-status">
-                                    <div className="upload-spinner" aria-label="Uploading"></div>
                                     <p>Please keep this page open while your file uploads</p>
                                 </div>
                             ) : uploadedLink && (

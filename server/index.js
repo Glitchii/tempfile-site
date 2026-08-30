@@ -59,14 +59,14 @@ const limitRequests = (windowMs, limit, message, options = {}) =>
 
 const uploadLimiter = limitRequests(
   +(process.env.UPLOAD_RATE_WINDOW_MS ?? 60_000),
-  +(process.env.UPLOAD_RATE_LIMIT ?? 30),
-  'Too many uploads. Please wait a moment and try again.',
+  +(process.env.UPLOAD_RATE_LIMIT ?? 5),
+  'Too many uploads. Wait a moment and try again.',
 )
 
 const authLimiter = limitRequests(
-  +(process.env.AUTH_RATE_WINDOW_MS ?? 15 * 60_000),
+  +(process.env.AUTH_RATE_WINDOW_MS ?? 10 * 60_000),
   +(process.env.AUTH_RATE_LIMIT ?? 10),
-  'Too many authentication attempts. Please wait and try again.',
+  'Too many authentication attempts. Wait and try again.',
   { skipSuccessfulRequests: true },
 )
 
@@ -338,8 +338,7 @@ const loadFileMeta = async (req, res, next) => {
 app.post('/api/files', uploadLimiter, (req, res, next) => {
   upload.single('file')(req, res, async (uploadError) => {
     try {
-      const uploadInfo = process.env.UPLOAD_INFO
-      if (uploadInfo) return err(res, 400, 'UploadDisabled', uploadInfo)
+      if (process.env.UPLOAD_MESSAGE) return err(res, 400, 'UploadDisabled', process.env.UPLOAD_MESSAGE)
       if (uploadError?.code === 'LIMIT_FILE_SIZE') return err(res, 400, 'FileTooLarge', 'File is too large.')
       if (uploadError) return err(res, 400, 'UploadError', 'There was an error while processing the file')
 
@@ -365,7 +364,7 @@ app.post('/api/files', uploadLimiter, (req, res, next) => {
 
       const body = req.file?.buffer || Buffer.from(text)
       const originalname = req.file?.originalname || 'text.txt'
-      const ext = req.file ? extensionFor(originalname) : extensionFor(req.body.name, '.txt')
+      const ext = req.file ? extensionFor(originalname, req.file?.mimetype?.split('/')?.[1] || '') : extensionFor(req.body.name, '.txt')
       const filename = await chooseName(req.body.name, ext)
       const password = typeof req.body.pass === 'string' ? req.body.pass : ''
       if (Buffer.byteLength(password) > 72) return err(res, 400, 'PasswordTooLong', 'Password must be at most 72 bytes')

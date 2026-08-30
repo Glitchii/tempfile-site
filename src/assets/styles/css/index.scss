@@ -782,6 +782,20 @@ main > * {
   min-width: 0;
 }
 
+.links .inner .title {
+  place-content: center;
+  display: flex;
+
+  &.uploading{
+    padding-right: 40px;
+  }
+}
+
+.links .inner .title h2 {
+  margin: 0;
+  padding: 0;
+}
+
 body:not(.showLinks) .links, body:not(.showLinks) .ov {
   display: none!important;
 }
@@ -871,7 +885,7 @@ body.showLinks .ov {
   display: grid;
   justify-items: center;
   gap: 18px;
-  margin-top: 35px;
+  margin-top: 30px;
   text-align: center;
 
   p {
@@ -879,14 +893,16 @@ body.showLinks .ov {
   }
 }
 
-.upload-spinner,
-.page-loader {
-  width: 42px;
-  height: 42px;
-  border: 4px solid #dce7f7;
-  border-top-color: #6f9ef5;
-  border-radius: 50%;
-  animation: spin .8s linear infinite;
+.upload-spinner, .page-loader {
+	width: 20px;
+	height: 20px;
+	border: 4px solid #0000;
+	border-top-color: #273036;
+	border-radius: 50%;
+	animation: spin 0.8s linear infinite;
+	position: relative;
+	top: 8px;
+	right: 18px;
 }
 
 @keyframes spin {
