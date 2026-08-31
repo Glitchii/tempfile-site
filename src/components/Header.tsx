@@ -7,7 +7,7 @@ const links = [
     { to: '/', label: 'Home' },
     { to: '/delete', label: 'Delete a file' },
     { to: '/api', label: 'API' },
-    { to: 'https://github.com/Glitchii/tempfile.site', label: 'Source code', target: '_blank' },
+    { to: 'https://github.com/Glitchii/tempfile-site', label: 'Source code', target: '_blank' },
     { to: 'https://github.com/Glitchii/', label: 'Contact' },
 ]
 

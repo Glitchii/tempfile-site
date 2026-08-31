@@ -11,6 +11,7 @@ import multer from 'multer'
 process.loadEnvFile()
 
 const PORT = +(process.env.PORT ?? 3001)
+const HOST = process.env.HOST || '0.0.0.0'
 const app = express()
 
 const trustProxy = process.env.TRUST_PROXY
@@ -546,6 +547,6 @@ app.get(/.*/, (_req, res) => res.sendFile(path.join(distDir, 'index.html')))
 cleanupExpired()
 setInterval(cleanupExpired, 60_000)
 
-app.listen(PORT, () => {
-  console.log(`API listening at http://0.0.0.0:${PORT} (${s3 ? `S3 bucket ${bucket}` : `local storage at ${path.relative(process.cwd(), dataDir)}`})`)
+app.listen(PORT, HOST, () => {
+  console.log(`API listening at http://${HOST}:${PORT} (${s3 ? `S3 bucket ${bucket}` : `local storage at ${path.relative(process.cwd(), dataDir)}`})`)
 })

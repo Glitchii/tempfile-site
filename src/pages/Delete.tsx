@@ -130,7 +130,7 @@ export default function Delete() {
             if (!res.ok) return notify(json?.error?.message || 'Could not delete file')
 
             setDeletedName(name)
-            notify('File has been deleted', true)
+            // notify('File has been deleted', true)
         } catch {
             notify('Could not reach the server')
         } finally {
