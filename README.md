@@ -1,6 +1,6 @@
-# TempFiles.co
+# TempFiles.co <!-- [TempFiles.co](https://tempfiles.co) -->
 
-[TempFiles.co](https://tempfiles.co) is a website for temporary file and text uploads. Uploads can expire after a chosen time and can optionally use passwords, download limits, custom names, IP rules, and deletion keys.
+A temporary file storage service with options to password protect, download limit, custom names, IP blacklisting etc.
 
 ### Using the API and responses
 
