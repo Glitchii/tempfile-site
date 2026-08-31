@@ -515,10 +515,12 @@ app.get('/files/:name', (req, res) => {
 })
 
 app.get('/debug', (req, res) => res.json({
-  xff: req.headers['x-forwarded-for'],
-  cfip: req.headers['cf-connecting-ip'],
-  socket: req.socket.remoteAddress,
-  reqIp: req.ip,
+  'X-Forwarded-For': req.get('X-Forwarded-For') ?? null,
+  'CF-Connecting-IP': req.get('CF-Connecting-IP') ?? null,
+  'X-Real-IP': req.get('X-Real-IP') ?? null,
+  'req.socket.remoteAddress': req.socket.remoteAddress,
+  'req.ip': req.ip,
+  'req.ips': req.ips,
 }))
 
 const cleanupExpired = async () => {
