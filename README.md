@@ -1,6 +1,6 @@
 # TempFiles.co <!-- [TempFiles.co](https://tempfiles.co) -->
 
-A temporary file storage service with options to password protect, limit downloads, choose custom names, IP blacklisting/whitelisting etc.
+A temporary file storage service with options to choose expiry date and time, password protect, limit downloads, pick custom names, IP blacklisting and whitelisting, etc.
 
 ### Using the API and responses
 
