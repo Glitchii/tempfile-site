@@ -1,6 +1,6 @@
-# TempFile
+# TempFiles.co
 
-[TempFile](https://tempfiles.co) (temporarily using localhost for demo while I renew domain) is a website for temporary file and text uploads. Uploads can expire after a chosen time and can optionally use passwords, download limits, custom names, IP rules, and deletion keys.
+[TempFiles.co](https://tempfiles.co) is a website for temporary file and text uploads. Uploads can expire after a chosen time and can optionally use passwords, download limits, custom names, IP rules, and deletion keys.
 
 ### Using the API and responses
 
