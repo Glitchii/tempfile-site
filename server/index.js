@@ -329,7 +329,7 @@ const getClientIp = (req) => normaliseIp(req.ip)
 
 const requesterNeedsDeleteKey = (meta, clientIp) => normaliseIp(meta.userIP) !== normaliseIp(clientIp)
 
-const publicOrigin = (req) => String(process.env.PUBLIC_ORIGIN || `${req.protocol}://${req.get('host')}`).replace(/\/+$/, '')
+const publicOrigin = (req) => `${req.protocol}://${req.get('host')}`
 
 const publicMeta = (meta, clientIp) => ({
   filename: meta.filename,
