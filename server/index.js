@@ -14,8 +14,8 @@ const PORT = +(process.env.PORT ?? 3001)
 const HOST = process.env.HOST || '0.0.0.0'
 const app = express()
 
-const trustProxy = process.env.TRUST_PROXY
-trustProxy && app.set('trust proxy', /^\d+$/.test(trustProxy) ? Number(trustProxy) : trustProxy)
+const trustProxy = process.env.TRUST_PROXY || 'loopback'
+app.set('trust proxy', /^\d+$/.test(trustProxy) ? Number(trustProxy) : trustProxy)
 
 const distDir = path.resolve(process.cwd(), 'dist')
 const dataDir = path.resolve(process.cwd(), 'data')
