@@ -1,49 +1,85 @@
-(Discontinued) A website that temporarily stores files to a certain date or time.
+# TempFiles.co
 
-# Using Requests
-Requests are done on the api path (/api/files/). After each request, a json response will be returned containing an 'ok' key (bool) to signify if it was successful or not. For example after a successful post request to upload a file, the output should look something like this:  
-`{"ok":true,"link":"https://tempfile.site/files/filename.png"}`
+[TempFiles.co](https://tempfiles.co) is a website for temporary file and text uploads. Uploads can expire after a chosen time and can optionally use passwords, download limits, custom names, IP rules, and deletion keys.
 
+### Using the API and responses
 
-## Getting a file
-Use a get request to get a file eg.
+You can also upload via the API. All examples below use curl, but you can replicate them with any HTTP client. The API is available under `/files`.
+
+Upload, metadata, authentication, and deletion responses are JSON. Successful responses contain `"ok": true`, otherwise `"ok": false` and an `error` object. Downloads return the uploaded file or text.
+
+A successful upload resembles:
+
+```json
+{
+  "ok": true,
+  "link": "https://tempfiles.co/files/example.png",
+  "authkey": "memorable.deletion.key",
+  "deletion": "To delete, make a DELETE request..."
+}
+```
+
+### Upload
+
+Send a multipart `POST` request to `/files`. Include `datetime` and either `file` or `text`.
+
 ```bash
-curl -O http://tempfile.site/api/files/filename.png
+curl -F datetime=5m -F file=@./image.png https://tempfiles.co/files
+curl -F datetime=1h -F text="Temporary note" https://tempfiles.co/files
 ```
-If a file requires a password, send the password in a header with a pass key eg. 
+
+The `datetime` value can be an ISO date or a number followed by `m`, `h`, `d`, `w`, or `mo`. It must be at least one minute and no more than 31 days in the future.
+
+Optional multipart fields:
+
+| Field | Purpose |
+| --- | --- |
+| `name` | Preferred URL-friendly file name. The original extension is retained for file uploads. |
+| `limit` | Positive whole-number download limit. The upload is deleted after the final download. |
+| `pass` | Password of at most 72 bytes. |
+| `ipblacklist` | Up to five comma-separated IPv4 or IPv6 addresses denied access. |
+| `ipwhitelist` | Up to five comma-separated addresses allowed access; all others are denied. |
+| `authkey` | Custom deletion key. A secure key is generated and returned when omitted. |
+
+For example:
+
 ```bash
-curl -O http://tempfile.site/api/files/filename.png -H "pass: the password"
+curl \
+  -F datetime=2d \
+  -F file=@./report.pdf \
+  -F name=weekly-report \
+  -F limit=5 \
+  -F pass="file password" \
+  -F ipblacklist="192.0.2.10,2001:db8::10" \
+  -F authkey="my.deletion.key" \
+  https://tempfiles.co/files
 ```
 
-## Uploading a file
-Use a post request to upload files with the file and the expiry date / time, eg.
+### Download
+
+All browser and API-client downloads use `/files/:name`. Password-protected downloads accept a `pass` header or redirect to the browser authentication page.
+
 ```bash
-curl -F datetime=1m -F file=@/path/to/file.png http://tempfile.site/api/files
+curl -O https://tempfiles.co/files/example.png
+curl -O https://tempfiles.co/files/example.png -H "pass: file password"
 ```
-For the expiry date, you can either use a timestamp string or a number with a unit eg. `3m` for 3 minutes, `1w` for a week, `1mo` for 1 month or `2002-05-19T:08:00.000Z` for my birthday (just make sure it's not in the past)
 
-To use a custom filename, use a form argument with a name parameter (`-F name=file-name`). Filenames should not have special characters that aren't url friendly, in other words, it should follow this pattern `[a-z0-9-_\.]`.
+Opening a password-protected `/files/:name` URL without a valid `pass` header redirects to the authentication page. A correct password sets a signed, HTTP-only cookie for that file for about 15 minutes.
 
-**Other options:**
-```yaml
-limit: Download limit, don't add this for unlimited. (-F limit=5). After this limit, file will be deleted
+Public metadata can be read without downloading the file:
 
-pass: Password protect the file. (-F pass="A password")
-
-ipblacklist: An IP to blacklist from downloading file. (-F ipblacklist="69.80.31.225"). For more than one IP, use a comma as separator instead of setting another form (-F), eg. -F ipblacklist="68.80.31.225,50.90.30.222"
-
-ipwhitelist: If added, file will only be downloaded from this IP. And as mentioned above, you can seperate by a command if more than one.
-
-authkey: Without this key, you won't be able to delete the file if it was not posted from the same IP. If you don't give a custom authkey parameter, it will be gerenerated for you and returned alongside the file link in response
-```
-*All options must be lowercase.*
-## Deleting a file
-To delete a file you'll need to send a delete request to the file eg.
 ```bash
-curl -X DELETE http://tempfile.site/api/files/filename.png
+curl https://tempfiles.co/files/example.png/info
 ```
-You can delete the file if it was uploaded from the same IP address, otherwise you will need an auth key. You can find the auth key by clicking 'more' from the options on the website before uploading.  
-To delete the file with the auth key you must send the key from a header named "authkey" eg.
+
+### Delete
+
+Delete from the uploader's IP without a key, or provide the upload's authentication key from another IP:
+
 ```bash
-curl -X DELETE http://tempfile.site/api/files/filename.png -H "authkey: the key"
+curl -X DELETE https://tempfiles.co/files/example.png
+curl -X DELETE https://tempfiles.co/files/example.png \
+  -H "authkey: memorable.deletion.key"
 ```
+
+The authentication key is only used for deletion when the uploader's IP does not match. It is separate from the optional download password.
