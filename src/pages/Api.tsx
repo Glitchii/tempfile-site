@@ -18,7 +18,7 @@ export default function Api() {
                         <tr><td><code>limit</code></td><td>Delete after this many downloads.</td></tr>
                         <tr><td><code>pass</code></td><td>Password protect download requests.</td></tr>
                         <tr><td><code>name</code></td><td>Custom file name.</td></tr>
-                        <tr><td><code>authkey</code></td><td>Key required to delete from a different IP.</td></tr>
+                        <tr><td><code>authkey</code></td><td>Key required to delete outside the uploading browser.</td></tr>
                         <tr><td><code>ipblacklist</code></td><td>Comma-separated IPs to block.</td></tr>
                         <tr><td><code>ipwhitelist</code></td><td>Comma-separated IPs to allow; all others are blocked.</td></tr>
                     </tbody>

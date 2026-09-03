@@ -74,7 +74,7 @@ curl https://tempfiles.co/files/example.png/info
 
 ### Delete
 
-Delete from the uploader's IP without a key, or provide the upload's authentication key from another IP:
+Delete from the browser that uploaded the file without a key, or provide the upload's authentication key from another browser, device, or API client:
 
 ```bash
 curl -X DELETE https://tempfiles.co/files/example.png
@@ -82,4 +82,4 @@ curl -X DELETE https://tempfiles.co/files/example.png \
   -H "authkey: memorable.deletion.key"
 ```
 
-The authentication key is only used for deletion when the uploader's IP does not match. It is separate from the optional download password.
+The server recognises the uploading browser with a secure, HTTP-only cookie that expires with the file. The authentication key is used when that cookie is unavailable and is separate from the optional download password.

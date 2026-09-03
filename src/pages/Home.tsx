@@ -43,7 +43,7 @@ const timeOptions = [
     ['1mo', '1 Month'],
 ] as const
 
-const maxFileSize = 2 * 1024 * 1024 * 1024
+const maxFileSize = 95 * 1024 * 1024
 const defaultExpiry = '5m'
 const emptyOptions = { limit: '', pass: '', name: '' }
 
@@ -161,7 +161,7 @@ export default function Home() {
             return
         }
 
-        if (file.size > maxFileSize) return showNotification('File too large, the limit is 2GB')
+        if (file.size > maxFileSize) return showNotification('File too large, the limit is 95MB')
         if (!file.size && !/.+?\.[^.]+$/.test(file.name)) return showNotification('File has no extension or size.')
 
         setTextMode(false)
@@ -375,7 +375,7 @@ export default function Home() {
                                 <div className="img mainImg upload-icon-container">
                                     <UploadIcon />
                                 </div>
-                                <img className="img otherImg" src={previewUrl || ''} alt={selectedFile?.name || ''} />
+                                <img className="img otherImg" src={previewUrl || undefined} alt={selectedFile?.name || ''} />
                                 <div className="img fileIcon">
                                     <p>{fileLabel}</p>
                                     <FileIcon />
@@ -420,7 +420,7 @@ export default function Home() {
                                             </QuestionMarkIcon>
                                         </div>
                                     </div>
-                                    <p className="qMarkDesc">You are allowed to <Link to="/delete" className="URL">delete a file</Link> if it was uploaded from the same IP address. This key is required for deletions from other IPs or from <Link to="/api" className="URL">API requests</Link>. Change to something simpler if you like</p>
+                                    <p className="qMarkDesc">This browser can <Link to="/delete" className="URL">delete the upload</Link> automatically. This key is required from another browser or device, and for <Link to="/api" className="URL">API requests</Link>. Change it to something simpler if you like</p>
                                     <div className="inputOptions">
                                         <input className="input btnPad" name="authkey" type="text" placeholder="Auth Key" value={authKey} onChange={(event) => setAuthKey(event.target.value)} maxLength={80} autoComplete="off" />
                                     </div>
@@ -507,12 +507,12 @@ export default function Home() {
                             </div>
                         )}
                         <div className="inner">
-                            <div className={clsx('title', { uploading })}>
-                                {uploading && <div className="upload-spinner" aria-label="Uploading"></div>}
+                            <div className="title">
                                 <h2>{uploading ? 'Uploading...' : 'File Uploaded'}</h2>
                             </div>
                             {uploading ? (
                                 <div className="upload-status">
+                                    <div className="upload-spinner" aria-hidden="true"></div>
                                     <p>Please keep this page open while your file uploads</p>
                                 </div>
                             ) : uploadedLink && (

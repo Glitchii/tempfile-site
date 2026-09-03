@@ -118,7 +118,7 @@ export default function Delete() {
     const deleteFile = async () => {
         if (!name || deleting || deleted) return
         if (file?.requesterRequiresDeleteKey && !authkey.trim())
-            return notify('This file was uploaded from a different IP, enter auth key to delete')
+            return notify('This browser does not own the upload. Enter its authentication key to delete it.')
 
         setDeleting(true)
         try {

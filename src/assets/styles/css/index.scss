@@ -647,14 +647,9 @@ main > * {
 }
 
 @keyframes menuBoxAn {
-  0% {
+  from {
     opacity: 0;
-    top: 30px;
-  }
-
-  50% {
-    opacity: 1;
-    top: 50px;
+    transform: translateY(-4px);
   }
 }
 
@@ -663,11 +658,11 @@ main > * {
 }
 
 .menu .menuBox {
-  animation: menuBoxAn .7s ease;
+  animation: menuBoxAn .14s ease-out;
   padding: 10px;
   border-radius: 5px;
   box-shadow: 0 0 20px 5px rgb(62 41 82 / 29%);
-  width: 300px;
+  width: min(300px, calc(100vw - 32px));
   top: 40px;
   right: 5px;
   position: absolute;
@@ -785,10 +780,6 @@ main > * {
 .links .inner .title {
   place-content: center;
   display: flex;
-
-  &.uploading{
-    padding-right: 40px;
-  }
 }
 
 .links .inner .title h2 {
@@ -806,8 +797,8 @@ body.showLinks .ov {
 
 @keyframes linksAn {
   from {
-    top: -600px;
     opacity: 0;
+    transform: translateY(-8px);
   }
 }
 
@@ -819,7 +810,7 @@ body.showLinks .ov {
   z-index: 600;
   top: 0;
   box-shadow: 0 60px 50px 0px rgb(0 0 0 / 10%);
-  animation: linksAn .5s ease;
+  animation: linksAn .16s ease-out;
 }
 
 .ov {
@@ -900,6 +891,9 @@ body.showLinks .ov {
 	border-top-color: #273036;
 	border-radius: 50%;
 	animation: spin 0.8s linear infinite;
+}
+
+.page-loader {
 	position: relative;
 	top: 8px;
 	right: 18px;
@@ -1050,6 +1044,10 @@ body.text .drag {
 }
 
 @media screen and (max-width: 745px) {
+  main.file-selected .btns > .inner::after {
+    display: none;
+  }
+
   .drag h2 {
     margin-top: 30px;
     display: none;

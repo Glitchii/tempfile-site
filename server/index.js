@@ -1,9 +1,11 @@
 import { DeleteObjectCommand, GetObjectCommand, HeadObjectCommand, ListObjectsV2Command, PutObjectCommand, S3Client } from '@aws-sdk/client-s3'
 import bcrypt from 'bcryptjs'
 import crypto from 'node:crypto'
+import { createReadStream } from 'node:fs'
 import fs from 'node:fs/promises'
 import { isIP } from 'node:net'
 import path from 'node:path'
+import { pipeline } from 'node:stream/promises'
 import express from 'express'
 import { rateLimit } from 'express-rate-limit'
 import multer from 'multer'
@@ -21,7 +23,8 @@ const distDir = path.resolve(process.cwd(), 'dist')
 const dataDir = path.resolve(process.cwd(), 'data')
 const filesDir = path.join(dataDir, 'files')
 const metaDir = path.join(dataDir, 'meta')
-const maxFileSize = 2 * 1024 * 1024 * 1024
+const tempDir = path.join(dataDir, 'tmp')
+const maxFileSize = 95 * 1024 * 1024
 const downloadOnlyTypes = /htm|svg|xml/i
 const authCookie = 'tempfile_auth'
 const authDurationMs = 15 * 60_000
@@ -34,7 +37,10 @@ const s3 = bucket && new S3Client({
   endpoint: process.env.AWS_ENDPOINT_URL,
 })
 
-const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: maxFileSize } })
+const upload = multer({
+  dest: tempDir,
+  limits: { fileSize: maxFileSize, files: 1, fields: 8, parts: 9, headerPairs: 100 },
+})
 
 app.use(express.json())
 app.use((_req, res, next) => next(res.setHeader('X-Powered-By', 'coffee and addiction') && null))
@@ -92,16 +98,26 @@ const getCookie = (req, name) => {
   }
 }
 
+const secureCookie = (req) => process.env.NODE_ENV === 'production' ? '; Secure' : ''
 const signAuthPayload = (payload) => crypto.createHmac('sha256', authSecret).update(payload).digest('base64url')
+const sha256 = (value) => crypto.createHash('sha256').update(value).digest('base64url')
+const safeEqual = (left, right) => {
+  if (typeof left !== 'string' || typeof right !== 'string')
+    return false
+
+  const a = Buffer.from(left)
+  const b = Buffer.from(right)
+  return a.length === b.length && crypto.timingSafeEqual(a, b)
+}
 
 const hasBrowserAuth = (req, filename) => {
   try {
     const [payload, signature] = (getCookie(req, authCookie) || '').split('.')
-    if (!payload || !signature) return false
+    if (!payload || !signature)
+      return false
 
-    const actual = Buffer.from(signature)
-    const expected = Buffer.from(signAuthPayload(payload))
-    if (actual.length !== expected.length || !crypto.timingSafeEqual(actual, expected)) return false
+    if (!safeEqual(signature, signAuthPayload(payload)))
+      return false
 
     const auth = JSON.parse(Buffer.from(payload, 'base64url').toString('utf8'))
     return auth.filename === filename && Number(auth.expiresAt) > Date.now()
@@ -113,8 +129,23 @@ const hasBrowserAuth = (req, filename) => {
 const setBrowserAuth = (req, res, filename) => {
   const expiresAt = Date.now() + authDurationMs
   const payload = Buffer.from(JSON.stringify({ filename, expiresAt })).toString('base64url')
-  const secure = req.secure || process.env.NODE_ENV === 'production' ? '; Secure' : ''
-  res.setHeader('Set-Cookie', `${authCookie}=${payload}.${signAuthPayload(payload)}; Max-Age=${authDurationMs / 1000}; Path=/files/${encodeURIComponent(filename)}; HttpOnly; SameSite=Lax${secure}`)
+  res.setHeader('Set-Cookie', `${authCookie}=${payload}.${signAuthPayload(payload)}; Max-Age=${authDurationMs / 1000}; Path=/files/${encodeURIComponent(filename)}; HttpOnly; SameSite=Lax${secureCookie(req)}`)
+}
+
+const ownerCookieFor = (filename) => `tempfile_owner_${sha256(filename).slice(0, 16)}`
+
+const hasUploadOwnership = (req, filename, meta) => {
+  const token = getCookie(req, ownerCookieFor(filename))
+  return Boolean(token && meta.ownerHash && safeEqual(sha256(token), meta.ownerHash))
+}
+
+const setUploadOwnership = (req, res, filename, token, expiresAt) => {
+  const maxAge = Math.ceil((expiresAt.getTime() - Date.now()) / 1000)
+  res.append('Set-Cookie', `${ownerCookieFor(filename)}=${token}; Max-Age=${maxAge}; Path=/files/${encodeURIComponent(filename)}; HttpOnly; SameSite=Strict${secureCookie(req)}`)
+}
+
+const clearUploadOwnership = (req, res, filename) => {
+  res.append('Set-Cookie', `${ownerCookieFor(filename)}=; Max-Age=0; Path=/files/${encodeURIComponent(filename)}; HttpOnly; SameSite=Strict${secureCookie(req)}`)
 }
 
 const browserError = (res, status) => {
@@ -142,12 +173,13 @@ const existsS3 = async (Key) => {
     await s3.send(new HeadObjectCommand({ Bucket: bucket, Key }))
     return true
   } catch (error) {
-    if (isMissingS3Object(error)) return false
+    if (isMissingS3Object(error))
+      return false
     throw error
   }
 }
 
-const getS3Object = async (Key) => {
+const getS3Buffer = async (Key) => {
   try {
     const data = await s3.send(new GetObjectCommand({ Bucket: bucket, Key }))
     return Buffer.from(await data.Body.transformToByteArray())
@@ -158,7 +190,7 @@ const getS3Object = async (Key) => {
 }
 
 const getS3Json = async (Key) => {
-  const body = await getS3Object(Key)
+  const body = await getS3Buffer(Key)
   return body ? JSON.parse(body.toString('utf8')) : null
 }
 
@@ -181,30 +213,45 @@ const readActiveMeta = async (filename) => {
   return null
 }
 
-const readUpload = async (filename) => {
-  const meta = await readActiveMeta(filename)
-  if (!meta) return null
+const openUploadBody = async (filename, range) => {
+  if (s3) {
+    try {
+      const data = await s3.send(new GetObjectCommand({
+        Bucket: bucket,
+        Key: fileKey(filename),
+        ...(range ? { Range: `bytes=${range.start}-${range.end}` } : {}),
+      }))
+      return data.Body
+    } catch (error) {
+      if (isMissingS3Object(error)) return null
+      throw error
+    }
+  }
 
-  const body = s3
-    ? await getS3Object(fileKey(filename))
-    : await fs.readFile(filePathFor(filename))
-  return body ? { meta, body } : null
+  const filePath = filePathFor(filename)
+  return (await existsLocal(filePath)) ? createReadStream(filePath, range || undefined) : null
 }
 
-const writeUpload = async (filename, meta, body) => {
+const writeUpload = async (filename, meta, source) => {
   if (s3) {
-    const writes = await Promise.allSettled([  
-      s3.send(new PutObjectCommand({ Bucket: bucket, Key: fileKey(filename), Body: body, ContentType: meta.mimetype || 'application/octet-stream' })),  
-      s3.send(new PutObjectCommand({ Bucket: bucket, Key: metaKey(filename), Body: JSON.stringify(meta), ContentType: 'application/json' })),  
+    const writes = await Promise.allSettled([
+      s3.send(new PutObjectCommand({
+        Bucket: bucket,
+        Key: fileKey(filename),
+        Body: typeof source === 'string' ? createReadStream(source) : source,
+        ContentLength: meta.size,
+        ContentType: meta.mimetype || 'application/octet-stream',
+      })),
+      s3.send(new PutObjectCommand({ Bucket: bucket, Key: metaKey(filename), Body: JSON.stringify(meta), ContentType: 'application/json' })),
     ])
 
-    const failed = writes.find(({ status }) => status === 'rejected')  
-    if (failed) {  
-      await Promise.allSettled([  
-        ...(writes[0].status === 'fulfilled' ? [s3.send(new DeleteObjectCommand({ Bucket: bucket, Key: fileKey(filename) }))] : []),  
-        ...(writes[1].status === 'fulfilled' ? [s3.send(new DeleteObjectCommand({ Bucket: bucket, Key: metaKey(filename) }))] : []),  
+    const failed = writes.find(({ status }) => status === 'rejected')
+    if (failed) {
+      await Promise.allSettled([
+        ...(writes[0].status === 'fulfilled' ? [s3.send(new DeleteObjectCommand({ Bucket: bucket, Key: fileKey(filename) }))] : []),
+        ...(writes[1].status === 'fulfilled' ? [s3.send(new DeleteObjectCommand({ Bucket: bucket, Key: metaKey(filename) }))] : []),
       ])
-      throw failed.reason  
+      throw failed.reason
     }
 
     return
@@ -212,7 +259,7 @@ const writeUpload = async (filename, meta, body) => {
 
   await ensureDirs()
   await Promise.all([
-    fs.writeFile(filePathFor(filename), body),
+    typeof source === 'string' ? fs.rename(source, filePathFor(filename)) : fs.writeFile(filePathFor(filename), source),
     fs.writeFile(metaPathFor(filename), JSON.stringify(meta), 'utf8'),
   ])
 }
@@ -327,11 +374,9 @@ const normaliseIp = (value) => {
 
 const getClientIp = (req) => normaliseIp(req.ip)
 
-const requesterNeedsDeleteKey = (meta, clientIp) => normaliseIp(meta.userIP) !== normaliseIp(clientIp)
-
 const publicOrigin = (req) => `${req.protocol}://${req.get('host')}`
 
-const publicMeta = (meta, clientIp) => ({
+const publicMeta = (meta, requesterRequiresDeleteKey) => ({
   filename: meta.filename,
   originalname: meta.originalname,
   mimetype: meta.mimetype,
@@ -341,7 +386,7 @@ const publicMeta = (meta, clientIp) => ({
   limit: meta.limit,
   hasPassword: Boolean(meta.pass),
   ipRestricted: Boolean(meta.ipblacklist?.length || meta.ipwhitelist?.length),
-  requesterRequiresDeleteKey: requesterNeedsDeleteKey(meta, clientIp),
+  requesterRequiresDeleteKey,
 })
 
 const loadFileMeta = async (req, res, next) => {
@@ -359,7 +404,7 @@ app.post('/files', uploadLimiter, (req, res, next) => {
   upload.single('file')(req, res, async (uploadError) => {
     try {
       if (process.env.UPLOAD_MESSAGE) return err(res, 400, 'UploadDisabled', process.env.UPLOAD_MESSAGE)
-      if (uploadError?.code === 'LIMIT_FILE_SIZE') return err(res, 400, 'FileTooLarge', 'File is too large.')
+      if (uploadError?.code === 'LIMIT_FILE_SIZE') return err(res, 400, 'FileTooLarge', `File is too large. The limit is ${ maxFileSize / 1024 * 1024}`)
       if (uploadError) return err(res, 400, 'UploadError', 'There was an error while processing the file')
 
       const text = req.body?.text?.toString()
@@ -382,7 +427,7 @@ app.post('/files', uploadLimiter, (req, res, next) => {
       const limit = limitRaw ? Number(limitRaw) : undefined
       if (limitRaw && (!Number.isSafeInteger(limit) || limit <= 0)) return err(res, 400, 'InvalidLimit', 'Limit must be a positive whole number')
 
-      const body = req.file?.buffer || Buffer.from(text)
+      const source = req.file?.path || Buffer.from(text)
       const originalname = req.file?.originalname || 'text.txt'
       const ext = req.file ? extensionFor(originalname, req.file?.mimetype?.split('/')?.[1] || '') : extensionFor(req.body.name, '.txt')
       const filename = await chooseName(req.body.name, ext)
@@ -392,24 +437,27 @@ app.post('/files', uploadLimiter, (req, res, next) => {
       const suppliedAuthKey = typeof req.body.authkey === 'string' ? req.body.authkey.trim() : ''
       if (Buffer.byteLength(suppliedAuthKey) > 128) return err(res, 400, 'AuthKeyTooLong', 'Authentication key must be at most 128 bytes')
       const authkey = suppliedAuthKey || crypto.randomBytes(9).toString('base64url')
+      const ownerToken = crypto.randomBytes(24).toString('base64url')
       const link = `${publicOrigin(req)}/files/${filename}`
 
       const meta = {
         filename,
         originalname,
         mimetype: req.file?.mimetype || 'text/plain; charset=utf-8',
-        size: body.length,
+        size: req.file?.size ?? source.length,
         createdAt: new Date().toISOString(),
         datetime: chosenDate.toISOString(),
-        userIP: getClientIp(req),
         authkey,
+        ownerHash: sha256(ownerToken),
         ...(passHash ? { pass: passHash } : {}),
         ...(typeof limit === 'number' ? { limit } : {}),
         ...(ipblacklist.length ? { ipblacklist } : {}),
         ...(ipwhitelist.length ? { ipwhitelist } : {}),
       }
 
-      await writeUpload(filename, meta, body)
+      await writeUpload(filename, meta, source)
+      setUploadOwnership(req, res, filename, ownerToken, chosenDate)
+      res.setHeader('Cache-Control', 'no-store')
 
       ok(res, {
         link,
@@ -418,6 +466,9 @@ app.post('/files', uploadLimiter, (req, res, next) => {
       })
     } catch (error) {
       next(error)
+    } finally {
+      if (req.file?.path)
+        await fs.rm(req.file.path, { force: true }).catch((error) => console.error('remove temporary upload', error))
     }
   })
 })
@@ -434,6 +485,19 @@ const canAccessByIp = (clientIp, meta) => {
   return true
 }
 
+const parseRange = (value, size) => {
+  const match = /^bytes=(\d*)-(\d*)$/.exec(value)
+  if (!match || (!match[1] && !match[2]) || !Number.isSafeInteger(size) || size < 1) return null
+
+  const first = match[1] ? Number(match[1]) : null
+  const last = match[2] ? Number(match[2]) : null
+  if (![first, last].every((part) => part === null || Number.isSafeInteger(part))) return null
+
+  const start = first ?? Math.max(size - last, 0)
+  const end = first === null || last === null ? size - 1 : Math.min(last, size - 1)
+  return start >= 0 && start < size && end >= start ? { start, end } : null
+}
+
 const decrementLimit = async (filename, meta) => {
   if (!meta.limit) return
   meta.limit -= 1
@@ -443,10 +507,8 @@ const decrementLimit = async (filename, meta) => {
 const sendUpload = async (req, res, filename) => {
   if (!filename) return browserError(res, 404)
 
-  const found = await readUpload(filename)
-  if (!found) return browserError(res, 404)
-
-  const { meta, body } = found
+  const meta = await readActiveMeta(filename)
+  if (!meta) return browserError(res, 404)
   if (!canAccessByIp(getClientIp(req), meta)) return browserError(res, 403)
 
   if (meta.pass && !hasBrowserAuth(req, filename)) {
@@ -457,21 +519,47 @@ const sendUpload = async (req, res, filename) => {
       return err(res, 401, 'WrongPass', 'Incorrect password')
   }
 
+  const rangeHeader = meta.limit ? undefined : req.headers.range
+  const range = rangeHeader ? parseRange(rangeHeader, meta.size) : undefined
+  if (rangeHeader && !range) {
+    res.setHeader('Content-Range', `bytes */${meta.size}`)
+    return res.sendStatus(416)
+  }
+
+  const body = req.method === 'HEAD' ? null : await openUploadBody(filename, range)
+  if (req.method !== 'HEAD' && !body) return browserError(res, 404)
+
+  if (downloadOnlyTypes.test(meta.mimetype + meta.originalname))
+    res.attachment(meta.originalname || filename)
+
+  if (range) {
+    res.status(206)
+    res.setHeader('Content-Range', `bytes ${range.start}-${range.end}/${meta.size}`)
+  }
+
   res.setHeader('Cache-Control', 'private, no-store')
   res.setHeader('Content-Security-Policy', "sandbox; default-src 'none'; frame-ancestors 'none'")
   res.setHeader('X-Content-Type-Options', 'nosniff')
   res.setHeader('Access-Control-Allow-Origin', '*')
-  res.setHeader('Content-Type', meta.mimetype)
-  res.setHeader('Content-Length', body.length)
-  if (downloadOnlyTypes.test(meta.mimetype + meta.originalname))
-    res.attachment(meta.originalname || filename)
+  res.setHeader('Access-Control-Expose-Headers', 'Accept-Ranges, Content-Length, Content-Range')
+  res.setHeader('Accept-Ranges', meta.limit ? 'none' : 'bytes')
+  res.setHeader('Content-Type', meta.mimetype || 'application/octet-stream')
+  res.setHeader('Content-Length', range ? range.end - range.start + 1 : meta.size)
 
-  res.send(body)
-  decrementLimit(filename, meta).catch((error) => console.error('decrement limit', error))
+  if (req.method === 'HEAD') return res.end()
+
+  try {
+    await pipeline(body, res)
+    decrementLimit(filename, meta).catch((error) => console.error('decrement limit', error))
+  } catch (error) {
+    if (error?.code !== 'ERR_STREAM_PREMATURE_CLOSE') console.error('stream file', error)
+  }
 }
 
 app.get('/files/:name/info', loadFileMeta, (req, res) => {
-  ok(res, { file: publicMeta(res.locals.file.meta, getClientIp(req)) })
+  const { filename, meta } = res.locals.file
+  res.setHeader('Cache-Control', 'private, no-store')
+  ok(res, { file: publicMeta(meta, !hasUploadOwnership(req, filename, meta)) })
 })
 
 app.post('/files/:name/auth', authLimiter, loadFileMeta, async (req, res) => {
@@ -496,16 +584,17 @@ app.post('/files/:name/auth', authLimiter, loadFileMeta, async (req, res) => {
 
 app.delete('/files/:name', authLimiter, loadFileMeta, async (req, res) => {
   const { filename, meta } = res.locals.file
-  if (requesterNeedsDeleteKey(meta, getClientIp(req))) {
+  if (!hasUploadOwnership(req, filename, meta)) {
     const key = req.headers.authkey
     if (typeof key !== 'string')
       return err(res, 400, 'MissingAuthKey', "An 'authkey' header with the auth key is required")
 
-    if (key !== meta.authkey)
+    if (!safeEqual(key, meta.authkey))
       return err(res, 400, 'BadAuthKey', 'Incorrect auth key received')
   }
 
   await removeUpload(filename)
+  clearUploadOwnership(req, res, filename)
   ok(res)
 })
 
@@ -547,7 +636,7 @@ app.use(express.static(distDir))
 app.get(/.*/, (_req, res) => res.sendFile(path.join(distDir, 'index.html')))
 
 cleanupExpired()
-setInterval(cleanupExpired, 60_000)
+setInterval(cleanupExpired, 60 * 60_000)
 
 app.listen(PORT, HOST, () => {
   console.log(`API listening at http://${HOST}:${PORT} (${s3 ? `S3 bucket ${bucket}` : `local storage at ${path.relative(process.cwd(), dataDir)}`})`)
